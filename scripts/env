@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# IMPORTANT: Do not use this file directly to store your secrets
+# create a copy in the same dir called 'private-env'
+
+# Github secrets
+export GITHUB_APP_APP_ID=
+export GITOPS_GIT_TOKEN=
+export GITOPS_GIT_ORG=
+export GITHUB_APP_CLIENT_ID=
+export GITHUB_APP_CLIENT_SECRET=
+export GITHUB_APP_WEBHOOK_URL=
+export GITHUB_APP_WEBHOOK_SECRET=
+export GITHUB_APP_PRIVATE_KEY=
+
+# ArgoCD secrets
+export ARGOCD_USER=
+export ARGOCD_PASSWORD=
+export ARGOCD_HOSTNAME=
+export ARGOCD_TOKEN=
+
+# RHDH secrets
+export BACKEND_SECRET=
+export ADMIN_TOKEN=
+export RHDH_CALLBACK_URL=
+
+# RHDH Postgres Secrets
+export POSTGRESQL_POSTGRES_PASSWORD=
+export POSTGRESQL_USER_PASSWORD=
+
+# Quay.io secrets
+export QUAY_DOCKERCONFIGJSON=
+
+# KeyCloak (RH SSO) secrets
+export KEYCLOAK_METADATA_URL=
+export KEYCLOAK_CLIENT_ID=
+export KEYCLOAK_REALM=
+export KEYCLOAK_BASE_URL=
+export KEYCLOAK_LOGIN_REALM=
+export KEYCLOAK_CLIENT_SECRET=

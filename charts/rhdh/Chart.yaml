@@ -1,0 +1,10 @@
+apiVersion: v2
+name: rolling-demo
+description: A Helm chart for deploying the RHDHPAI rolling demo to an OpenShift Cluster
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
+dependencies:
+  - name: backstage
+    repository: https://redhat-developer.github.io/rhdh-chart/
+    version: "3.1.1"

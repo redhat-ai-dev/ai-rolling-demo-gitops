@@ -1,0 +1,557 @@
+global:
+  dynamic:
+    includes:
+      - "dynamic-plugins.default.yaml"
+    plugins:
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-dynamic-home-page
+        disabled: true
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
+        disabled: true
+      - package: oci://quay.io/karthik_jk/global-header:latest!red-hat-developer-hub-backstage-plugin-global-header
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-global-header:
+                mountPoints:
+                  - mountPoint: application/header
+                    importName: GlobalHeader
+                    config:
+                      position: above-main-content # above-main-content | below-main-content
+
+                  - mountPoint: global.header/component
+                    importName: SearchComponent
+                    config:
+                      priority: 100
+
+                  - mountPoint: global.header/component
+                    importName: Spacer
+                    config:
+                      priority: 99
+                      props:
+                        growFactor: 0
+
+                  - mountPoint: global.header/component
+                    importName: HeaderIconButton
+                    config:
+                      priority: 90
+                      props:
+                        title: Create...
+                        icon: add
+                        to: create
+
+                  - mountPoint: global.header/component
+                    importName: StarredDropdown
+                    config:
+                      priority: 85
+
+                  - mountPoint: global.header/component
+                    importName: ApplicationLauncherDropdown
+                    config:
+                      priority: 82
+
+                  - mountPoint: global.header/component
+                    importName: SupportButton
+                    config:
+                      priority: 80
+
+                  - mountPoint: global.header/component
+                    importName: NotificationButton
+                    config:
+                      priority: 70
+
+                  - mountPoint: global.header/component
+                    importName: Divider
+                    config:
+                      priority: 50
+
+                  - mountPoint: global.header/component
+                    importName: ProfileDropdown
+                    config:
+                      priority: 10
+
+                  - mountPoint: global.header/profile
+                    importName: MenuItemLink
+                    config:
+                      priority: 100
+                      props:
+                        title: Settings
+                        link: /settings
+                        icon: manageAccounts
+
+                  - mountPoint: global.header/profile
+                    importName: LogoutButton
+                    config:
+                      priority: 10
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Red Hat AI
+                      sectionLink: https://www.redhat.com/en/products/ai
+                      sectionLinkLabel: Read more
+                      priority: 200
+                      props:
+                        title: Podman Desktop
+                        icon: https://podman-desktop.io/img/logo.svg
+                        link: https://podman-desktop.io/
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Red Hat AI
+                      sectionLinkLabel: Read more
+                      priority: 170
+                      props:
+                        title: OpenShift AI
+                        icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
+                        link: https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Red Hat AI
+                      sectionLinkLabel: Read more
+                      priority: 160
+                      props:
+                        title: RHEL AI
+                        icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
+                        link: https://www.redhat.com/en/products/ai/enterprise-linux-ai
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Red Hat AI
+                      sectionLinkLabel: Read more
+                      priority: 150
+                      props:
+                        title: Instructlab
+                        icon: https://instructlab.ai/logo.png
+                        link: https://instructlab.ai/
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Quick Links
+                      priority: 150
+                      props:
+                        title: Quay.io
+                        icon: https://quay.io/static/img/quay_favicon.png
+                        link: https://quay.io
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Quick Links
+                      priority: 140
+                      props:
+                        title: Slack
+                        icon: https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg
+                        link: https://slack.com/
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Quick Links
+                      priority: 130
+                      props:
+                        title: ArgoCD
+                        icon: https://argo-cd.readthedocs.io/en/stable/assets/logo.png
+                        link: https://argo-cd.readthedocs.io/en/stable/
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Quick Links
+                      priority: 120
+                      props:
+                        title: Openshift
+                        icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
+                        link: https://www.redhat.com/en/technologies/cloud-computing/openshift
+      - package: oci://quay.io/karthik_jk/ai-experience:1.5!red-hat-developer-hub-backstage-plugin-ai-experience
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-ai-experience:
+                dynamicRoutes:
+                  - path: /
+                    importName: AiExperiencePage
+      - package: oci://quay.io/karthik_jk/ai-experience:1.5!red-hat-developer-hub-backstage-plugin-ai-experience-backend-dynamic
+        disabled: false
+      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
+        disabled: false
+      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
+        disabled: false
+      - package:  ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+        disabled: false
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-redhat-argocd
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage-community.plugin-redhat-argocd:
+                mountPoints:
+                  - mountPoint: entity.page.overview/cards
+                    importName: ArgocdDeploymentSummary
+                    config:
+                      layout:
+                        gridColumnEnd:
+                          lg: "span 8"
+                          xs: "span 12"
+                      if:
+                        allOf:
+                          - isArgocdConfigured
+                  - mountPoint: entity.page.cd/cards
+                    importName: ArgocdDeploymentLifecycle
+                    config:
+                      layout:
+                        gridColumn: '1 / -1'
+                      if:
+                        allOf:
+                          - isArgocdConfigured
+      - disabled: false
+        package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd-backend-dynamic
+      - disabled: false
+        package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-argocd-dynamic
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-techdocs
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-community-plugin-topology
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-dynamic
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-org-dynamic    
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-gitlab-dynamic
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-dynamic
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-org-dynamic
+      - disabled: false
+        package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage-community.plugin-tekton:
+                mountPoints:
+                  - config:
+                      if:
+                        allOf:
+                          - isTektonCIAvailable
+                      layout:
+                        gridColumn: 1 / -1
+                        gridRowStart: 1
+                    importName: TektonCI
+                    mountPoint: entity.page.ci/cards
+
+  clusterRouterBase: apps.rosa.xiyoq-yb34z-3br.gto9.p3.openshiftapps.com
+  host: ""
+  auth:
+    backend:
+      enabled: true
+      existingSecret: ""
+      value: ""
+backstage:
+  upstream:
+    backstage:
+      image:
+        registry: quay.io
+        repository: rhdh/rhdh-hub-rhel9
+        tag: "1.5"
+        pullSecrets:
+          - quay-pull-secret
+      command: []
+      appConfig:
+        app:
+          title: RHDHPAI Rolling Demo Developer Hub
+          baseUrl: "${RHDH_BASE_URL}"
+        auth:
+          environment: production
+          session:
+            secret: "${BACKEND_SECRET}"
+          providers:
+            oidc:
+              production:
+                metadataUrl: "${KEYCLOAK_METADATA_URL}"
+                clientId: "${KEYCLOAK_CLIENT_ID}"
+                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+                callbackUrl: "${RHDH_CALLBACK_URL}"
+                prompt: auto
+                signIn:
+                  resolvers:
+                    - resolver: emailLocalPartMatchingUserEntityName
+        backend:
+          auth:
+            externalAccess:
+              - type: static
+                options:
+                  token: ${ADMIN_TOKEN}
+                  subject: admin-curl-access
+            keys:
+              - secret: "${BACKEND_SECRET}"
+          baseUrl: "${RHDH_BASE_URL}"
+          database:
+            connection:
+              password: ${POSTGRESQL_ADMIN_PASSWORD}
+              user: postgres
+          cors:
+            origin: "${RHDH_BASE_URL}"
+          # AI Experience config
+          csp:
+            upgrade-insecure-requests: false
+            img-src:
+              - "'self'"
+              - "data:"
+              - https://upload.wikimedia.org
+              - https://podman-desktop.io
+              - https://argo-cd.readthedocs.io
+              - https://instructlab.ai
+              - https://quay.io
+        signInPage: oidc
+        catalog:
+          rules:
+            - allow: [User, Group, System, Component, Resource, Location, Template, API]
+          locations:
+            - target: https://github.com/redhat-ai-dev/ai-lab-template/blob/rolling-demo/all.yaml
+              type: url
+            - type: url
+              target: https://github.com/redhat-ai-dev/model-catalog-example/blob/v0.1/developer-model-service/catalog-info.yaml
+              rules:
+                - allow: [Component, Resource, Api]
+            - type: url
+              target: https://github.com/redhat-ai-dev/model-catalog-example/blob/v0.1/ollama-model-service/catalog-info.yaml
+              rules:
+                - allow: [Component, Resource, Api]
+          providers:
+            github:
+              providerId:
+                organization: "fpetk"
+                schedule:
+                  frequency:
+                    minutes: 1
+                  initialDelay:
+                    seconds: 15
+                  timeout:
+                    minutes: 15
+            githubOrg:
+              githubUrl: https://github.com
+              orgs: ["fpetk"]
+              schedule:
+                frequency:
+                  minutes: 1
+                initialDelay:
+                  seconds: 15
+                timeout:
+                  minutes: 15
+            keycloakOrg:
+              default:
+                baseUrl: "${KEYCLOAK_BASE_URL}"
+                loginRealm: "${KEYCLOAK_REALM}"
+                realm: "${KEYCLOAK_REALM}"
+                clientId: "${KEYCLOAK_CLIENT_ID}"
+                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+                schedule:
+                  frequency: { minutes: 1 }
+                  timeout: { minutes: 1 }
+                  initialDelay: { seconds: 15 }
+                signIn:
+                  resolvers:
+                    - resolver: emailLocalPartMatchingUserEntityName
+        permission:
+          enabled: false
+          rbac:
+            admin:
+              users:
+                - name: user:default/tpetkos
+                - name: user:default/gmontero
+                - name: user:default/jcollier
+                - name: user:default/jdubrick
+                - name: user:default/eyuen
+                - name: user:default/mvaldron
+                - name: user:default/yangcao
+                - name: user:default/mfaisal
+        integrations:
+          github:
+            - apps:
+                - appId: ${GITHUB_APP_APP_ID}
+                  clientId: ${GITHUB_APP_CLIENT_ID}
+                  clientSecret: ${GITHUB_APP_CLIENT_SECRET}
+                  webhookUrl: ${GITHUB_APP_WEBHOOK_URL}
+                  webhookSecret: ${GITHUB_APP_WEBHOOK_SECRET}
+                  privateKey: |
+                    ${GITHUB_APP_PRIVATE_KEY}
+              host: github.com
+        kubernetes:
+          clusterLocatorMethods:
+            - clusters:
+                - authProvider: serviceAccount
+                  name: default
+                  serviceAccountToken: ${K8S_CLUSTER_TOKEN}
+                  skipTLSVerify: true
+                  url: https://kubernetes.default.svc
+              type: config
+          customResources:
+            - apiVersion: v1beta1
+              group: tekton.dev
+              plural: pipelines
+            - apiVersion: v1beta1
+              group: tekton.dev
+              plural: pipelineruns
+            - apiVersion: v1beta1
+              group: tekton.dev
+              plural: taskruns
+            - apiVersion: v1
+              group: route.openshift.io
+              plural: routes
+          serviceLocatorMethod:
+            type: multiTenant
+        argocd:
+          username: ${ARGOCD_USER}
+          password: ${ARGOCD_PASSWORD}
+          waitCycles: 25
+          appLocatorMethods:
+          - type: 'config'
+            instances:
+              - name: default
+                url: https://${ARGOCD_HOSTNAME}
+                token: ${ARGOCD_API_TOKEN}
+        proxy:
+          endpoints:
+            "/developer-hub":
+              target: https://raw.githubusercontent.com
+              pathRewrite:
+                "^/api/proxy/developer-hub/learning-paths": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/ai-integrations/plugins/ai-experience/src/learning-paths/data.json"
+              changeOrigin: true
+              secure: false
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /healthcheck
+          port: 7007
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 2
+        timeoutSeconds: 2
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /healthcheck
+          port: 7007
+          scheme: HTTP
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 2
+      extraEnvVars:
+        - name: POSTGRESQL_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: postgres-password
+              name: "{{ .Release.Name }}-postgresql"
+      extraEnvVarsSecrets:
+        - github-secrets
+        - kubernetes-secrets
+        - rhdh-secrets
+        - keycloak-secrets
+        - argocd-secrets
+      args:
+        - "--config"
+        - dynamic-plugins-root/app-config.dynamic-plugins.yaml
+      extraVolumeMounts:
+        - name: dynamic-plugins-root
+          mountPath: /opt/app-root/src/dynamic-plugins-root
+      extraVolumes:
+        - name: dynamic-plugins-root
+          ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 2Gi
+        - name: dynamic-plugins
+          configMap:
+            defaultMode: 420
+            name: rolling-demo-dynamic-plugins
+            optional: true
+        - name: dynamic-plugins-npmrc
+          secret:
+            defaultMode: 420
+            optional: true
+            secretName: dynamic-plugins-npmrc
+      initContainers:
+        - name: install-dynamic-plugins
+          image: '{{ include "backstage.image" . }}'
+          command:
+            - ./install-dynamic-plugins.sh
+            - /dynamic-plugins-root
+          env:
+            - name: NPM_CONFIG_USERCONFIG
+              value: /opt/app-root/src/.npmrc.dynamic-plugins
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /dynamic-plugins-root
+              name: dynamic-plugins-root
+            - mountPath: /opt/app-root/src/dynamic-plugins.yaml
+              name: dynamic-plugins
+              readOnly: true
+              subPath: dynamic-plugins.yaml
+            - mountPath: /opt/app-root/src/.npmrc.dynamic-plugins
+              name: dynamic-plugins-npmrc
+              readOnly: true
+              subPath: .npmrc
+      installDir: /opt/app-root/src
+      podAnnotations:
+        checksum/dynamic-plugins: >-
+          {{- include "common.tplvalues.render" ( dict "value"
+          .Values.global.dynamic "context" $) | sha256sum }}
+    ingress:
+      host: "{{ .Values.global.host }}"
+    postgresql:
+      enabled: true
+      postgresqlDataDir: /var/lib/pgsql/data/userdata
+      image:
+        registry: registry.redhat.io
+        repository: rhel9/postgresql-15
+        tag: latest
+      auth:
+        username: postgres
+        existingSecret: "{{ .Release.Name }}-postgresql"
+        secretKeys:
+          adminPasswordKey: postgres-password
+      primary:
+        podSecurityContext:
+          enabled: false
+        containerSecurityContext:
+          enabled: false
+        persistence:
+          enabled: true
+          size: 1Gi
+          mountPath: /var/lib/pgsql/data
+        extraEnvVars:
+          - name: POSTGRESQL_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: postgres-password
+                name: "{{ .Release.Name }}-postgresql"
+  route:
+    annotations: {}
+    enabled: true
+    host: "{{ .Values.global.host }}"
+    path: "/"
+    wildcardPolicy: None
+    tls:
+      enabled: true
+      termination: "edge"
+      certificate: ""
+      key: ""
+      caCertificate: ""
+      destinationCACertificate: ""
+      insecureEdgeTerminationPolicy: "Redirect"

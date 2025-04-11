@@ -268,7 +268,7 @@ backstage:
       command: []
       appConfig:
         app:
-          title: RHDHPAI Rolling Demo Developer Hub
+          title: AI Rolling Demo Developer Hub
           baseUrl: "${RHDH_BASE_URL}"
         auth:
           environment: production

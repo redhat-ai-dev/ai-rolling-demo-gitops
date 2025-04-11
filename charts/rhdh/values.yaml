@@ -284,7 +284,7 @@ backstage:
                 prompt: auto
                 signIn:
                   resolvers:
-                    - resolver: emailLocalPartMatchingUserEntityName
+                    - resolver: preferredUsernameMatchingUserEntityName
         backend:
           auth:
             externalAccess:
@@ -361,7 +361,7 @@ backstage:
                   initialDelay: { seconds: 15 }
                 signIn:
                   resolvers:
-                    - resolver: emailLocalPartMatchingUserEntityName
+                    - resolver: emailMatchingUserEntityProfileEmail
         permission:
           enabled: false
           rbac:

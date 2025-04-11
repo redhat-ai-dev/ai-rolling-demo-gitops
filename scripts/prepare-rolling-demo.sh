@@ -131,15 +131,6 @@ kubectl create secret generic "$SECRET_NAME" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 
-SECRET_NAME="pruner-secrets"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$ARGOCD_NAMESPACE" \
-    --from-literal=GITOPS_GIT_TOKEN="$GITOPS_GIT_TOKEN" \
-    --from-literal=GITOPS_GIT_ORG="$GITOPS_GIT_ORG" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
-
 SECRET_NAME="pipelines-as-code-secret"
 echo -n "* $SECRET_NAME secret: "
 kubectl create secret generic "$SECRET_NAME" \

@@ -2,7 +2,7 @@
 
 **Rolling Demo Last Update:** 10 April 2025
 
-The repository contains the gitops resources required to deploy an instance of the RHDHPAI rolling demo. The project is currently live at [TODO-add-a-link-once-deployed](#).
+The repository contains the gitops resources required to deploy an instance of the RHDHPAI rolling demo. The project is currently live at [rolling-demo-backstage-rolling-demo-ns.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com](https://rolling-demo-backstage-rolling-demo-ns.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com).
 
 ## Contents
 

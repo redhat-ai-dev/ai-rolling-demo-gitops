@@ -249,7 +249,7 @@ global:
                     importName: TektonCI
                     mountPoint: entity.page.ci/cards
 
-  clusterRouterBase: apps.rosa.xiyoq-yb34z-3br.gto9.p3.openshiftapps.com
+  clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
   host: ""
   auth:
     backend:
@@ -330,7 +330,7 @@ backstage:
           providers:
             github:
               providerId:
-                organization: "fpetk"
+                organization: "ai-rolling-demo"
                 schedule:
                   frequency:
                     minutes: 1
@@ -340,7 +340,7 @@ backstage:
                     minutes: 15
             githubOrg:
               githubUrl: https://github.com
-              orgs: ["fpetk"]
+              orgs: ["ai-rolling-demo"]
               schedule:
                 frequency:
                   minutes: 1

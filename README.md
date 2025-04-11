@@ -9,7 +9,8 @@ The repository contains the gitops resources required to deploy an instance of t
 The rolling demo combines the following components so far:
 
 - The redhat developer hub chart ([rhdh-chart](https://github.com/redhat-developer/rhdh-chart)), in an attempt to keep the demo up-to-date with the latest changes of RHDH.
-- The [AI software templates](https://github.com/redhat-ai-dev/ai-lab-template), a collection of Software Templates based on AI applications
+- The [AI software templates](https://github.com/redhat-ai-dev/ai-lab-template), a collection of Software Templates based on AI applications.
+- The [AI homepage](https://github.com/redhat-developer/rhdh-plugins/tree/main/workspaces/ai-integrations/plugins/ai-experience), provides users with better visibility into the AI-related assets, tools and resources.
 
 ## Capabilities & Limitations
 

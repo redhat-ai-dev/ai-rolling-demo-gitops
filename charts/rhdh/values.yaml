@@ -454,6 +454,9 @@ backstage:
             secretKeyRef:
               key: postgres-password
               name: "{{ .Release.Name }}-postgresql"
+        # Only for demo purposes: Remove in production
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: "0"
       extraEnvVarsSecrets:
         - github-secrets
         - kubernetes-secrets

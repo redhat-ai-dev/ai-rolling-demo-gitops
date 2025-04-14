@@ -22,7 +22,7 @@ The rolling demo combines the following components so far:
 ### AI Software Templates
 
 - Currently our demo doesn't support deployment which require GPU.
-- The rolling demo, currently supports only Github deployments. That said, you cannot use `Gitlab` as `Host Type` when creating
+- The rolling demo, currently supports only Github deployments. That said, you cannot use `Gitlab` as `Host Type` when installing the template.
 - The github organization set to serve the demo is `ai-rolling-demo`, that said you need to keep it as the `Repository Owner`.
 - Same applies for the `Image Organization` value. The `quay.io` repository corresponding to the demo is `rhdhpai-rolling-demo`.
 

@@ -120,6 +120,15 @@ kubectl create secret generic "$SECRET_NAME" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 
+SECRET_NAME="ai-rh-developer-hub-env"
+echo -n "* $SECRET_NAME secret: "
+kubectl create secret generic "$SECRET_NAME" \
+    --namespace="$RHDH_NAMESPACE" \
+    --from-literal=NODE_TLS_REJECT_UNAUTHORIZED="0" \
+    --from-literal=RHDH_TOKEN="$ADMIN_TOKEN"
+    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
+echo "OK"
+
 SECRET_NAME="argocd-secrets"
 echo -n "* $SECRET_NAME secret: "
 kubectl create secret generic "$SECRET_NAME" \

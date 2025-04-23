@@ -1,6 +1,6 @@
 # Local configuration files
 *.local.yaml
 .resources/
-scripts/private-env
+*private-env
 *cosign.pub
 *argocd.yaml

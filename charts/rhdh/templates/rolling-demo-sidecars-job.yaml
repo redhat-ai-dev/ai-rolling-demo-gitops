@@ -1,0 +1,98 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: update-deployment-containers
+spec:
+  template:
+    spec:
+      containers:
+        - name: patch-deployment
+          image: quay.io/redhat-ai-dev/utils:latest
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              DEPLOYMENT="rolling-demo-backstage"
+              NAMESPACE="rolling-demo-ns"
+
+              echo "Waiting deployment ${DEPLOYMENT} to be available.."
+              kubectl rollout status deployment/$DEPLOYMENT -n $NAMESPACE --timeout=600s
+
+              echo "Patching ${DEPLOYMENT} .."
+              kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' -p='
+              [
+                {
+                  "op": "add",
+                  "path": "/spec/template/spec/containers/1",
+                  "value": {
+                    "name": "location",
+                    "env": [
+                      { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
+                      { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
+                      { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
+                    ],
+                    "envFrom": [
+                      { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
+                      { "secretRef": { "name": "ai-rh-developer-hub-env" } }
+                    ],
+                    "image": "quay.io/redhat-ai-dev/model-catalog-location-service:latest",
+                    "imagePullPolicy": "Always",
+                    "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
+                    "startupProbe": {
+                      "httpGet": { "path": "/.backstage/health/v1/liveness", "port": 7007, "scheme": "HTTP" },
+                      "initialDelaySeconds": 30,
+                      "timeoutSeconds": 4,
+                      "periodSeconds": 20,
+                      "successThreshold": 1,
+                      "failureThreshold": 3
+                    },
+                    "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
+                    "workingDir": "/opt/app-root/src"
+                  }
+                },
+                {
+                  "op": "add",
+                  "path": "/spec/template/spec/containers/2",
+                  "value": {
+                    "name": "storage-rest",
+                    "env": [
+                      { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
+                      { "name": "STORAGE_TYPE", "value": "ConfigMap" },
+                      { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
+                      { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
+                    ],
+                    "envFrom": [
+                      { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
+                      { "secretRef": { "name": "ai-rh-developer-hub-env" } }
+                    ],
+                    "image": "quay.io/redhat-ai-dev/model-catalog-storage-rest:latest",
+                    "imagePullPolicy": "Always",
+                    "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
+                    "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
+                    "workingDir": "/opt/app-root/src"
+                  }
+                },
+                {
+                  "op": "add",
+                  "path": "/spec/template/spec/containers/3",
+                  "value": {
+                    "name": "rhoai-normalizer",
+                    "env": [
+                      { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
+                      { "name": "MR_ROUTE", "value": "odh-model-registries-modelregistry-public-rest" },
+                      { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
+                      { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
+                    ],
+                    "envFrom": [
+                      { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
+                      { "secretRef": { "name": "ai-rh-developer-hub-env" } }
+                    ],
+                    "image": "quay.io/redhat-ai-dev/model-catalog-rhoai-normalizer:latest",
+                    "imagePullPolicy": "Always",
+                    "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
+                    "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
+                    "workingDir": "/opt/app-root/src"
+                  }
+                }
+              ]'
+      restartPolicy: OnFailure
+  backoffLimit: 4

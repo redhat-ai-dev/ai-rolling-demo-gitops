@@ -9,7 +9,7 @@ The rolling demo combines the following components so far:
 - The redhat developer hub chart ([rhdh-chart](https://github.com/redhat-developer/rhdh-chart)), in an attempt to keep the demo up-to-date with the latest changes of RHDH.
 - The [AI software templates](https://github.com/redhat-ai-dev/ai-lab-template), a collection of Software Templates based on AI applications.
 - The [AI homepage](https://github.com/redhat-developer/rhdh-plugins/tree/main/workspaces/ai-integrations/plugins/ai-experience), provides users with better visibility into the AI-related assets, tools and resources.
-- The [Model Catalog Bridge](https://github.com/redhat-ai-dev/model-catalog-bridge) and the [catalog-backend-module-rhdh-ai](https://github.com/redhat-ai-dev/rhdh-plugins/tree/main/workspaces/rhdh-ai/plugins/catalog-backend-module-rhdh-ai) plugin. This mechanism provides a way to facilitate the seamless export of AI model records from Open Data Hub and imports them into Red Hat Developer Hub (Backstage) as catalog entities.
+- The [Model Catalog Bridge](https://github.com/redhat-ai-dev/model-catalog-bridge) and the [catalog-backend-module-rhdh-ai](https://github.com/redhat-ai-dev/rhdh-plugins/tree/main/workspaces/rhdh-ai/plugins/catalog-backend-module-rhdh-ai) plugin. This mechanism provides a way to facilitate the seamless export of AI model records from Red Hat OpenShift AI and imports them into Red Hat Developer Hub (Backstage) as catalog entities.
 
 ## Capabilities & Limitations
 
@@ -27,7 +27,7 @@ The rolling demo combines the following components so far:
 
 ### Model Catalog Bridge
 
-- A pre-requisite for the model catalog bridge to work is a running Open Data Hub instance, so the bridge can fetch all registered models and add them to RHDH as catalog entities.
+- A pre-requisite for the model catalog bridge to work is a running Red Hat OpenShift AI instance, so the bridge can fetch all registered models and add them to RHDH as catalog entities.
 
 ### Limited Application Lifecycle
 

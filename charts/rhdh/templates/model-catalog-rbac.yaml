@@ -50,8 +50,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: rhdh-odh-dashboard-permissions
-  namespace: odh-model-registries
+  name: rhdh-rhoai-dashboard-permissions
+  namespace: rhoai-model-registries
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

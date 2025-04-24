@@ -18,7 +18,6 @@ ENV_VARS=(
   "ARGOCD_USER" \
   "ARGOCD_API_TOKEN" \
   "BACKEND_SECRET" \
-  "ADMIN_TOKEN" \
   "RHDH_CALLBACK_URL" \
   "POSTGRESQL_POSTGRES_PASSWORD" \
   "POSTGRESQL_USER_PASSWORD" \
@@ -45,8 +44,10 @@ echo "OK"
 # Create the necessary ServiceAccount token
 echo "Creating the k8s sa token.."
 kubectl create serviceaccount k8s-sa -n $RHDH_NAMESPACE
+kubectl create serviceaccount rhdh-sa -n $RHDH_NAMESPACE
 kubectl create rolebinding k8s-admin-binding   --clusterrole=admin   --serviceaccount=$RHDH_NAMESPACE:k8s-sa   --namespace=$RHDH_NAMESPACE
-K8S_CLUSTER_TOKEN=$(kubectl create token k8s-sa -n $RHDH_NAMESPACE)
+K8S_CLUSTER_TOKEN=$(kubectl create token k8s-sa -n $RHDH_NAMESPACE --duration 8760h)
+RHDH_SA_TOKEN=$(kubectl create token k8s-sa -n $RHDH_NAMESPACE --duration 8760h)
 echo "OK"
 
 # Get the argocd admin pass and hostname
@@ -114,7 +115,7 @@ echo -n "* $SECRET_NAME secret: "
 kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
     --from-literal=BACKEND_SECRET="$BACKEND_SECRET" \
-    --from-literal=ADMIN_TOKEN="$ADMIN_TOKEN" \
+    --from-literal=ADMIN_TOKEN="$RHDH_SA_TOKEN" \
     --from-literal=RHDH_BASE_URL="$RHDH_BASE_URL" \
     --from-literal=RHDH_CALLBACK_URL="$RHDH_CALLBACK_URL" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
@@ -125,7 +126,7 @@ echo -n "* $SECRET_NAME secret: "
 kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
     --from-literal=NODE_TLS_REJECT_UNAUTHORIZED="0" \
-    --from-literal=RHDH_TOKEN="$ADMIN_TOKEN"
+    --from-literal=RHDH_TOKEN="$RHDH_SA_TOKEN" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 

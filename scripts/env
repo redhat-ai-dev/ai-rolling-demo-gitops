@@ -21,7 +21,6 @@ export ARGOCD_TOKEN=
 
 # RHDH secrets
 export BACKEND_SECRET=
-export ADMIN_TOKEN=
 export RHDH_CALLBACK_URL=
 
 # RHDH Postgres Secrets

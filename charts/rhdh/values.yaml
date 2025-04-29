@@ -105,7 +105,7 @@ global:
                       props:
                         title: OpenShift AI
                         icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
-                        link: https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-ai
+                        link: https://rhods-dashboard-redhat-ods-applications.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
 
                   - mountPoint: global.header/application-launcher
                     importName: MenuItemLink

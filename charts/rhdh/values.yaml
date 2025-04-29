@@ -168,16 +168,24 @@ global:
                         title: Openshift
                         icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
                         link: https://www.redhat.com/en/technologies/cloud-computing/openshift
-      - package: oci://quay.io/karthik_jk/ai-experience:1.5!red-hat-developer-hub-backstage-plugin-ai-experience
+      - package: oci://quay.io/karthik_jk/ai-experience:1.6!red-hat-developer-hub-backstage-plugin-ai-experience
         disabled: false
         pluginConfig:
           dynamicPlugins:
             frontend:
               red-hat-developer-hub.backstage-plugin-ai-experience:
+                appIcons:
+                  - name: aiNewsIcon
+                    importName: AiNewsIcon
                 dynamicRoutes:
                   - path: /
                     importName: AiExperiencePage
-      - package: oci://quay.io/karthik_jk/ai-experience:1.5!red-hat-developer-hub-backstage-plugin-ai-experience-backend-dynamic
+                  - path: /ai-news
+                    importName: AiNewsPage
+                    menuItem:
+                      icon: aiNewsIcon
+                      text: AI News
+      - package: oci://quay.io/karthik_jk/ai-experience:1.6!red-hat-developer-hub-backstage-plugin-ai-experience-backend-dynamic
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
         disabled: false
@@ -314,6 +322,7 @@ backstage:
               - https://argo-cd.readthedocs.io
               - https://instructlab.ai
               - https://quay.io
+              - https://media.wired.com
           reading:
             allow:
               - host: example.com
@@ -438,6 +447,10 @@ backstage:
                 "^/api/proxy/developer-hub/learning-paths": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/ai-integrations/plugins/ai-experience/src/learning-paths/data.json"
               changeOrigin: true
               secure: false
+            "/ai-rssfeed":
+              target: "https://www.wired.com/feed/tag/ai/latest/rss"
+              changeOrigin: true
+              followRedirects: true
       readinessProbe:
         failureThreshold: 3
         httpGet:

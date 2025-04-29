@@ -334,14 +334,6 @@ backstage:
           locations:
             - target: https://github.com/redhat-ai-dev/ai-lab-template/blob/rolling-demo/all.yaml
               type: url
-            - type: url
-              target: https://github.com/redhat-ai-dev/model-catalog-example/blob/v0.1/developer-model-service/catalog-info.yaml
-              rules:
-                - allow: [Component, Resource, Api]
-            - type: url
-              target: https://github.com/redhat-ai-dev/model-catalog-example/blob/v0.1/ollama-model-service/catalog-info.yaml
-              rules:
-                - allow: [Component, Resource, Api]
           providers:
             modelCatalog:
               development:

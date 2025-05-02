@@ -339,7 +339,7 @@ backstage:
         signInPage: oidc
         catalog:
           rules:
-            - allow: [User, Group, System, Component, Resource, Location, Template, API]
+            - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API]
           locations:
             - target: https://github.com/redhat-ai-dev/ai-lab-template/blob/rolling-demo/all.yaml
               type: url

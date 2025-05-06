@@ -322,7 +322,7 @@ backstage:
               - https://argo-cd.readthedocs.io
               - https://instructlab.ai
               - https://quay.io
-              - https://media.wired.com
+              - https://news.mit.edu
           reading:
             allow:
               - host: example.com
@@ -452,7 +452,7 @@ backstage:
               changeOrigin: true
               secure: false
             "/ai-rssfeed":
-              target: "https://www.wired.com/feed/tag/ai/latest/rss"
+              target: "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml"
               changeOrigin: true
               followRedirects: true
       readinessProbe:

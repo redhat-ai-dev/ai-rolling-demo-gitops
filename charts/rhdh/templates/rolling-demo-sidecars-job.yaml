@@ -2,6 +2,8 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: update-deployment-containers
+  annotations:
+    argocd.argoproj.io/hook: PostSync
 spec:
   template:
     spec:
@@ -17,84 +19,140 @@ spec:
               echo "Waiting deployment ${DEPLOYMENT} to be available.."
               kubectl rollout status deployment/$DEPLOYMENT -n $NAMESPACE --timeout=600s
 
+              echo "Checking if containers already exist in deployment..."
+              CONTAINERS=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers[] | .name')
+
+              # Create temp dir and files
+              TEMP_DIR=$(mktemp -d)
+              PATCH_FILE="${TEMP_DIR}/patch.json"
+
+              # Create the container definition files
+              cat > "${TEMP_DIR}/location.json" <<EOF
+              {
+                "name": "location",
+                "env": [
+                  { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
+                  { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
+                  { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
+                ],
+                "envFrom": [
+                  { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
+                  { "secretRef": { "name": "ai-rh-developer-hub-env" } }
+                ],
+                "image": "quay.io/redhat-ai-dev/model-catalog-location-service:latest",
+                "imagePullPolicy": "Always",
+                "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
+                "startupProbe": {
+                  "httpGet": { "path": "/.backstage/health/v1/liveness", "port": 7007, "scheme": "HTTP" },
+                  "initialDelaySeconds": 30,
+                  "timeoutSeconds": 4,
+                  "periodSeconds": 20,
+                  "successThreshold": 1,
+                  "failureThreshold": 3
+                },
+                "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
+                "workingDir": "/opt/app-root/src"
+              }
+              EOF
+
+              cat > "${TEMP_DIR}/storage-rest.json" <<EOF
+              {
+                "name": "storage-rest",
+                "env": [
+                  { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
+                  { "name": "STORAGE_TYPE", "value": "ConfigMap" },
+                  { "name": "PUSH_TO_RHDH", "value": "False"},
+                  { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
+                  { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
+                ],
+                "envFrom": [
+                  { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
+                  { "secretRef": { "name": "ai-rh-developer-hub-env" } }
+                ],
+                "image": "quay.io/redhat-ai-dev/model-catalog-storage-rest:latest",
+                "imagePullPolicy": "Always",
+                "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
+                "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
+                "workingDir": "/opt/app-root/src"
+              }
+              EOF
+
+              cat > "${TEMP_DIR}/rhoai-normalizer.json" <<EOF
+              {
+                "name": "rhoai-normalizer",
+                "env": [
+                  { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
+                  { "name": "MR_ROUTE", "value": "rhoai-model-registries-modelregistry-public-rest" },
+                  { "name": "POLLING_INTERVAL", "value": "10s"},
+                  { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
+                  { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
+                ],
+                "envFrom": [
+                  { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
+                  { "secretRef": { "name": "ai-rh-developer-hub-env" } }
+                ],
+                "image": "quay.io/redhat-ai-dev/model-catalog-rhoai-normalizer:latest",
+                "imagePullPolicy": "Always",
+                "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
+                "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
+                "workingDir": "/opt/app-root/src"
+              }
+              EOF
+
+              # build the file used for patching
+              echo "[" > "$PATCH_FILE"
+
+              add_patch_operation() {
+                local operation=$1
+                local path=$2
+                local json_file=$3
+                local is_last=$4
+                
+                echo "  {" >> "$PATCH_FILE"
+                echo "    \"op\": \"$operation\"," >> "$PATCH_FILE"
+                echo "    \"path\": \"$path\"," >> "$PATCH_FILE"
+                echo "    \"value\": $(cat $json_file)" >> "$PATCH_FILE"
+                if [ "$is_last" = "true" ]; then
+                  echo "  }" >> "$PATCH_FILE"
+                else
+                  echo "  }," >> "$PATCH_FILE"
+                fi
+              }
+
+              # check action for each one of the containers
+              if echo "$CONTAINERS" | grep -q '"location"'; then
+                echo "Container 'location' already exists, will replace..."
+                LOCATION_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "location") | index(true)')
+                add_patch_operation "replace" "/spec/template/spec/containers/$LOCATION_INDEX" "${TEMP_DIR}/location.json" "false"
+              else
+                echo "Container 'location' does not exist, will add..."
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/location.json" "false"
+              fi
+
+              if echo "$CONTAINERS" | grep -q '"storage-rest"'; then
+                echo "Container 'storage-rest' already exists, will replace..."
+                STORAGE_REST_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "storage-rest") | index(true)')
+                add_patch_operation "replace" "/spec/template/spec/containers/$STORAGE_REST_INDEX" "${TEMP_DIR}/storage-rest.json" "false"
+              else
+                echo "Container 'storage-rest' does not exist, will add..."
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/storage-rest.json" "false"
+              fi
+
+              if echo "$CONTAINERS" | grep -q '"rhoai-normalizer"'; then
+                echo "Container 'rhoai-normalizer' already exists, will replace..."
+                RHOAI_NORMALIZER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "rhoai-normalizer") | index(true)')
+                add_patch_operation "replace" "/spec/template/spec/containers/$RHOAI_NORMALIZER_INDEX" "${TEMP_DIR}/rhoai-normalizer.json" "true"
+              else
+                echo "Container 'rhoai-normalizer' does not exist, will add..."
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "true"
+              fi
+
+              echo "]" >> "$PATCH_FILE"
+
+              echo "Applied in detail:"
+              cat "$PATCH_FILE" | jq '.'
+
               echo "Patching ${DEPLOYMENT} .."
-              kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' -p='
-              [
-                {
-                  "op": "add",
-                  "path": "/spec/template/spec/containers/1",
-                  "value": {
-                    "name": "location",
-                    "env": [
-                      { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
-                      { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
-                      { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
-                    ],
-                    "envFrom": [
-                      { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
-                      { "secretRef": { "name": "ai-rh-developer-hub-env" } }
-                    ],
-                    "image": "quay.io/redhat-ai-dev/model-catalog-location-service:latest",
-                    "imagePullPolicy": "Always",
-                    "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
-                    "startupProbe": {
-                      "httpGet": { "path": "/.backstage/health/v1/liveness", "port": 7007, "scheme": "HTTP" },
-                      "initialDelaySeconds": 30,
-                      "timeoutSeconds": 4,
-                      "periodSeconds": 20,
-                      "successThreshold": 1,
-                      "failureThreshold": 3
-                    },
-                    "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
-                    "workingDir": "/opt/app-root/src"
-                  }
-                },
-                {
-                  "op": "add",
-                  "path": "/spec/template/spec/containers/2",
-                  "value": {
-                    "name": "storage-rest",
-                    "env": [
-                      { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
-                      { "name": "STORAGE_TYPE", "value": "ConfigMap" },
-                      { "name": "PUSH_TO_RHDH", "value": "False"},
-                      { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
-                      { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
-                    ],
-                    "envFrom": [
-                      { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
-                      { "secretRef": { "name": "ai-rh-developer-hub-env" } }
-                    ],
-                    "image": "quay.io/redhat-ai-dev/model-catalog-storage-rest:latest",
-                    "imagePullPolicy": "Always",
-                    "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
-                    "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
-                    "workingDir": "/opt/app-root/src"
-                  }
-                },
-                {
-                  "op": "add",
-                  "path": "/spec/template/spec/containers/3",
-                  "value": {
-                    "name": "rhoai-normalizer",
-                    "env": [
-                      { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
-                      { "name": "MR_ROUTE", "value": "rhoai-model-registries-rhoai-model-registry-rest" },
-                      { "name": "POLLING_INTERVAL", "value": "10s"},
-                      { "name": "POD_IP", "valueFrom": { "fieldRef": { "fieldPath": "status.podIP" } } },
-                      { "name": "POD_NAMESPACE", "valueFrom": { "fieldRef": { "fieldPath": "metadata.namespace" } } }
-                    ],
-                    "envFrom": [
-                      { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
-                      { "secretRef": { "name": "ai-rh-developer-hub-env" } }
-                    ],
-                    "image": "quay.io/redhat-ai-dev/model-catalog-rhoai-normalizer:latest",
-                    "imagePullPolicy": "Always",
-                    "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
-                    "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
-                    "workingDir": "/opt/app-root/src"
-                  }
-                }
-              ]'
+              kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' --patch="$(cat $PATCH_FILE)"
       restartPolicy: OnFailure
   backoffLimit: 4

@@ -356,7 +356,7 @@ backstage:
                 organization: "ai-rolling-demo"
                 schedule:
                   frequency:
-                    minutes: 1
+                    minutes: 15
                   initialDelay:
                     seconds: 15
                   timeout:
@@ -366,7 +366,7 @@ backstage:
               orgs: ["ai-rolling-demo"]
               schedule:
                 frequency:
-                  minutes: 1
+                  minutes: 15
                 initialDelay:
                   seconds: 15
                 timeout:

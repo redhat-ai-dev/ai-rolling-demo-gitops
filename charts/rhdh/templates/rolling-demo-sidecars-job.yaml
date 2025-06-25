@@ -99,6 +99,28 @@ spec:
               }
               EOF
 
+              cat > "${TEMP_DIR}/road-core-sidecar.json" <<EOF
+              {
+                "name": "road-core-sidecar",
+                "env": [
+                  { "name": "PROJECT", "value": "rhdh" },
+                  { "name": "RCS_CONFIG_FILE", "value": "/app-root/config/rcsconfig.yaml" },
+                  { "name": "RHDH_CONFIG_FILE", "value": "/app-root/config/app-config-rhdh.yaml" }
+                ],
+                "envFrom": [
+                  { "secretRef": { "name": "team-cluster-key" } },
+                  { "secretRef": { "name": "secrets-rhdh" } }
+                ],
+                "image": "quay.io/redhat-ai-dev/road-core-service:latest",
+                "ports": [{ "containerPort": 8080, "name": "rcs-backend", "protocol": "TCP" }],
+                "volumeMounts": [
+                  { "mountPath": "/app-root/config/rcsconfig.yaml", "name": "rcsconfig", "subPath": "rcsconfig.yaml" },
+                  { "mountPath": "/app-root/config/team-cluster-key/team_cluster_key.txt", "name": "openai", "subPath": "team_cluster_key.txt" },
+                  { "mountPath": "/app-root/config/app-config-rhdh.yaml", "name": "app-config-rhdh", "subPath": "app-config.yaml" }
+                ]
+              }
+              EOF
+
               # build the file used for patching
               echo "[" > "$PATCH_FILE"
 
@@ -141,10 +163,19 @@ spec:
               if echo "$CONTAINERS" | grep -q '"rhoai-normalizer"'; then
                 echo "Container 'rhoai-normalizer' already exists, will replace..."
                 RHOAI_NORMALIZER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "rhoai-normalizer") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$RHOAI_NORMALIZER_INDEX" "${TEMP_DIR}/rhoai-normalizer.json" "true"
+                add_patch_operation "replace" "/spec/template/spec/containers/$RHOAI_NORMALIZER_INDEX" "${TEMP_DIR}/rhoai-normalizer.json" "false"
               else
                 echo "Container 'rhoai-normalizer' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "true"
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "false"
+              fi
+
+              if echo "$CONTAINERS" | grep -q '"road-core-sidecar"'; then
+                echo "Container 'road-core-sidecar' already exists, will replace..."
+                ROAD_CORE_SIDECAR_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "road-core-sidecar") | index(true)')
+                add_patch_operation "replace" "/spec/template/spec/containers/$ROAD_CORE_SIDECAR_INDEX" "${TEMP_DIR}/road-core-sidecar.json" "true"
+              else
+                echo "Container 'road-core-sidecar' does not exist, will add..."
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/road-core-sidecar.json" "true"
               fi
 
               echo "]" >> "$PATCH_FILE"

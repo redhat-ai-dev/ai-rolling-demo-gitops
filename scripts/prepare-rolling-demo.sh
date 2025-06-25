@@ -27,7 +27,9 @@ ENV_VARS=(
   "KEYCLOAK_REALM" \
   "KEYCLOAK_BASE_URL" \
   "KEYCLOAK_LOGIN_REALM" \
-  "KEYCLOAK_CLIENT_SECRET"
+  "KEYCLOAK_CLIENT_SECRET" \
+  "OLLAMA_URL" \
+  "OLLAMA_TOKEN"
 )
 for ENV_VAR in "${ENV_VARS[@]}"; do
   if [ -z "${!ENV_VAR}" ]; then
@@ -69,6 +71,16 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=GITHUB_APP_WEBHOOK_URL="$GITHUB_APP_WEBHOOK_URL" \
     --from-literal=GITHUB_APP_WEBHOOK_SECRET="$GITHUB_APP_WEBHOOK_SECRET" \
     --from-literal=GITHUB_APP_PRIVATE_KEY="$GITHUB_APP_PRIVATE_KEY" \
+    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
+echo "OK"
+
+echo "Setting up secrets on $RHDH_NAMESPACE and $PAC_NAMESPACE"
+SECRET_NAME="lightspeed-secrets"
+echo -n "* $SECRET_NAME secret: "
+kubectl create secret generic "$SECRET_NAME" \
+    --namespace="$RHDH_NAMESPACE" \
+    --from-literal=OLLAMA_URL="$OLLAMA_URL" \
+    --from-literal=OLLAMA_TOKEN="$OLLAMA_TOKEN" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 

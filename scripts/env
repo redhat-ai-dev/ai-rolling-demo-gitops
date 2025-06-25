@@ -37,3 +37,7 @@ export KEYCLOAK_REALM=
 export KEYCLOAK_BASE_URL=
 export KEYCLOAK_LOGIN_REALM=
 export KEYCLOAK_CLIENT_SECRET=
+
+# Ollama secrets
+export OLLAMA_TOKEN=
+export OLLAMA_URL=

@@ -241,6 +241,56 @@ global:
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-org-dynamic
       - disabled: false
+        package: oci://quay.io/karthik_jk/lightspeed:latest!red-hat-developer-hub-backstage-plugin-lightspeed
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-lightspeed:
+                appIcons:
+                  - name: LightspeedIcon
+                    module: LightspeedPlugin
+                    importName: LightspeedIcon
+                dynamicRoutes:
+                  - path: /lightspeed
+                    importName: LightspeedPage
+                    module: LightspeedPlugin
+                    menuItem:
+                      icon: LightspeedIcon
+                      text: Lightspeed
+      - disabled: false
+        package: oci://quay.io/karthik_jk/lightspeed:latest!red-hat-developer-hub-backstage-plugin-lightspeed-backend
+      - disabled: true
+        package: ./dynamic-plugins/dist/backstage-community-plugin-analytics-provider-segment
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-adoption-insights:bs_1.35.1__0.0.3!red-hat-developer-hub-backstage-plugin-adoption-insights
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-adoption-insights:
+                appIcons:
+                  - name: adoptionInsightsIcon
+                    importName: AdoptionInsightsIcon
+                dynamicRoutes:
+                  - path: /adoption-insights
+                    importName: AdoptionInsightsPage
+                    menuItem:
+                      icon: adoptionInsightsIcon
+                      text: Adoption Insights
+                menuItems:
+                  adoption-insights:
+                    parent: admin
+                    icon: adoptionInsightsIcon
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-adoption-insights-backend:bs_1.35.1__0.0.4!red-hat-developer-hub-backstage-plugin-adoption-insights-backend
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights:bs_1.35.1__0.0.2!red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-analytics-module-adoption-insights:
+                apiFactories:
+                  - importName: AdoptionInsightsAnalyticsApiFactory
+      - disabled: false
         package: oci://quay.io/redhat-ai-dev/ai-integrations-rhdh:latest!red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
@@ -280,6 +330,12 @@ backstage:
         app:
           title: AI Rolling Demo Developer Hub
           baseUrl: "${RHDH_BASE_URL}"
+          analytics:
+            adoptionInsights:
+              maxBufferSize: 20
+              flushInterval: 5000
+              debug: false
+              licensedUsers: 2000
         auth:
           environment: production
           session:
@@ -385,19 +441,12 @@ backstage:
                 signIn:
                   resolvers:
                     - resolver: emailMatchingUserEntityProfileEmail
-        permission:
-          enabled: false
-          rbac:
-            admin:
-              users:
-                - name: user:default/tpetkos
-                - name: user:default/gmontero
-                - name: user:default/jcollier
-                - name: user:default/jdubrick
-                - name: user:default/eyuen
-                - name: user:default/mvaldron
-                - name: user:default/yangcao
-                - name: user:default/mfaisal
+        lightspeed:
+          servers:
+          - id: team_cluster
+            url: "${OLLAMA_URL}"
+            token: "${OLLAMA_TOKEN}"
+            type: "openai"
         integrations:
           github:
             - apps:
@@ -490,6 +539,7 @@ backstage:
         - rhdh-secrets
         - keycloak-secrets
         - argocd-secrets
+        - lightspeed-secrets
       args:
         - "--config"
         - dynamic-plugins-root/app-config.dynamic-plugins.yaml
@@ -516,6 +566,17 @@ backstage:
             defaultMode: 420
             optional: true
             secretName: dynamic-plugins-npmrc
+        - name: rcsconfig
+          configMap:
+            name: rcsconfig
+        - name: app-config-rhdh
+          configMap:
+            name: rolling-demo-backstage-app-config
+        - name: openai
+          secret:
+            defaultMode: 420
+            optional: true
+            secretName: team-cluster-key
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'

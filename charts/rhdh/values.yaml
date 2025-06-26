@@ -373,6 +373,7 @@ backstage:
             img-src:
               - "'self'"
               - "data:"
+              - https://img.freepik.com
               - https://upload.wikimedia.org
               - https://podman-desktop.io
               - https://argo-cd.readthedocs.io

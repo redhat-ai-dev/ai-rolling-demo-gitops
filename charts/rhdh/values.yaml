@@ -374,6 +374,7 @@ backstage:
               - "'self'"
               - "data:"
               - https://img.freepik.com
+              - https://cdn.dribbble.com
               - https://upload.wikimedia.org
               - https://podman-desktop.io
               - https://argo-cd.readthedocs.io

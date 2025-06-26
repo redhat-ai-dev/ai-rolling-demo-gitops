@@ -12,6 +12,10 @@ data:
         models:
           - name: dummymodel
     ols_config:
+      reference_content:
+        product_docs_index_path: "./vector_db/rhdh_product_docs/1.6"
+        product_docs_index_id: rhdh-product-docs-1_6
+        embeddings_model_path: "./embeddings_model"
       conversation_cache:
         type: memory
         memory:

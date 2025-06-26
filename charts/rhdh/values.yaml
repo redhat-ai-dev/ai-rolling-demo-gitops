@@ -290,7 +290,7 @@ global:
               red-hat-developer-hub.backstage-plugin-analytics-module-adoption-insights:
                 apiFactories:
                   - importName: AdoptionInsightsAnalyticsApiFactory
-      - disabled: false
+      - disabled: true
         package: oci://quay.io/redhat-ai-dev/ai-integrations-rhdh:latest!red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
@@ -387,10 +387,8 @@ backstage:
               - host: '*.openshiftapps.com'
               - host: '10.*:9090'
               - host: '127.0.0.1:9090'
-              - host: '127.0.0.1:8080'
               - host: '127.0.0.1:7070'
               - host: 'localhost:9090'
-              - host: 'localhost:8080'
               - host: 'localhost:7070'
         signInPage: oidc
         catalog:

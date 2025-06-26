@@ -572,11 +572,6 @@ backstage:
         - name: app-config-rhdh
           configMap:
             name: rolling-demo-backstage-app-config
-        - name: openai
-          secret:
-            defaultMode: 420
-            optional: true
-            secretName: team-cluster-key
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'

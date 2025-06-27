@@ -381,6 +381,9 @@ backstage:
               - https://instructlab.ai
               - https://quay.io
               - https://news.mit.edu
+            script-src:
+              - "'self'"
+              - https://cdn.jsdelivr.net
           reading:
             allow:
               - host: example.com

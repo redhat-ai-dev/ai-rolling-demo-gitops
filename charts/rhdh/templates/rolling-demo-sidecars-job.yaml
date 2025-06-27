@@ -84,6 +84,9 @@ spec:
               cat > "${TEMP_DIR}/rhoai-normalizer.json" <<EOF
               {
                 "name": "rhoai-normalizer",
+                "args": [
+                   "-metrics-address=:8888"
+                ],
                 "env": [
                   { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },
                   { "name": "MR_ROUTE", "value": "rhoai-model-registries-rhoai-model-registry-rest" },

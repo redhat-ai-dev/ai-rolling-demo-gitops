@@ -171,7 +171,7 @@ spec:
                 add_patch_operation "replace" "/spec/template/spec/containers/$RHOAI_NORMALIZER_INDEX" "${TEMP_DIR}/rhoai-normalizer.json" "false"
               else
                 echo "Container 'rhoai-normalizer' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "true"
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "false"
               fi
 
               if echo "$CONTAINERS" | grep -q '"road-core-sidecar"'; then

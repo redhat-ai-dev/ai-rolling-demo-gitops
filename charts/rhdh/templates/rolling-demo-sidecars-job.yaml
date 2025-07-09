@@ -168,7 +168,7 @@ spec:
               if echo "$CONTAINERS" | grep -q '"rhoai-normalizer"'; then
                 echo "Container 'rhoai-normalizer' already exists, will replace..."
                 RHOAI_NORMALIZER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "rhoai-normalizer") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$RHOAI_NORMALIZER_INDEX" "${TEMP_DIR}/rhoai-normalizer.json" "true"
+                add_patch_operation "replace" "/spec/template/spec/containers/$RHOAI_NORMALIZER_INDEX" "${TEMP_DIR}/rhoai-normalizer.json" "false"
               else
                 echo "Container 'rhoai-normalizer' does not exist, will add..."
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "true"

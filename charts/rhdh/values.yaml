@@ -335,7 +335,7 @@ backstage:
               maxBufferSize: 20
               flushInterval: 5000
               debug: false
-              licensedUsers: 2000
+              licensedUsers: 50
         auth:
           environment: production
           session:

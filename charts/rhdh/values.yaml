@@ -383,6 +383,7 @@ backstage:
               - https://news.mit.edu
             script-src:
               - "'self'"
+              - "'unsafe-eval'"
               - https://cdn.jsdelivr.net
           reading:
             allow:

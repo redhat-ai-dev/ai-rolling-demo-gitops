@@ -4,10 +4,18 @@ Here are the steps required to setup an instance of the rolling demo on your own
 
 ### Pre-requisites
 
-In order to install the demo your cluster shoud have already installed:
+Your cluster should be of type `g5.4xlarge` or bigger. Additionally, to install the demo your cluster should have already installed the following operators:
 
 - [Openshift Gitops](https://www.redhat.com/en/technologies/cloud-computing/openshift/gitops)
 - [Openshift Pipelines](https://www.redhat.com/en/technologies/cloud-computing/openshift/pipelines)
+- [Node Feature Discovery](https://docs.redhat.com/en/documentation/openshift_container_platform/4.10/html/specialized_hardware_and_driver_enablement/node-feature-discovery-operator), create a `NodeFeatureDiscovery` instance (with default values) and wait until its `Available`.
+- [Nvidia GPU Operator](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/index.html), create a `ClusterPolicy` CR and wait until is `Ready` (~ 5mins).
+
+After you have installed the above pre-reqs, you'll have to:
+
+- Clone the [odh-kubeflow-model-registry-setup](https://github.com/redhat-ai-dev/odh-kubeflow-model-registry-setup) repo.
+- Run `oc apply -f ./kustomize-rhoai/` from its root directory.
+- Wait until the job in the `odh-kubeflow-model-registry-setup` project is completed.
 
 Next, you will need to do two minor configuration steps on your `ArgoCD` instance:
 
@@ -45,6 +53,10 @@ kubectl apply -f argocd.yaml -n openshift-gitops
 ### Installation
 
 After the required steps above you can simply use the [prepare-rolling-demo.sh](./scripts/prepare-rolling-demo.sh) script to prepare everything you need for the installation.
+
+```bash
+cd scripts; bash prepare-rolling-demo.sh
+```
 
 Finally you have to create your argocd application in the `openshift-gitops` namespace:
 

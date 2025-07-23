@@ -196,10 +196,10 @@ spec:
               if echo "$CONTAINERS" | grep -q '"road-core-sidecar"'; then
                 echo "Container 'road-core-sidecar' already exists, will replace..."
                 ROAD_CORE_SIDECAR_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "road-core-sidecar") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$ROAD_CORE_SIDECAR_INDEX" "${TEMP_DIR}/road-core-sidecar.json" "true"
+                add_patch_operation "replace" "/spec/template/spec/containers/$ROAD_CORE_SIDECAR_INDEX" "${TEMP_DIR}/road-core-sidecar.json" "false"
               else
                 echo "Container 'road-core-sidecar' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/road-core-sidecar.json" "true"
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/road-core-sidecar.json" "false"
               fi
 
               if echo "$CONTAINERS" | grep -q '"feedback-harvester"'; then

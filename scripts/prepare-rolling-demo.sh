@@ -44,6 +44,12 @@ echo "Creating new project for $RHDH_NAMESPACE if it doesn't exist.."
 oc new-project $RHDH_NAMESPACE
 echo "OK"
 
+echo "Creating new project for $LIGHTSPEED_POSTGRES_NAMESPACE if it doesn't exist.."
+oc new-project $LIGHTSPEED_POSTGRES_NAMESPACE
+echo "Labeling $LIGHTSPEED_POSTGRES_NAMESPACE for ArgoCD management.."
+oc label namespace $LIGHTSPEED_POSTGRES_NAMESPACE argocd.argoproj.io/managed-by=openshift-gitops --overwrite
+echo "OK"
+
 # Create the necessary ServiceAccount token
 echo "Creating the k8s sa token.."
 kubectl create serviceaccount k8s-sa -n $RHDH_NAMESPACE

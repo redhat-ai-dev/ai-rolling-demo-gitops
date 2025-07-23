@@ -126,6 +126,25 @@ spec:
               }
               EOF
 
+              cat > "${TEMP_DIR}/feedback-harvester-sidecar.json" <<EOF
+              {
+                "name": "feedback-harvester",
+                "env": [
+                  { "name": "PGUSER", "valueFrom": { "secretKeyRef": { "name": "lightspeed-postgres-info", "key": "user" } } },
+                  { "name": "PGPASSWORD", "valueFrom": { "secretKeyRef": { "name": "lightspeed-postgres-info", "key": "password" } } },
+                  { "name": "PGDATABASE", "valueFrom": { "secretKeyRef": { "name": "lightspeed-postgres-info", "key": "db-name" } } },
+                  { "name": "PGHOST", "value": "lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local" }
+                  { "name": "PGPORT", "value": "5432" }
+                  { "name": "FEEDBACK_DIRECORY", "value": "/app-root/tmp/data/feedback" }
+                  { "name": "FETCH_FREQUENCY", "value": "60" }
+                ],
+                "image": "quay.io/redhat-ai-dev/feedback-harvester:v0.1.0",
+                "volumeMounts": [
+                  { "mountPath": "/app-root/tmp/data/feedback", "name": "shared-data" }
+                ]
+              }
+              EOF
+
               # build the file used for patching
               echo "[" > "$PATCH_FILE"
 
@@ -181,6 +200,15 @@ spec:
               else
                 echo "Container 'road-core-sidecar' does not exist, will add..."
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/road-core-sidecar.json" "true"
+              fi
+
+              if echo "$CONTAINERS" | grep -q '"feedback-harvester"'; then
+                echo "Container 'feedback-harvester' already exists, will replace..."
+                FEEDBACK_HARVESTER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "feedback-harvester") | index(true)')
+                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
+              else
+                echo "Container 'feedback-harvester' does not exist, will add..."
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
               fi
 
               echo "]" >> "$PATCH_FILE"

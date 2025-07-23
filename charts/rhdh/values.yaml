@@ -577,6 +577,8 @@ backstage:
         - name: app-config-rhdh
           configMap:
             name: rolling-demo-backstage-app-config
+        - name: shared-data
+          emptyDir: {}
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'

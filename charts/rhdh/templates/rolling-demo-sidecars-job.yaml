@@ -115,7 +115,7 @@ spec:
                   { "name": "RHDH_CONFIG_FILE", "value": "/app-root/config/app-config-rhdh.yaml" }
                 ],
                 "envFrom": [
-                  { "secretRef": { "name": "secrets-rhdh" } }
+                  { "secretRef": { "name": "lightspeed-secrets" } }
                 ],
                 "image": "quay.io/redhat-ai-dev/road-core-service:latest",
                 "ports": [{ "containerPort": 8080, "name": "rcs-backend", "protocol": "TCP" }],
@@ -133,9 +133,9 @@ spec:
                   { "name": "PGUSER", "valueFrom": { "secretKeyRef": { "name": "lightspeed-postgres-info", "key": "user" } } },
                   { "name": "PGPASSWORD", "valueFrom": { "secretKeyRef": { "name": "lightspeed-postgres-info", "key": "password" } } },
                   { "name": "PGDATABASE", "valueFrom": { "secretKeyRef": { "name": "lightspeed-postgres-info", "key": "db-name" } } },
-                  { "name": "PGHOST", "value": "lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local" }
-                  { "name": "PGPORT", "value": "5432" }
-                  { "name": "FEEDBACK_DIRECORY", "value": "/app-root/tmp/data/feedback" }
+                  { "name": "PGHOST", "value": "lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local" },
+                  { "name": "PGPORT", "value": "5432" },
+                  { "name": "FEEDBACK_DIRECORY", "value": "/app-root/tmp/data/feedback" },
                   { "name": "FETCH_FREQUENCY", "value": "60" }
                 ],
                 "image": "quay.io/redhat-ai-dev/feedback-harvester:v0.1.0",

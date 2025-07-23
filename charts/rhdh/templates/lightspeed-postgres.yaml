@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lightspeed-postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lightspeed-postgres-svc
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: postgres
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: password
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: user
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: db-name
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pg
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: lightspeed-postgres-pvc
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: configure-postgres-db
+spec:
+  template:
+    spec:
+      containers:
+      - name: postgres-job
+        image: postgres:15
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: password
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: user
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: db-name
+        - name: PGHOST
+          value: lightspeed-postgres-svc
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for Postgres to be ready..."
+          until pg_isready -h "$POSTGRES_HOST" -U "$POSTGRES_USER"; do
+            sleep 2
+          done
+          echo "Postgres is ready, creating table..."
+
+          psql <<EOF
+          CREATE TABLE IF NOT EXISTS feedback (
+            id SERIAL PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            conversation_id TEXT NOT NULL,
+            user_question TEXT NOT NULL,
+            llm_response TEXT NOT NULL,
+            sentiment INTEGER,
+            user_feedback TEXT
+          );
+          EOF
+      restartPolicy: OnFailure

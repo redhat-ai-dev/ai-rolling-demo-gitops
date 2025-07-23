@@ -25,8 +25,14 @@ data:
       default_provider: dummy
       default_model: dummymodel
       query_validation_method: disabled
+      user_data_collection:
+        feedback_disabled: false
+        feedback_storage: "/app-root/tmp/data/feedback"
     dev_config:
       enable_dev_ui: false
       disable_auth: false
       disable_tls: true
       enable_system_prompt_override: true
+    user_data_collector_config:
+      ingress_url: "https://example.ingress.com/upload"
+      user_agent: "example-agent"

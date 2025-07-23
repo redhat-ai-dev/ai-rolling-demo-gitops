@@ -4,6 +4,7 @@
 RHDH_NAMESPACE="rolling-demo-ns"
 ARGOCD_NAMESPACE="openshift-gitops"
 PAC_NAMESPACE="openshift-pipelines"
+LIGHTSPEED_POSTGRES_NAMESPACE="lightspeed-postgres"
 
 # Source the private env and check if all env vars
 # have been set
@@ -160,6 +161,26 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=github-application-id="$GITHUB_APP_APP_ID" \
     --from-literal=github-private-key="$GITHUB_APP_PRIVATE_KEY" \
     --from-literal=webhook.secret="$GITHUB_APP_WEBHOOK_SECRET" \
+    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
+echo "OK"
+
+SECRET_NAME="lightspeed-postgres-info"
+echo -n "* $SECRET_NAME secret in $LIGHTSPEED_POSTGRES_NAMESPACE: "
+kubectl create secret generic "$SECRET_NAME" \
+    --namespace="$LIGHTSPEED_POSTGRES_NAMESPACE" \
+    --from-literal=user="$POSTGRES_USER" \
+    --from-literal=password="$POSTGRES_PASSWORD" \
+    --from-literal=db-name="$POSTGRES_DB" \
+    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
+echo "OK"
+
+SECRET_NAME="lightspeed-postgres-info"
+echo -n "* $SECRET_NAME secret in $RHDH_NAMESPACE: "
+kubectl create secret generic "$SECRET_NAME" \
+    --namespace="$RHDH_NAMESPACE" \
+    --from-literal=user="$POSTGRES_USER" \
+    --from-literal=password="$POSTGRES_PASSWORD" \
+    --from-literal=db-name="$POSTGRES_DB" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 

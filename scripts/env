@@ -22,6 +22,7 @@ export ARGOCD_TOKEN=
 # RHDH secrets
 export BACKEND_SECRET=
 export RHDH_CALLBACK_URL=
+export RHDH_BASE_URL=
 
 # RHDH Postgres Secrets
 export POSTGRESQL_POSTGRES_PASSWORD=
@@ -41,3 +42,8 @@ export KEYCLOAK_CLIENT_SECRET=
 # Ollama secrets
 export OLLAMA_TOKEN=
 export OLLAMA_URL=
+
+# Postgres secrets
+export POSTGRES_PASSWORD=
+export POSTGRES_USER=
+export POSTGRES_DB=

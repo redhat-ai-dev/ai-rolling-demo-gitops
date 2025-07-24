@@ -136,7 +136,7 @@ spec:
                   { "name": "PGDATABASE", "valueFrom": { "secretKeyRef": { "name": "lightspeed-postgres-info", "key": "db-name" } } },
                   { "name": "PGHOST", "value": "lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local" },
                   { "name": "PGPORT", "value": "5432" },
-                  { "name": "FEEDBACK_DIRECORY", "value": "/app-root/tmp/data/feedback" },
+                  { "name": "FEEDBACK_DIRECTORY", "value": "/app-root/tmp/data/feedback" },
                   { "name": "FETCH_FREQUENCY", "value": "60" }
                 ],
                 "image": "quay.io/redhat-ai-dev/feedback-harvester:v0.1.0",

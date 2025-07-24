@@ -121,7 +121,8 @@ spec:
                 "ports": [{ "containerPort": 8080, "name": "rcs-backend", "protocol": "TCP" }],
                 "volumeMounts": [
                   { "mountPath": "/app-root/config/rcsconfig.yaml", "name": "rcsconfig", "subPath": "rcsconfig.yaml" },
-                  { "mountPath": "/app-root/config/app-config-rhdh.yaml", "name": "app-config-rhdh", "subPath": "app-config.yaml" }
+                  { "mountPath": "/app-root/config/app-config-rhdh.yaml", "name": "app-config-rhdh", "subPath": "app-config.yaml" },
+                  { "mountPath": "/app-root/tmp/data/feedback", "name": "shared-data" }
                 ]
               }
               EOF

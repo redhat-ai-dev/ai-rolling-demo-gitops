@@ -174,9 +174,9 @@ SECRET_NAME="lightspeed-postgres-info"
 echo -n "* $SECRET_NAME secret in $LIGHTSPEED_POSTGRES_NAMESPACE: "
 kubectl create secret generic "$SECRET_NAME" \
     --namespace="$LIGHTSPEED_POSTGRES_NAMESPACE" \
-    --from-literal=user="$POSTGRES_USER" \
-    --from-literal=password="$POSTGRES_PASSWORD" \
-    --from-literal=db-name="$POSTGRES_DB" \
+    --from-literal=user="$LIGHTSPEED_POSTGRES_USER" \
+    --from-literal=password="$LIGHTSPEED_POSTGRES_PASSWORD" \
+    --from-literal=db-name="$LIGHTSPEED_POSTGRES_DB" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 
@@ -184,9 +184,9 @@ SECRET_NAME="lightspeed-postgres-info"
 echo -n "* $SECRET_NAME secret in $RHDH_NAMESPACE: "
 kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
-    --from-literal=user="$POSTGRES_USER" \
-    --from-literal=password="$POSTGRES_PASSWORD" \
-    --from-literal=db-name="$POSTGRES_DB" \
+    --from-literal=user="$LIGHTSPEED_POSTGRES_USER" \
+    --from-literal=password="$LIGHTSPEED_POSTGRES_PASSWORD" \
+    --from-literal=db-name="$LIGHTSPEED_POSTGRES_DB" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 

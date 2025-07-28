@@ -407,7 +407,7 @@ backstage:
               rules:
                 - allow: [Component, System]
               type: url
-            - target: https://github.com/redhat-ai-dev/ai-lab-template/blob/rolling-demo/all.yaml
+            - target: https://github.com/redhat-ai-dev/ai-lab-template/blob/ai-rolling-demo/all.yaml
               type: url
           providers:
             modelCatalog:

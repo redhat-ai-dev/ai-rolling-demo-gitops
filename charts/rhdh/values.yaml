@@ -7,6 +7,14 @@ global:
         disabled: true
       - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
         disabled: true
+      - package: oci://quay.io/tpetkos/customized-sign-in-page:v0.1.0!red-hat-developer-hub-backstage-plugin-customized-sign-in-page
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-customized-sign-in-page:
+                signInPage:
+                  importName: CustomizedSignInPage
       - package: oci://quay.io/karthik_jk/global-header:latest!red-hat-developer-hub-backstage-plugin-global-header
         disabled: false
         pluginConfig:
@@ -539,6 +547,8 @@ backstage:
         # Only for demo purposes: Remove in production
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: "0"
+        - name: NODE_ENV
+          value: production
       extraEnvVarsSecrets:
         - github-secrets
         - kubernetes-secrets

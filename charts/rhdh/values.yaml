@@ -359,6 +359,15 @@ backstage:
                 signIn:
                   resolvers:
                     - resolver: preferredUsernameMatchingUserEntityName
+              development:
+                metadataUrl: "${KEYCLOAK_METADATA_URL}"
+                clientId: "${KEYCLOAK_CLIENT_ID}"
+                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+                callbackUrl: "${RHDH_CALLBACK_URL}"
+                prompt: auto
+                signIn:
+                  resolvers:
+                    - resolver: preferredUsernameMatchingUserEntityName
         backend:
           auth:
             externalAccess:

@@ -28,10 +28,12 @@ check_dependencies() {
     echo
     echo "* Missing required tools: ${missing[*]}"
     echo "* Please install them and try again."
+    echo "FAIL"
     exit 1
   fi
 
   echo "* All dependencies are installed."
+  echo "OK"
 }
 
 # create_project: creates a project in openshift
@@ -46,9 +48,11 @@ create_project() {
       echo "* Project '$namespace' created successfully."
     else
       echo "* Failed to create project '$namespace'. Exiting."
+      echo "FAIL"
       exit 1
     fi
   fi
+  echo "OK"
 }
 
 # add_argocd_label: labels a given openshift project for argocd
@@ -58,10 +62,12 @@ add_argocd_label() {
 
   if ! oc label namespace "$namespace" "argocd.argoproj.io/managed-by=$argocd_namespace" --overwrite; then
     echo "* Failed to label namespace '$namespace'. Exiting."
+    echo "FAIL"
     return 1
   fi
 
   echo "* Project '$namespace' labeled successfully."
+  echo "OK"
 }
 
 # enable_argocd_admin_apiKey: Enables argoCD admin apiKey capability
@@ -73,6 +79,7 @@ enable_argocd_admin_apiKey() {
   echo "* Exporting Argo CD CR from namespace '$namespace'..."
   if ! kubectl get argocd "$argocd_name" -n "$namespace" -o yaml > argocd.yaml; then
     echo "* Failed to fetch Argo CD CR. Exiting."
+    echo "FAIL"
     exit 1
   fi
 
@@ -86,6 +93,7 @@ enable_argocd_admin_apiKey() {
     if ! kubectl apply -f "$temp_file" -n "$namespace"; then
       echo "* Failed to apply patched CR. Exiting."
       rm -f "$temp_file"
+      echo "FAIL"
       exit 1
     fi
 
@@ -93,6 +101,7 @@ enable_argocd_admin_apiKey() {
     rm -f "$temp_file"
 
     echo "* Patch applied successfully."
+    echo "OK"
   fi
 }
 
@@ -105,6 +114,7 @@ generate_argocd_api_token() {
 
   if [[ -z "$argocd_server" ]]; then
     echo "* Could not retrieve Argo CD server route from namespace '$namespace'."
+    echo "FAIL"
     return 1
   fi
 
@@ -112,8 +122,10 @@ generate_argocd_api_token() {
     --username admin \
     --password "$ARGOCD_PASSWORD" \
     --insecure \
+    --skip-test-tls \
     --grpc-web; then
     echo "* Login failed."
+    echo "FAIL"
     return 1
   fi
 
@@ -127,6 +139,7 @@ generate_argocd_api_token() {
 
   export ARGOCD_API_TOKEN
   echo "* ARGOCD_API_TOKEN exported for this session."
+  echo "OK"
 }
 
 # create_sa_tokens: creates rhdh & k8s sa and their tokens
@@ -156,6 +169,7 @@ create_sa_tokens() {
   export RHDH_SA_TOKEN
 
   echo "* Service accounts and tokens created."
+  echo "OK"
 }
 
 # get_argocd_admin_creds: fetches argocd admin password and argocd hostname
@@ -176,6 +190,7 @@ get_argocd_admin_creds() {
   export ARGOCD_HOSTNAME
 
   echo "* Retrieved Argo CD admin credentials."
+  echo "OK"
 }
 
 # configure_cosign_signing_secret: configures signing secret
@@ -191,6 +206,7 @@ configure_cosign_signing_secret() {
   echo "* Generating new Cosign key pair into 'signing-secrets'..."
   if ! env COSIGN_PASSWORD="$random_pass" cosign generate-key-pair "k8s://$namespace/signing-secrets" >/dev/null; then
     echo "* Failed to generate cosign key pair. Exiting."
+    echo "FAIL"
     return 1
   fi
 
@@ -201,6 +217,27 @@ configure_cosign_signing_secret() {
     | kubectl apply -f - >/dev/null
 
   echo "* Cosign signing secret configured and made immutable."
+  echo "OK"
+}
+
+# create_secret: creates a secret if it doesn't exist
+create_secret() {
+  local secret_name="$1"
+  local namespace="$2"
+  local secret_spec="$3"
+
+  echo -n "* $secret_name secret in $namespace: "
+
+  if kubectl get secret "$secret_name" -n "$namespace" >/dev/null 2>&1; then
+    echo " * Already exists, skipping."
+  else
+    eval "kubectl create secret generic \"$secret_name\" \
+      --namespace=\"$namespace\" \
+      $secret_spec \
+      --dry-run=client -o yaml | kubectl apply --filename - >/dev/null"
+    echo " * Created."
+  fi
+  echo "OK"
 }
 
 # ----------- Setup ENV ----------- #
@@ -244,169 +281,113 @@ done
 echo ""
 echo "Checking for required dependencies..."
 check_dependencies
-echo "OK"
 
 # 1. Allow ArgoCD Admin to generate apiKey #
 echo ""
 echo "Setting up ArgoCD apiKey..."
 enable_argocd_admin_apiKey "$ARGOCD_NAMESPACE" "$ARGOCD_NAMESPACE"
-echo "OK"
 
 # 2. Export the ARGOCD_API_TOKEN
 echo ""
 echo "Generating the ARGOCD_API_TOKEN..."
 generate_argocd_api_token "$ARGOCD_NAMESPACE"
-echo "OK"
 
 # 3. Create project RHDH and LightSpeed Projects if they do not exist
 echo ""
 echo "Creating new project for $RHDH_NAMESPACE..."
 create_project "$RHDH_NAMESPACE"
-echo "OK"
 
 echo ""
 echo "Creating new project for $LIGHTSPEED_POSTGRES_NAMESPACE..."
 create_project $LIGHTSPEED_POSTGRES_NAMESPACE
-echo "OK"
 
 echo ""
 echo "Labeling $LIGHTSPEED_POSTGRES_NAMESPACE for ArgoCD management.."
 add_argocd_label "$LIGHTSPEED_POSTGRES_NAMESPACE"
-echo "OK"
 
 # 4. Create the necessary ServiceAccount token
 echo ""
 create_sa_tokens "$RHDH_NAMESPACE"
 echo "Creating k8s and RHDH SA tokens..."
-echo "OK"
 
 # ----------- Secrets Setup ----------- #
 echo ""
 echo "Setting up secrets on $RHDH_NAMESPACE and $PAC_NAMESPACE"
 
-SECRET_NAME="github-secrets"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=GITHUB_APP_APP_ID="$GITHUB_APP_APP_ID" \
-    --from-literal=GITHUB_APP_CLIENT_ID="$GITHUB_APP_CLIENT_ID" \
-    --from-literal=GITHUB_APP_CLIENT_SECRET="$GITHUB_APP_CLIENT_SECRET" \
-    --from-literal=GITHUB_APP_WEBHOOK_URL="$GITHUB_APP_WEBHOOK_URL" \
-    --from-literal=GITHUB_APP_WEBHOOK_SECRET="$GITHUB_APP_WEBHOOK_SECRET" \
-    --from-literal=GITHUB_APP_PRIVATE_KEY="$GITHUB_APP_PRIVATE_KEY" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# github-secrets
+create_secret "github-secrets" "$RHDH_NAMESPACE" "
+  --from-literal=GITHUB_APP_APP_ID=\$GITHUB_APP_APP_ID
+  --from-literal=GITHUB_APP_CLIENT_ID=\$GITHUB_APP_CLIENT_ID
+  --from-literal=GITHUB_APP_CLIENT_SECRET=\$GITHUB_APP_CLIENT_SECRET
+  --from-literal=GITHUB_APP_WEBHOOK_URL=\$GITHUB_APP_WEBHOOK_URL
+  --from-literal=GITHUB_APP_WEBHOOK_SECRET=\$GITHUB_APP_WEBHOOK_SECRET
+  --from-literal=GITHUB_APP_PRIVATE_KEY=\$GITHUB_APP_PRIVATE_KEY"
 
-echo "Setting up secrets on $RHDH_NAMESPACE and $PAC_NAMESPACE"
-SECRET_NAME="lightspeed-secrets"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=LIGHTSPEED_TOKEN="$LIGHTSPEED_TOKEN" \
-    --from-literal=LIGHTSPEED_URL="$LIGHTSPEED_URL" \
-    --from-literal=OLLAMA_URL="$OLLAMA_URL" \
-    --from-literal=OLLAMA_TOKEN="$OLLAMA_TOKEN" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# lightspeed-secrets
+create_secret "lightspeed-secrets" "$RHDH_NAMESPACE" "
+  --from-literal=LIGHTSPEED_TOKEN=\$LIGHTSPEED_TOKEN
+  --from-literal=LIGHTSPEED_URL=\$LIGHTSPEED_URL
+  --from-literal=OLLAMA_URL=\$OLLAMA_URL
+  --from-literal=OLLAMA_TOKEN=\$OLLAMA_TOKEN"
 
-SECRET_NAME="kubernetes-secrets"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=K8S_CLUSTER_TOKEN="$K8S_CLUSTER_TOKEN" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# kubernetes-secrets
+create_secret "kubernetes-secrets" "$RHDH_NAMESPACE" "
+  --from-literal=K8S_CLUSTER_TOKEN=\$K8S_CLUSTER_TOKEN"
 
-SECRET_NAME="rolling-demo-postgresql"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=postgres-password="$POSTGRESQL_POSTGRES_PASSWORD" \
-    --from-literal=password="$POSTGRESQL_USER_PASSWORD" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# rolling-demo-postgresql
+create_secret "rolling-demo-postgresql" "$RHDH_NAMESPACE" "
+  --from-literal=postgres-password=\$POSTGRESQL_POSTGRES_PASSWORD
+  --from-literal=password=\$POSTGRESQL_USER_PASSWORD"
 
-SECRET_NAME="quay-pull-secret"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=.dockerconfigjson="$QUAY_DOCKERCONFIGJSON" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# quay-pull-secret
+create_secret "quay-pull-secret" "$RHDH_NAMESPACE" "
+  --from-literal=.dockerconfigjson=\$QUAY_DOCKERCONFIGJSON"
 
-SECRET_NAME="keycloak-secrets"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=KEYCLOAK_METADATA_URL="$KEYCLOAK_METADATA_URL" \
-    --from-literal=KEYCLOAK_CLIENT_ID="$KEYCLOAK_CLIENT_ID" \
-    --from-literal=KEYCLOAK_REALM="$KEYCLOAK_REALM" \
-    --from-literal=KEYCLOAK_BASE_URL="$KEYCLOAK_BASE_URL" \
-    --from-literal=KEYCLOAK_LOGIN_REALM="$KEYCLOAK_LOGIN_REALM" \
-    --from-literal=KEYCLOAK_CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# keycloak-secrets
+create_secret "keycloak-secrets" "$RHDH_NAMESPACE" "
+  --from-literal=KEYCLOAK_METADATA_URL=\$KEYCLOAK_METADATA_URL
+  --from-literal=KEYCLOAK_CLIENT_ID=\$KEYCLOAK_CLIENT_ID
+  --from-literal=KEYCLOAK_REALM=\$KEYCLOAK_REALM
+  --from-literal=KEYCLOAK_BASE_URL=\$KEYCLOAK_BASE_URL
+  --from-literal=KEYCLOAK_LOGIN_REALM=\$KEYCLOAK_LOGIN_REALM
+  --from-literal=KEYCLOAK_CLIENT_SECRET=\$KEYCLOAK_CLIENT_SECRET"
 
-SECRET_NAME="secrets-rhdh"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=BACKEND_SECRET="$BACKEND_SECRET" \
-    --from-literal=ADMIN_TOKEN="$RHDH_SA_TOKEN" \
-    --from-literal=RHDH_BASE_URL="$RHDH_BASE_URL" \
-    --from-literal=RHDH_CALLBACK_URL="$RHDH_CALLBACK_URL" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# rhdh-secrets
+create_secret "rhdh-secrets" "$RHDH_NAMESPACE" "
+  --from-literal=BACKEND_SECRET=\$BACKEND_SECRET
+  --from-literal=ADMIN_TOKEN=\$RHDH_SA_TOKEN
+  --from-literal=RHDH_BASE_URL=\$RHDH_BASE_URL
+  --from-literal=RHDH_CALLBACK_URL=\$RHDH_CALLBACK_URL"
 
-SECRET_NAME="ai-rh-developer-hub-env"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=NODE_TLS_REJECT_UNAUTHORIZED="0" \
-    --from-literal=RHDH_TOKEN="$RHDH_SA_TOKEN" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# ai-rh-developer-hub-env
+create_secret "ai-rh-developer-hub-env" "$RHDH_NAMESPACE" "
+  --from-literal=NODE_TLS_REJECT_UNAUTHORIZED=0
+  --from-literal=RHDH_TOKEN=\$RHDH_SA_TOKEN"
 
-SECRET_NAME="argocd-secrets"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=ARGOCD_USER="$ARGOCD_USER" \
-    --from-literal=ARGOCD_PASSWORD="$ARGOCD_PASSWORD" \
-    --from-literal=ARGOCD_HOSTNAME="$ARGOCD_HOSTNAME" \
-    --from-literal=ARGOCD_API_TOKEN="$ARGOCD_API_TOKEN" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# argocd-secrets
+create_secret "argocd-secrets" "$RHDH_NAMESPACE" "
+  --from-literal=ARGOCD_USER=\$ARGOCD_USER
+  --from-literal=ARGOCD_PASSWORD=\$ARGOCD_PASSWORD
+  --from-literal=ARGOCD_HOSTNAME=\$ARGOCD_HOSTNAME
+  --from-literal=ARGOCD_API_TOKEN=\$ARGOCD_API_TOKEN"
 
-SECRET_NAME="pipelines-as-code-secret"
-echo -n "* $SECRET_NAME secret: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$PAC_NAMESPACE" \
-    --from-literal=github-application-id="$GITHUB_APP_APP_ID" \
-    --from-literal=github-private-key="$GITHUB_APP_PRIVATE_KEY" \
-    --from-literal=webhook.secret="$GITHUB_APP_WEBHOOK_SECRET" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# pipelines-as-code-secret
+create_secret "pipelines-as-code-secret" "$PAC_NAMESPACE" "
+  --from-literal=github-application-id=\$GITHUB_APP_APP_ID
+  --from-literal=github-private-key=\$GITHUB_APP_PRIVATE_KEY
+  --from-literal=webhook.secret=\$GITHUB_APP_WEBHOOK_SECRET"
 
-SECRET_NAME="lightspeed-postgres-info"
-echo -n "* $SECRET_NAME secret in $LIGHTSPEED_POSTGRES_NAMESPACE: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$LIGHTSPEED_POSTGRES_NAMESPACE" \
-    --from-literal=user="$LIGHTSPEED_POSTGRES_USER" \
-    --from-literal=password="$LIGHTSPEED_POSTGRES_PASSWORD" \
-    --from-literal=db-name="$LIGHTSPEED_POSTGRES_DB" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# lightspeed-postgres-info in LIGHTSPEED_POSTGRES_NAMESPACE
+create_secret "lightspeed-postgres-info" "$LIGHTSPEED_POSTGRES_NAMESPACE" "
+  --from-literal=user=\$LIGHTSPEED_POSTGRES_USER
+  --from-literal=password=\$LIGHTSPEED_POSTGRES_PASSWORD
+  --from-literal=db-name=\$LIGHTSPEED_POSTGRES_DB"
 
-SECRET_NAME="lightspeed-postgres-info"
-echo -n "* $SECRET_NAME secret in $RHDH_NAMESPACE: "
-kubectl create secret generic "$SECRET_NAME" \
-    --namespace="$RHDH_NAMESPACE" \
-    --from-literal=user="$LIGHTSPEED_POSTGRES_USER" \
-    --from-literal=password="$LIGHTSPEED_POSTGRES_PASSWORD" \
-    --from-literal=db-name="$LIGHTSPEED_POSTGRES_DB" \
-    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
-echo "OK"
+# lightspeed-postgres-info in RHDH_NAMESPACE
+create_secret "lightspeed-postgres-info" "$RHDH_NAMESPACE" "
+  --from-literal=user=\$LIGHTSPEED_POSTGRES_USER
+  --from-literal=password=\$LIGHTSPEED_POSTGRES_PASSWORD
+  --from-literal=db-name=\$LIGHTSPEED_POSTGRES_DB"
 
 # ------------- Setup Openshift Pipelines ------------- #
 # Configure cosign

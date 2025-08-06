@@ -307,8 +307,8 @@ kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
     --from-literal=OLLAMA_URL="$OLLAMA_URL" \
     --from-literal=OLLAMA_TOKEN="$OLLAMA_TOKEN" \
-    --from-literal=LIGHTSPEED_TOKEN='"$LIGHTSPEED_TOKEN"' \
-    --from-literal=LIGHTSPEED_URL='"$LIGHTSPEED_URL"' \
+    --from-literal=LIGHTSPEED_TOKEN="$LIGHTSPEED_TOKEN" \
+    --from-literal=LIGHTSPEED_URL="$LIGHTSPEED_URL" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 

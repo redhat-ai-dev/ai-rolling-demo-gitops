@@ -148,7 +148,7 @@ create_sa_tokens() {
     --serviceaccount="$namespace:k8s-sa" \
     --namespace="$namespace" 2>/dev/null || echo "* Role binding already exists."
 
-  kubectl create rolebinding k8s-admin-binding \
+  kubectl create rolebinding k8s-reader-binding \
     --clusterrole=cluster-reader \
     --serviceaccount="$namespace:k8s-sa" \
     --namespace="$namespace" 2>/dev/null || echo "* Role binding already exists."

@@ -69,12 +69,15 @@ export QUAY_DOCKERCONFIGJSON="your-quay.io-dockerconfig.json"
 # KeyCloak (RH SSO) secrets
 # In this area you can point to an already existing keycloak instance.
 # Could be an instance external to your cluster.
-export KEYCLOAK_METADATA_URL="your-instance's-url/auth/realms/your-realm"
+# Note: The instance url is the route to your OCP keycloak deployment
+export KEYCLOAK_METADATA_URL="{your-instance's-url}/auth/realms/your-realm"
 export KEYCLOAK_CLIENT_ID="your-client-id"
-export KEYCLOAK_REALM="your-realm"
-export KEYCLOAK_BASE_URL="your-instance's-url/auth"
-export KEYCLOAK_LOGIN_REALM="your-realm"
 export KEYCLOAK_CLIENT_SECRET="your-secret"
+# KEYCLOAK_REALM: The realm you want to use for your deployment.
+# Check more info for realms here: https://www.keycloak.org/docs/latest/server_admin/index.html#_configuring-realms
+export KEYCLOAK_REALM="your-realm"
+export KEYCLOAK_LOGIN_REALM=${KEYCLOAK_REALM}
+export KEYCLOAK_BASE_URL="{your-instance's-url}/auth"
 
 # Ollama secrets
 # Again here is ok to use an existing ollama service external to

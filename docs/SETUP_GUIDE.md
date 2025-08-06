@@ -51,8 +51,10 @@ export ARGOCD_USER="your-user" # default value is "admin"
 
 # RHDH secrets
 export BACKEND_SECRET="a-randomly-generated-string"
-export RHDH_CLUSTER_ROUTER_BASE="example: apps.mycluster.openshift.com"
-export RHDH_BASE_URL="https://rolling-demo-backstage-rolling-demo-ns.${RHDH_CLUSTER_ROUTER_BASE}" # this is the route for the RHDH console 
+# RHDH_CLUSTER_ROUTER_BASE: should contain the domain suffix of all the
+# OCP routes.
+export RHDH_CLUSTER_ROUTER_BASE="apps.mycluster.openshift.com"
+export RHDH_BASE_URL="https://rolling-demo-backstage-rolling-demo-ns.${RHDH_CLUSTER_ROUTER_BASE}" # this is the route for the RHDH console
 export RHDH_CALLBACK_URL="${RHDH_BASE_URL}/api/auth/oidc/handler/frame"
 
 # RHDH Postgres Secrets - any valid password strings for these two env vars will do

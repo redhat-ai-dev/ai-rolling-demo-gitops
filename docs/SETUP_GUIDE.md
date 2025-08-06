@@ -79,14 +79,16 @@ export KEYCLOAK_REALM="your-realm"
 export KEYCLOAK_LOGIN_REALM=${KEYCLOAK_REALM}
 export KEYCLOAK_BASE_URL="{your-instance's-url}/auth"
 
+# NOTE: For Ollama & Lightspeed we rely on 3Scale. Therefore,
+# to setup your Ollama & Lightspeed tokens & urls you'll need
+# first to register an application on the 3Scale service.
+# Check more info here: https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/2.11/html/getting_started/first-steps-with-threescale_configuring-your-api
+
 # Ollama secrets
-# Again here is ok to use an existing ollama service external to
-# your cluster
 export OLLAMA_TOKEN="your-ollama-token"
 export OLLAMA_URL="ollama-url"
 
 # Lightspeed secrets
-# Same as keycloak and ollama here you can use an external instance
 export LIGHTSPEED_URL="your-lightspeed-token"
 export LIGHTSPEED_TOKEN="lightspeed-url"
 

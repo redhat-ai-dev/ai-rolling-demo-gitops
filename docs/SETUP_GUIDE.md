@@ -68,8 +68,7 @@ export QUAY_DOCKERCONFIGJSON="your-quay.io-dockerconfig.json"
 
 # KeyCloak (RH SSO) secrets
 # In this area you can point to an already existing keycloak instance.
-# Could be an instance external to your cluster.
-# Note: The instance url is the route to your OCP keycloak deployment
+# As per RHDHPAI use case please refer to the already existing secrets in our Dev Instance.
 export KEYCLOAK_METADATA_URL="{your-instance's-url}/auth/realms/your-realm"
 export KEYCLOAK_CLIENT_ID="your-client-id"
 export KEYCLOAK_CLIENT_SECRET="your-secret"
@@ -83,6 +82,7 @@ export KEYCLOAK_BASE_URL="{your-instance's-url}/auth"
 # to setup your Ollama & Lightspeed tokens & urls you'll need
 # first to register an application on the 3Scale service.
 # Check more info here: https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/2.11/html/getting_started/first-steps-with-threescale_configuring-your-api
+# As per RHDHPAI use case please refer to the already existing secrets in our Dev Instance.
 
 # Ollama secrets
 export OLLAMA_TOKEN="your-ollama-token"

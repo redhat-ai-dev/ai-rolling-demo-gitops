@@ -7,6 +7,14 @@ global:
         disabled: true
       - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
         disabled: true
+      - package: oci://quay.io/tpetkos/customized-sign-in-page:v0.1.0!red-hat-developer-hub-backstage-plugin-customized-sign-in-page
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-customized-sign-in-page:
+                signInPage:
+                  importName: CustomizedSignInPage
       - package: oci://quay.io/karthik_jk/global-header:latest!red-hat-developer-hub-backstage-plugin-global-header
         disabled: false
         pluginConfig:
@@ -261,35 +269,6 @@ global:
         package: oci://quay.io/karthik_jk/lightspeed:latest!red-hat-developer-hub-backstage-plugin-lightspeed-backend
       - disabled: true
         package: ./dynamic-plugins/dist/backstage-community-plugin-analytics-provider-segment
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-adoption-insights:bs_1.35.1__0.0.3!red-hat-developer-hub-backstage-plugin-adoption-insights
-        disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-adoption-insights:
-                appIcons:
-                  - name: adoptionInsightsIcon
-                    importName: AdoptionInsightsIcon
-                dynamicRoutes:
-                  - path: /adoption-insights
-                    importName: AdoptionInsightsPage
-                    menuItem:
-                      icon: adoptionInsightsIcon
-                      text: Adoption Insights
-                menuItems:
-                  adoption-insights:
-                    parent: admin
-                    icon: adoptionInsightsIcon
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-adoption-insights-backend:bs_1.35.1__0.0.4!red-hat-developer-hub-backstage-plugin-adoption-insights-backend
-        disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights:bs_1.35.1__0.0.2!red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights
-        disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-analytics-module-adoption-insights:
-                apiFactories:
-                  - importName: AdoptionInsightsAnalyticsApiFactory
       - disabled: false
         package: oci://quay.io/redhat-ai-dev/ai-integrations-rhdh:latest!red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog
       - disabled: false
@@ -322,7 +301,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.6"
+        tag: "1.7-131"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -343,6 +322,15 @@ backstage:
           providers:
             oidc:
               production:
+                metadataUrl: "${KEYCLOAK_METADATA_URL}"
+                clientId: "${KEYCLOAK_CLIENT_ID}"
+                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+                callbackUrl: "${RHDH_CALLBACK_URL}"
+                prompt: auto
+                signIn:
+                  resolvers:
+                    - resolver: preferredUsernameMatchingUserEntityName
+              development:
                 metadataUrl: "${KEYCLOAK_METADATA_URL}"
                 clientId: "${KEYCLOAK_CLIENT_ID}"
                 clientSecret: "${KEYCLOAK_CLIENT_SECRET}"

@@ -43,6 +43,10 @@ export KEYCLOAK_CLIENT_SECRET=
 export OLLAMA_TOKEN=
 export OLLAMA_URL=
 
+# Lightspeed secrets
+export LIGHTSPEED_URL=
+export LIGHTSPEED_TOKEN=
+
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD=
 export LIGHTSPEED_POSTGRES_USER=

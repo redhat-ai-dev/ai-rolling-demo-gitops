@@ -72,7 +72,7 @@ export QUAY_DOCKERCONFIGJSON="your-quay.io-dockerconfig.json"
 # Hint:: As per RHDHPAI use case You could replace the values below with the ones in
 # the Dev Instance: https://console-openshift-console.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
 # Namespace: rolling-demo-ns and Secret: keycloak-secrets.
-Remember to Base64 Decode the values for the various environment variables stored in the `keycloak-secrets`.
+# Remember to Base64 Decode the values for the various environment variables stored in the `keycloak-secrets`.
 export KEYCLOAK_CLIENT_ID="your-client-id"
 export KEYCLOAK_CLIENT_SECRET="your-secret"
 # KEYCLOAK_REALM: The realm you want to use for your deployment.

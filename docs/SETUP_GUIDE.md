@@ -90,7 +90,8 @@ export KEYCLOAK_BASE_URL="https://keycloak-rh-sso.apps.rosa.redhat-ai-dev.m6no.p
 # Ollama secrets
 # Hint:: Per RHDHPAI case the Lightspeed and Ollama tokens can be found in https://console-openshift-console.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
 # Namespace: rolling-demo-ns
-# Secret: lightspeed-secrets (keys are identical with the env var names below)
+# Secret: lightspeed-secrets (keys are identical with the env var names below).
+Remember to Base64 Decode the values for the various environment variables stored in the `keycloak-secrets`.
 export OLLAMA_TOKEN="your-ollama-token"
 export OLLAMA_URL="https://ollama-model-service-apicast-production.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com:443/v1"
 

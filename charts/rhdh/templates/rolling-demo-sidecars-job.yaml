@@ -85,7 +85,9 @@ spec:
               {
                 "name": "rhoai-normalizer",
                 "args": [
-                   "-metrics-address=:8888"
+                   "-metrics-address=:8888",
+                   "-zap-log-level=6",
+                   "-v=6"
                 ],
                 "env": [
                   { "name": "NORMALIZER_FORMAT", "value": "JsonArrayFormat" },

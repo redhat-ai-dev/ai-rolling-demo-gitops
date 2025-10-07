@@ -307,7 +307,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.7-131"
+        tag: "1.8"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -346,12 +346,20 @@ backstage:
                   resolvers:
                     - resolver: preferredUsernameMatchingUserEntityName
         backend:
+          actions:
+            pluginSources:
+              - 'software-catalog-mcp-tool'
+              - 'techdocs-mcp-tool'
           auth:
             externalAccess:
               - type: static
                 options:
                   token: ${ADMIN_TOKEN}
                   subject: admin-curl-access
+              - type: static
+                options:
+                  token: ${MCP_TOKEN}
+                  subject: mcp-clients
             keys:
               - secret: "${BACKEND_SECRET}"
           baseUrl: "${RHDH_BASE_URL}"

@@ -141,7 +141,7 @@ create_sa_tokens() {
   local namespace="$1"
   kubectl create serviceaccount k8s-sa -n "$namespace" 2>/dev/null || echo "* 'k8s-sa' already exists."
   kubectl create serviceaccount rhdh-sa -n "$namespace" 2>/dev/null || echo "*  'rhdh-sa' already exists."
-  kubectl create serviceaccount mcp-actions-sa -n "$namespace" 2>/dev/null || echo "*  'rhdh-sa' already exists."
+  kubectl create serviceaccount mcp-actions-sa -n "$namespace" 2>/dev/null || echo "*  'mcp-actions-sa' already exists."
 
   echo "* Creating role binding for 'k8s-sa'..."
   kubectl create rolebinding k8s-admin-binding \

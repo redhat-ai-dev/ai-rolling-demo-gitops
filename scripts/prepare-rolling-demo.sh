@@ -141,6 +141,7 @@ create_sa_tokens() {
   local namespace="$1"
   kubectl create serviceaccount k8s-sa -n "$namespace" 2>/dev/null || echo "* 'k8s-sa' already exists."
   kubectl create serviceaccount rhdh-sa -n "$namespace" 2>/dev/null || echo "*  'rhdh-sa' already exists."
+  kubectl create serviceaccount mcp-actions-sa -n "$namespace" 2>/dev/null || echo "*  'rhdh-sa' already exists."
 
   echo "* Creating role binding for 'k8s-sa'..."
   kubectl create rolebinding k8s-admin-binding \
@@ -159,8 +160,12 @@ create_sa_tokens() {
   echo "* Creating token for 'rhdh-sa'..."
   RHDH_SA_TOKEN=$(kubectl create token rhdh-sa -n "$namespace")
 
+  echo "* Creating token for 'mcp-actions-sa'..."
+  MCP_TOKEN=$(kubectl create token mcp-actions-sa -n "$namespace")
+
   export K8S_CLUSTER_TOKEN
   export RHDH_SA_TOKEN
+  export MCP_TOKEN
 
   echo "* Service accounts and tokens created."
   echo "OK"
@@ -356,6 +361,7 @@ kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
     --from-literal=BACKEND_SECRET="$BACKEND_SECRET" \
     --from-literal=ADMIN_TOKEN="$RHDH_SA_TOKEN" \
+    --from-literal=MCP_TOKEN="$MCP_TOKEN" \
     --from-literal=RHDH_BASE_URL="$RHDH_BASE_URL" \
     --from-literal=RHDH_CALLBACK_URL="$RHDH_CALLBACK_URL" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null

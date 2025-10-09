@@ -75,7 +75,6 @@ spec:
                 ],
                 "image": "quay.io/redhat-ai-dev/model-catalog-storage-rest:latest",
                 "imagePullPolicy": "Always",
-                "ports": [{ "containerPort": 9090, "name": "storage", "protocol": "TCP" }],
                 "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
                 "workingDir": "/opt/app-root/src"
               }
@@ -101,7 +100,6 @@ spec:
                 ],
                 "image": "quay.io/redhat-ai-dev/model-catalog-rhoai-normalizer:latest",
                 "imagePullPolicy": "Always",
-                "ports": [{ "containerPort": 9090, "name": "normalizer", "protocol": "TCP" }],
                 "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
                 "workingDir": "/opt/app-root/src"
               }

@@ -249,11 +249,15 @@ global:
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-org-dynamic
       - disabled: false
-        package: oci://quay.io/karthik_jk/lightspeed:latest!red-hat-developer-hub-backstage-plugin-lightspeed
+        package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:next__1.0.0!red-hat-developer-hub-backstage-plugin-lightspeed
         pluginConfig:
           dynamicPlugins:
             frontend:
               red-hat-developer-hub.backstage-plugin-lightspeed:
+                translationResources:
+                  - importName: lightspeedTranslations
+                    module: Alpha
+                    ref: lightspeedTranslationRef
                 appIcons:
                   - name: LightspeedIcon
                     module: LightspeedPlugin
@@ -266,13 +270,13 @@ global:
                       icon: LightspeedIcon
                       text: Lightspeed
       - disabled: false
-        package: oci://quay.io/karthik_jk/lightspeed:latest!red-hat-developer-hub-backstage-plugin-lightspeed-backend
+        package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:next__1.0.0!red-hat-developer-hub-backstage-plugin-lightspeed-backend
       - disabled: false
         package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:next__0.1.2!backstage-plugin-mcp-actions-backend
       - disabled: false
-        package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-tool:next__0.2.1!red-hat-developer-hub-backstage-plugin-software-catalog-mcp-tool
+        package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-tool:next__0.2.2!red-hat-developer-hub-backstage-plugin-software-catalog-mcp-tool
       - disabled: false
-        package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-tool:next__0.2.0!red-hat-developer-hub-backstage-plugin-techdocs-mcp-tool
+        package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-tool:next__0.2.1!red-hat-developer-hub-backstage-plugin-techdocs-mcp-tool
       - disabled: true
         package: ./dynamic-plugins/dist/backstage-community-plugin-analytics-provider-segment
       - disabled: false
@@ -309,7 +313,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.8"
+        tag: "1.8-143"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -454,9 +458,8 @@ backstage:
         lightspeed:
           servers:
           - id: team_cluster
-            url: "${OLLAMA_URL}"
-            token: "${OLLAMA_TOKEN}"
-            type: "openai"
+            url: "${VLLM_URL}"
+            token: "${VLLM_API_KEY}"
         integrations:
           github:
             - apps:
@@ -550,6 +553,7 @@ backstage:
         - keycloak-secrets
         - argocd-secrets
         - lightspeed-secrets
+        - llama-stack-secrets
       args:
         - "--config"
         - dynamic-plugins-root/app-config.dynamic-plugins.yaml
@@ -576,6 +580,14 @@ backstage:
             defaultMode: 420
             optional: true
             secretName: dynamic-plugins-npmrc
+        - name: lightspeed-stack
+          configMap:
+            name: lightspeed-stack
+        - name: shared-storage
+          emptyDir: {}
+        - name: rag-data-volume
+          emptyDir: {}
+        # TODO: Remove this once road-core container has been removed
         - name: rcsconfig
           configMap:
             name: rcsconfig
@@ -605,6 +617,15 @@ backstage:
               name: dynamic-plugins-npmrc
               readOnly: true
               subPath: .npmrc
+        - name: init-rag-data
+          image: 'quay.io/redhat-ai-dev/rag-content:release-1.7-lcs'
+          command:
+            - "sh"
+            - "-c"
+            - "echo 'Copying RAG data...'; cp -r /rag/vector_db/rhdh_product_docs /data/ && cp -r /rag/embeddings_model /data/ && echo 'Copy complete.'"
+          volumeMounts:
+            - mountPath: /data
+              name: rag-data-volume
       installDir: /opt/app-root/src
       podAnnotations:
         checksum/dynamic-plugins: >-

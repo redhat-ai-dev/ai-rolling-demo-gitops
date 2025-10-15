@@ -245,8 +245,10 @@ ENV_VARS=(
   "KEYCLOAK_CLIENT_SECRET" \
   "OLLAMA_URL" \
   "OLLAMA_TOKEN" \
-  "LIGHTSPEED_TOKEN" \
-  "LIGHTSPEED_URL" \
+  "VLLM_URL" \
+  "VLLM_API_KEY" \
+  "VALIDATION_PROVIDER" \
+  "VALIDATION_MODEL_NAME" \
 )
 for ENV_VAR in "${ENV_VARS[@]}"; do
   if [ -z "${!ENV_VAR}" ]; then
@@ -312,8 +314,17 @@ kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
     --from-literal=OLLAMA_URL="$OLLAMA_URL" \
     --from-literal=OLLAMA_TOKEN="$OLLAMA_TOKEN" \
-    --from-literal=LIGHTSPEED_TOKEN="$LIGHTSPEED_TOKEN" \
-    --from-literal=LIGHTSPEED_URL="$LIGHTSPEED_URL" \
+    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
+echo "OK"
+
+SECRET_NAME="llama-stack-secrets"
+echo -n "* $SECRET_NAME secret: "
+kubectl create secret generic "$SECRET_NAME" \
+    --namespace="$RHDH_NAMESPACE" \
+    --from-literal=VLLM_URL="$VLLM_URL" \
+    --from-literal=VLLM_API_KEY="$VLLM_API_KEY" \
+    --from-literal=VALIDATION_PROVIDER="$VALIDATION_PROVIDER" \
+    --from-literal=VALIDATION_MODEL_NAME="$VALIDATION_MODEL_NAME" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 echo "OK"
 

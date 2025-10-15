@@ -105,23 +105,31 @@ spec:
               }
               EOF
 
-              cat > "${TEMP_DIR}/road-core-sidecar.json" <<EOF
+              cat > "${TEMP_DIR}/llama-stack-sidecar.json" <<EOF
               {
-                "name": "road-core-sidecar",
-                "env": [
-                  { "name": "PROJECT", "value": "rhdh" },
-                  { "name": "RCS_CONFIG_FILE", "value": "/app-root/config/rcsconfig.yaml" },
-                  { "name": "RHDH_CONFIG_FILE", "value": "/app-root/config/app-config-rhdh.yaml" }
-                ],
+                "name": "llama-stack",
                 "envFrom": [
-                  { "secretRef": { "name": "lightspeed-secrets" } }
+                  { "secretRef": { "name": "llama-stack-secrets" } }
                 ],
-                "image": "quay.io/redhat-ai-dev/road-core-service:latest",
-                "ports": [{ "containerPort": 8080, "name": "rcs-backend", "protocol": "TCP" }],
+                "image": "quay.io/redhat-ai-dev/llama-stack:latest",
+                "imagePullPolicy": "Always",
                 "volumeMounts": [
-                  { "mountPath": "/app-root/config/rcsconfig.yaml", "name": "rcsconfig", "subPath": "rcsconfig.yaml" },
-                  { "mountPath": "/app-root/config/app-config-rhdh.yaml", "name": "app-config-rhdh", "subPath": "app-config.yaml" },
-                  { "mountPath": "/app-root/tmp/data/feedback", "name": "shared-data" }
+                  { "mountPath": "/app-root/.llama", "name": "shared-storage" },
+                  { "mountPath": "/app-root/embeddings_model", "name": "rag-data-volume", "subPath": "embeddings_model" },
+                  { "mountPath": "/app-root/vector_db/rhdh_product_docs", "name": "rag-data-volume", "subPath": "rhdh_product_docs" }
+                ]
+              }
+              EOF
+
+              cat > "${TEMP_DIR}/lightspeed-core-sidecar.json" <<EOF
+              {
+                "name": "lightspeed-core",
+                "image": "quay.io/lightspeed-core/lightspeed-stack:latest",
+                "imagePullPolicy": "Always",
+                "ports": [{ "containerPort": 8080, "name": "lcs-backend", "protocol": "TCP" }],
+                "volumeMounts": [
+                  { "mountPath": "/app-root/lightspeed-stack.yaml", "name": "lightspeed-stack", "subPath": "lightspeed-stack.yaml" },
+                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
                 ]
               }
               EOF
@@ -135,12 +143,12 @@ spec:
                   { "name": "PGDATABASE", "valueFrom": { "secretKeyRef": { "name": "lightspeed-postgres-info", "key": "db-name" } } },
                   { "name": "PGHOST", "value": "lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local" },
                   { "name": "PGPORT", "value": "5432" },
-                  { "name": "FEEDBACK_DIRECTORY", "value": "/app-root/tmp/data/feedback" },
+                  { "name": "FEEDBACK_DIRECTORY", "value": "/tmp/data/feedback" },
                   { "name": "FETCH_FREQUENCY", "value": "60" }
                 ],
                 "image": "quay.io/redhat-ai-dev/feedback-harvester:v0.1.0",
                 "volumeMounts": [
-                  { "mountPath": "/app-root/tmp/data/feedback", "name": "shared-data" }
+                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
                 ]
               }
               EOF
@@ -153,11 +161,18 @@ spec:
                 local path=$2
                 local json_file=$3
                 local is_last=$4
-                
+
                 echo "  {" >> "$PATCH_FILE"
                 echo "    \"op\": \"$operation\"," >> "$PATCH_FILE"
-                echo "    \"path\": \"$path\"," >> "$PATCH_FILE"
-                echo "    \"value\": $(cat $json_file)" >> "$PATCH_FILE"
+
+                # Only add value field if it's not a remove operation
+                if [ "$operation" != "remove" ]; then
+                  echo "    \"path\": \"$path\"," >> "$PATCH_FILE"
+                  echo "    \"value\": $(cat $json_file)" >> "$PATCH_FILE"
+                else
+                  echo "    \"path\": \"$path\"" >> "$PATCH_FILE"
+                fi
+
                 if [ "$is_last" = "true" ]; then
                   echo "  }" >> "$PATCH_FILE"
                 else
@@ -166,6 +181,7 @@ spec:
               }
 
               # check action for each one of the containers
+              # Location: Add/Replace
               if echo "$CONTAINERS" | grep -q '"location"'; then
                 echo "Container 'location' already exists, will replace..."
                 LOCATION_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "location") | index(true)')
@@ -175,6 +191,7 @@ spec:
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/location.json" "false"
               fi
 
+              # Storage REST: Add/Replace
               if echo "$CONTAINERS" | grep -q '"storage-rest"'; then
                 echo "Container 'storage-rest' already exists, will replace..."
                 STORAGE_REST_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "storage-rest") | index(true)')
@@ -184,6 +201,7 @@ spec:
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/storage-rest.json" "false"
               fi
 
+              # RHOAI Normalizer: Add/Replace
               if echo "$CONTAINERS" | grep -q '"rhoai-normalizer"'; then
                 echo "Container 'rhoai-normalizer' already exists, will replace..."
                 RHOAI_NORMALIZER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "rhoai-normalizer") | index(true)')
@@ -193,22 +211,54 @@ spec:
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "false"
               fi
 
+              # NOTE: Temporary/one-off removal for road-core-sidecar to avoid downtime
+              # This part will be removed after the new containers are in place.
               if echo "$CONTAINERS" | grep -q '"road-core-sidecar"'; then
-                echo "Container 'road-core-sidecar' already exists, will replace..."
+                echo "Container 'road-core-sidecar' exists, will be replaced by new containers..."
                 ROAD_CORE_SIDECAR_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "road-core-sidecar") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$ROAD_CORE_SIDECAR_INDEX" "${TEMP_DIR}/road-core-sidecar.json" "false"
-              else
-                echo "Container 'road-core-sidecar' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/road-core-sidecar.json" "false"
+                add_patch_operation "remove" "/spec/template/spec/containers/$ROAD_CORE_SIDECAR_INDEX" "" "false"
               fi
 
+              # Lightspeed Core: Add/Replace
+              if echo "$CONTAINERS" | grep -q '"lightspeed-core"'; then
+                echo "Container 'lightspeed-core' already exists, will replace..."
+                LIGHTSPEED_CORE_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
+                add_patch_operation "replace" "/spec/template/spec/containers/$LIGHTSPEED_CORE_INDEX" "${TEMP_DIR}/lightspeed-core-sidecar.json" "false"
+              else
+                echo "Container 'lightspeed-core' does not exist, will add..."
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/lightspeed-core-sidecar.json" "false"
+              fi
+
+              # Feedback Harvester: Add/Replace
               if echo "$CONTAINERS" | grep -q '"feedback-harvester"'; then
                 echo "Container 'feedback-harvester' already exists, will replace..."
                 FEEDBACK_HARVESTER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "feedback-harvester") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
+
+                # NOTE: Temporary/one-off adjustment of container indices
+                # This part will be removed after the new containers are in place.
+                # Adjust index if road-core-sidecar was removed before feedback-harvester
+                if echo "$CONTAINERS" | grep -q '"road-core-sidecar"'; then
+                  ROAD_CORE_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "road-core-sidecar") | index(true)')
+                  if [ "$ROAD_CORE_INDEX" -lt "$FEEDBACK_HARVESTER_INDEX" ]; then
+                    echo "Adjusting feedback-harvester index due to road-core-sidecar removal..."
+                    FEEDBACK_HARVESTER_INDEX=$((FEEDBACK_HARVESTER_INDEX - 1))
+                  fi
+                fi
+
+                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "false"
               else
                 echo "Container 'feedback-harvester' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "false"
+              fi
+
+              # Llama Stack: Add/Replace
+              if echo "$CONTAINERS" | grep -q '"llama-stack"'; then
+                echo "Container 'llama-stack' already exists, will replace..."
+                LLAMA_STACK_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "llama-stack") | index(true)')
+                add_patch_operation "replace" "/spec/template/spec/containers/$LLAMA_STACK_INDEX" "${TEMP_DIR}/llama-stack-sidecar.json" "true"
+              else
+                echo "Container 'llama-stack' does not exist, will add..."
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/llama-stack-sidecar.json" "true"
               fi
 
               echo "]" >> "$PATCH_FILE"

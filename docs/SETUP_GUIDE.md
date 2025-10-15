@@ -91,13 +91,20 @@ export KEYCLOAK_BASE_URL="https://keycloak-rh-sso.apps.rosa.redhat-ai-dev.m6no.p
 # Hint:: Per RHDHPAI case the Lightspeed and Ollama tokens can be found in https://console-openshift-console.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
 # Namespace: rolling-demo-ns
 # Secret: lightspeed-secrets (keys are identical with the env var names below).
-# Remember to Base64 Decode the values for the various environment variables stored in the `keycloak-secrets`.
+# Remember to Base64 Decode the values for the various environment variables stored in the `lightpseed-secrets`.
 export OLLAMA_TOKEN="your-ollama-token"
 export OLLAMA_URL="https://ollama-model-service-apicast-production.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com:443/v1"
 
-# Lightspeed secrets
-export LIGHTSPEED_URL="your-lightspeed-token"
-export LIGHTSPEED_TOKEN="https://ibm-granite-8b-code-instruct-3scale-apicast-production.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com"
+# Llama Stack secrets (for Lightspeed Core Service)
+# Hint:: Per RHDHPAI case the Llama Stack tokens can be found in https://console-openshift-console.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
+# Secret: llama-stack-secrets (keys are identical with the env var names below).
+# Remember to Base64 Decode the values for the various environment variables stored in the `llama-stack-secrets`.
+export VLLM_URL="https://meta-llama-31-8b-3scale-apicast-production.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com:443/v1"
+export VLLM_API_KEY="your-llama-stack-token"
+# VALIDATION_PROVIDER: The LLM provider type - must be one of: vllm, ollama, openai
+export VALIDATION_PROVIDER="vllm"
+# VALIDATION_MODEL_NAME: The name of the model to use for validation
+export VALIDATION_MODEL_NAME="llama-31-8b-version1"
 
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD="your-preffered-lightspeed-psql-password"

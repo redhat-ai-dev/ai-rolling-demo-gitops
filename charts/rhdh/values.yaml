@@ -455,11 +455,6 @@ backstage:
                 signIn:
                   resolvers:
                     - resolver: emailMatchingUserEntityProfileEmail
-        lightspeed:
-          servers:
-          - id: team_cluster
-            url: "${VLLM_URL}"
-            token: "${VLLM_API_KEY}"
         integrations:
           github:
             - apps:
@@ -586,15 +581,6 @@ backstage:
         - name: shared-storage
           emptyDir: {}
         - name: rag-data-volume
-          emptyDir: {}
-        # TODO: Remove this once road-core container has been removed
-        - name: rcsconfig
-          configMap:
-            name: rcsconfig
-        - name: app-config-rhdh
-          configMap:
-            name: rolling-demo-backstage-app-config
-        - name: shared-data
           emptyDir: {}
       initContainers:
         - name: install-dynamic-plugins

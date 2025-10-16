@@ -211,14 +211,6 @@ spec:
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "false"
               fi
 
-              # NOTE: Temporary/one-off removal for road-core-sidecar to avoid downtime
-              # This part will be removed after the new containers are in place.
-              if echo "$CONTAINERS" | grep -q '"road-core-sidecar"'; then
-                echo "Container 'road-core-sidecar' exists, will be replaced by new containers..."
-                ROAD_CORE_SIDECAR_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "road-core-sidecar") | index(true)')
-                add_patch_operation "remove" "/spec/template/spec/containers/$ROAD_CORE_SIDECAR_INDEX" "" "false"
-              fi
-
               # Lightspeed Core: Add/Replace
               if echo "$CONTAINERS" | grep -q '"lightspeed-core"'; then
                 echo "Container 'lightspeed-core' already exists, will replace..."
@@ -233,18 +225,6 @@ spec:
               if echo "$CONTAINERS" | grep -q '"feedback-harvester"'; then
                 echo "Container 'feedback-harvester' already exists, will replace..."
                 FEEDBACK_HARVESTER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "feedback-harvester") | index(true)')
-
-                # NOTE: Temporary/one-off adjustment of container indices
-                # This part will be removed after the new containers are in place.
-                # Adjust index if road-core-sidecar was removed before feedback-harvester
-                if echo "$CONTAINERS" | grep -q '"road-core-sidecar"'; then
-                  ROAD_CORE_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "road-core-sidecar") | index(true)')
-                  if [ "$ROAD_CORE_INDEX" -lt "$FEEDBACK_HARVESTER_INDEX" ]; then
-                    echo "Adjusting feedback-harvester index due to road-core-sidecar removal..."
-                    FEEDBACK_HARVESTER_INDEX=$((FEEDBACK_HARVESTER_INDEX - 1))
-                  fi
-                fi
-
                 add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "false"
               else
                 echo "Container 'feedback-harvester' does not exist, will add..."

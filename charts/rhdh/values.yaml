@@ -5,8 +5,6 @@ global:
     plugins:
       - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-dynamic-home-page
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
-        disabled: true
       - package: oci://quay.io/tpetkos/customized-sign-in-page:v0.1.0!red-hat-developer-hub-backstage-plugin-customized-sign-in-page
         disabled: false
         pluginConfig:
@@ -15,11 +13,19 @@ global:
               red-hat-developer-hub.backstage-plugin-customized-sign-in-page:
                 signInPage:
                   importName: CustomizedSignInPage
-      - package: oci://quay.io/karthik_jk/global-header:latest!red-hat-developer-hub-backstage-plugin-global-header
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
         disabled: false
         pluginConfig:
           dynamicPlugins:
             frontend:
+              default.main-menu-items:
+                menuItems:
+                  default.create:
+                    title: ''
+                  default.admin:
+                    title: Administration
+                    textKey: menuItem.administration
+                    icon: admin
               red-hat-developer-hub.backstage-plugin-global-header:
                 mountPoints:
                   - mountPoint: application/header

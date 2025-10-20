@@ -25,3 +25,7 @@ data:
       type: "sqlite"
       sqlite:
         db_path: "/tmp/cache.db"
+    mcp_servers:
+    - name: "mcp-integration-tools"
+      provider_id: "model-context-protocol"
+      url: "https://rolling-demo-backstage-rolling-demo-ns.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/api/mcp-actions/v1"

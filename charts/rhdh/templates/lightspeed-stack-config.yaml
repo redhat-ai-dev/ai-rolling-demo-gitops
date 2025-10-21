@@ -25,7 +25,3 @@ data:
       type: "sqlite"
       sqlite:
         db_path: "/tmp/cache.db"
-    mcp_servers:
-    - name: "mcp-integration-tools"
-      provider_id: "model-context-protocol"
-      url: "http://rolling-demo-backstage.rolling-demo-ns.svc.cluster.local:7007/api/mcp-actions/v1"

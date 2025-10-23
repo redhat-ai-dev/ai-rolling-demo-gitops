@@ -182,6 +182,16 @@ global:
                         title: Openshift
                         icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
                         link: https://www.redhat.com/en/technologies/cloud-computing/openshift
+
+                  - mountPoint: global.header/application-launcher
+                    importName: MenuItemLink
+                    config:
+                      section: Quick Links
+                      priority: 120
+                      props:
+                        title: MCP Instructions
+                        icon: https://commons.wikimedia.org/wiki/File:Google_Docs_2020_Logo.svg
+                        link: https://docs.google.com/document/d/1o9qRYCAszGzTwW2mRjC4c9wFwJIx8J3XF1kGPFy5F1s/edit?usp=sharing
       - package: oci://quay.io/karthik_jk/ai-experience:1.6.1!red-hat-developer-hub-backstage-plugin-ai-experience
         disabled: false
         pluginConfig:

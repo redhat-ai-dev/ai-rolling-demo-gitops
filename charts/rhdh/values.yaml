@@ -187,7 +187,7 @@ global:
                     importName: MenuItemLink
                     config:
                       section: Quick Links
-                      priority: 120
+                      priority: 110
                       props:
                         title: MCP Instructions
                         icon: https://commons.wikimedia.org/wiki/File:Google_Docs_2020_Logo.svg

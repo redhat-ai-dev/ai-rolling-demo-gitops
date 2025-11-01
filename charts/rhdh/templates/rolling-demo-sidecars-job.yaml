@@ -111,7 +111,7 @@ spec:
                 "envFrom": [
                   { "secretRef": { "name": "llama-stack-secrets" } }
                 ],
-                "image": "quay.io/redhat-ai-dev/llama-stack:latest",
+                "image": "quay.io/redhat-ai-dev/llama-stack:0.1.0",
                 "imagePullPolicy": "Always",
                 "volumeMounts": [
                   { "mountPath": "/app-root/.llama", "name": "shared-storage" },

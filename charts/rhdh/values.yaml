@@ -265,7 +265,7 @@ global:
       - disabled: false
         package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-org-dynamic
       - disabled: false
-        package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:next__1.0.0!red-hat-developer-hub-backstage-plugin-lightspeed
+        package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:next__1.0.1!red-hat-developer-hub-backstage-plugin-lightspeed
         pluginConfig:
           dynamicPlugins:
             frontend:

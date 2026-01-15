@@ -43,7 +43,7 @@ spec:
                   { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
                   { "secretRef": { "name": "ai-rh-developer-hub-env" } }
                 ],
-                "image": "quay.io/redhat-ai-dev/model-catalog-location-service:latest",
+                "image": "quay.io/redhat-ai-dev/model-catalog-location-service@sha256:c4471e07be6e0dbe821613053e6264a552cacda7f8604dbf306e6ac9e81e8ab9",
                 "imagePullPolicy": "Always",
                 "ports": [{ "containerPort": 9090, "name": "location", "protocol": "TCP" }],
                 "startupProbe": {
@@ -73,7 +73,7 @@ spec:
                   { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
                   { "secretRef": { "name": "ai-rh-developer-hub-env" } }
                 ],
-                "image": "quay.io/redhat-ai-dev/model-catalog-storage-rest:latest",
+                "image": "quay.io/redhat-ai-dev/model-catalog-storage-rest@sha256:609f6866c7913a87c51912260803c219e564fa7dc90c2ff735ff6dfc5797bc3b",
                 "imagePullPolicy": "Always",
                 "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
                 "workingDir": "/opt/app-root/src"
@@ -98,7 +98,7 @@ spec:
                   { "secretRef": { "name": "rhdh-rhoai-bridge-token" } },
                   { "secretRef": { "name": "ai-rh-developer-hub-env" } }
                 ],
-                "image": "quay.io/redhat-ai-dev/model-catalog-rhoai-normalizer:latest",
+                "image": "quay.io/redhat-ai-dev/model-catalog-rhoai-normalizer@sha256:9f19742450a3a9c6d9c01d8341a20db7eb5a52a39348f488ae06b6aa49754a26",
                 "imagePullPolicy": "Always",
                 "volumeMounts": [{ "mountPath": "/opt/app-root/src/dynamic-plugins-root", "name": "dynamic-plugins-root" }],
                 "workingDir": "/opt/app-root/src"

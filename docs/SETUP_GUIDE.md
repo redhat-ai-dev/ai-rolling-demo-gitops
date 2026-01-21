@@ -26,6 +26,12 @@ In order to be able to set everything up you need to have installed:
 - [oc](https://docs.redhat.com/en/documentation/openshift_container_platform/4.8/html/cli_tools/openshift-cli-oc)
 - [kubectl](https://kubernetes.io/docs/reference/kubectl/)
 
+#### Update your fork's `clusterRouterBase` directly
+
+That's a temporary measure, in case you're working on a fork, remember to update your `clusterRouterBase` value with your cluster's domain.
+
+The `clusterRouterBase` value is here: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/charts/rhdh/values.yaml#L319
+
 #### Setup the `private-env` file
 
 - Create a file called `private-env` inside the [scripts/](./scripts/) directory and copy all the contents of the [scripts/env](./scripts/env) file there.

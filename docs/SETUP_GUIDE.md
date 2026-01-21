@@ -26,11 +26,25 @@ In order to be able to set everything up you need to have installed:
 - [oc](https://docs.redhat.com/en/documentation/openshift_container_platform/4.8/html/cli_tools/openshift-cli-oc)
 - [kubectl](https://kubernetes.io/docs/reference/kubectl/)
 
+#### Update your fork's `gitops/application.yaml`
+
+In case you're working from your own branch/fork you'll need to update the values of your gitops application.yaml, to point to your fork and (if necessary) your branch.
+
+The related application.yaml section is here: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/gitops/application.yaml#L10-L15
+
 #### Update your fork's `clusterRouterBase` directly
 
-That's a temporary measure, in case you're working on a fork, remember to update your `clusterRouterBase` value with your cluster's domain.
+That's a temporary measure, in case you're working from your own branch/fork, remember to update your `clusterRouterBase` value with your cluster's domain.
 
 The `clusterRouterBase` value is here: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/charts/rhdh/values.yaml#L319
+
+#### Update your github organization directly
+
+That's a temporary measure, in case you're working from your own branch/fork, remember to update your default `github Org` value with yours.
+
+The `github Org` value needs to be changed in two places:
+1. https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/charts/rhdh/values.yaml#L442
+2. https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/charts/rhdh/values.yaml#L452
 
 #### Setup the `private-env` file
 

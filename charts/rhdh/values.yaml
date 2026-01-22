@@ -413,6 +413,8 @@ backstage:
               type: url
             - target: https://github.com/redhat-ai-dev/ai-lab-template/blob/ai-rolling-demo-1_9/all.yaml
               type: url
+            - target: https://github.com/redhat-ai-dev/llama-stack-agentic-sample/blob/ai-rolling-demo-1_9/all.yaml
+              type: url
           providers:
             modelCatalog:
               development:

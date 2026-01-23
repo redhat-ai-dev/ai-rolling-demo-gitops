@@ -28,7 +28,7 @@ In order to be able to set everything up you need to have installed:
 
 #### Update your fork's `gitops/application.yaml`
 
-In case you're working from your own branch/fork you'll need to update the values of your gitops application.yaml, to point to your fork and (if necessary) your branch.
+In case you're working from your own branch/fork you'll need to update the values of your gitops application.yaml, to point to your fork and (if necessary) your branch.  If you are using a branch, specify it in the `targetRevision` field, replacing `HEAD`.
 
 The related application.yaml section is here: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/gitops/application.yaml#L10-L15
 

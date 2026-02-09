@@ -51,29 +51,19 @@ global:
           dynamicPlugins:
             frontend:
               red-hat-developer-hub.backstage-plugin-lightspeed:
-                translationResources:
-                  - importName: lightspeedTranslations
-                    module: Alpha
-                    ref: lightspeedTranslationRef
-                appIcons:
-                  - name: LightspeedIcon
-                    module: LightspeedPlugin
-                    importName: LightspeedIcon
                 dynamicRoutes:
                   - path: /lightspeed
                     importName: LightspeedPage
-                    module: LightspeedPlugin
-                    menuItem:
-                      icon: LightspeedIcon
-                      text: Lightspeed
                 mountPoints:
-                  - mountPoint: application/provider
-                    importName: LightspeedDrawerProvider
                   - mountPoint: application/listener
                     importName: LightspeedFAB
-                  - mountPoint: application/drawer-state
+                  - mountPoint: application/provider
+                    importName: LightspeedDrawerProvider
+                  - mountPoint: application/internal/drawer-state
                     importName: LightspeedDrawerStateExposer
-                  - mountPoint: application/drawer-content
+                    config:
+                      id: lightspeed
+                  - mountPoint: application/internal/drawer-content
                     importName: LightspeedChatContainer
                     config:
                       id: lightspeed

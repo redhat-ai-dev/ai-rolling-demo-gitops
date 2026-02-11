@@ -17,7 +17,7 @@ jobs:
               uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
             - name: Update plugins for next__ and bs_ tags
-              uses: redhat-ai-dev/rhdh-plugin-gitops-updater@ffc2bc9f90d9b396a0d56ca30529555873523a5c # v1.0.6
+              uses: redhat-ai-dev/rhdh-plugin-gitops-updater@711e4cef7ea24ee20defc61d93573425f98084fc # v1.0.7
               with:
                   config-path: "charts/rhdh/values.yaml"
                   github-token: ${{ secrets.PAT_TOKEN }}

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # source the private env
 # usually is called from scripts/prepare-rolling-demo
 # so all env vars have been checked.
@@ -7,78 +6,91 @@ source ./private-env
 
 # Constants
 CRD="tektonconfigs"
-NAMESPACE="rolling-demo-ns"
+NAMESPACE="${RHDH_NAMESPACE:-rolling-demo-ns}"
 BASE_DIR="$(realpath $(dirname ${BASH_SOURCE[0]}))"
 PAC_NAMESPACE="openshift-pipelines"
 
+source "$BASE_DIR/logging.sh"
+
 # Update the tekton config to add the transparency url
-echo -n "* Update the TektonConfig resource: "
+log "Waiting for TektonConfig resource to be available..."
 until kubectl get tektonconfig config >/dev/null 2>&1; do
-    echo -n "_"
+    log "TektonConfig not ready yet. Waiting..."
     sleep 3
 done
 TEKTON_CONFIG=$(yq ".spec.chain.\"transparency.url\" = \"http://rekor-server.${NAMESPACE}.svc\"" $BASE_DIR/resources/tekton-config.yaml -M -I=0 -o='json')
-kubectl patch tektonconfig config --type 'merge' --patch "${TEKTON_CONFIG}" >/dev/null
+log "Updating the TektonConfig resource..."
+kubectl patch tektonconfig config --type 'merge' --patch "${TEKTON_CONFIG}" >/dev/null 2>&1
 if [ $? -ne 0 ]; then
-    echo "FAIL"
+    log_fail
     exit 1
 fi
-echo "OK"
+
 
 # Fetching cosign public key
 # Fetches cosign public key needed for namespace setup
-echo -n "* Fetching cosign public key: "
+log "Waiting for signing-secrets to be available..."
 while ! kubectl get secrets -n $PAC_NAMESPACE  signing-secrets >/dev/null 2>&1; do
-    echo -n "_"
+    log "signing-secrets not found yet. Waiting..."
     sleep 2
 done
-echo -n "."
+
+# set up cosign public key
 COSIGN_SIGNING_PUBLIC_KEY=""
+log "Fetching cosign public key..."
 while [ -z "${COSIGN_SIGNING_PUBLIC_KEY:-}" ]; do
-    echo -n "_"
     sleep 2
     COSIGN_SIGNING_PUBLIC_KEY=$(kubectl get secrets -n $PAC_NAMESPACE signing-secrets -o jsonpath='{.data.cosign\.pub}' 2>/dev/null)
     if [ $? -ne 0 ]; then
-        echo -n "FAIL"
+        log_fail
         exit 1
     fi
+    if [ -z "${COSIGN_SIGNING_PUBLIC_KEY:-}" ]; then
+        log "Cosign public key not yet available. Waiting..."
+    fi
 done
-echo "OK"
+
 
 # Creating Namespace Setup Tekton Task Definition
 # Creates Tekton Task definition for creating custom namespaces with needed resources
-echo -n "* Creating Namespace Setup Tekton Task Definition: "
+log "Creating Namespace Setup Tekton Task Definition..."
 DEV_SETUP_TASK=$(cat $BASE_DIR/resources/dev-setup-task.yaml)
+
 if [ ! -z "${GITOPS_GIT_TOKEN}" ]; then
     DEV_SETUP_TASK=$(echo "${DEV_SETUP_TASK}" | yq ".spec.params[0].default = \"${GITOPS_GIT_TOKEN}\"" -M)
     if [ $? -ne 0 ]; then
-        echo -n "FAIL"
+        log_fail
         exit 1
     fi
-    echo -n "."
+    log "GITOPS_GIT_TOKEN updated."
 fi
+
+# setup pipelines webhook secret
 if [ ! -z "${GITHUB_APP_WEBHOOK_SECRET}" ]; then
     DEV_SETUP_TASK=$(echo "${DEV_SETUP_TASK}" | yq ".spec.params[2].default = \"${GITHUB_APP_WEBHOOK_SECRET}\"" -M)
     if [ $? -ne 0 ]; then
-        echo -n "FAIL"
+        log_fail
         exit 1
     fi
-    echo -n "."
+    log "GITHUB_APP_WEBHOOK_SECRET updated."
 fi
+
+# setup dockerconfig json
 if [ ! -z "${QUAY_DOCKERCONFIGJSON}" ]; then
     export QUAY_DOCKERCONFIGJSON=${QUAY_DOCKERCONFIGJSON}
     DEV_SETUP_TASK=$(echo "${DEV_SETUP_TASK}" | yq ".spec.params[3].default = strenv(QUAY_DOCKERCONFIGJSON)" -M)
     if [ $? -ne 0 ]; then
-        echo -n "FAIL"
+        log_fail
         exit 1
     fi
-    echo -n "."
+    log "QUAY_DOCKERCONFIGJSON updated."
 fi
+
+# define tekton pipelines task for setting up the app namespace
 export TASK_SCRIPT="#!/usr/bin/env bash
 set -o errexit
 set -o nounset
 set -o pipefail
-
 SECRET_NAME=\"cosign-pub\"
 if [ -n \"$COSIGN_SIGNING_PUBLIC_KEY\" ]; then
   echo -n \"* \$SECRET_NAME secret: \"
@@ -97,7 +109,6 @@ type: Opaque
 EOF
   echo \"OK\"
 fi
-
 SECRET_NAME=\"gitops-auth-secret\"
 if [ -n \"\$GIT_TOKEN\" ]; then
   echo -n \"* \$SECRET_NAME secret: \"
@@ -107,7 +118,6 @@ if [ -n \"\$GIT_TOKEN\" ]; then
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
   echo \"OK\"
 fi
-
 SECRET_NAME=\"pipelines-secret\"
 if [ -n \"\$PIPELINES_WEBHOOK_SECRET\" ]; then
   echo -n \"* \$SECRET_NAME secret: \"
@@ -116,7 +126,6 @@ if [ -n \"\$PIPELINES_WEBHOOK_SECRET\" ]; then
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
   echo \"OK\"
 fi
-
 SECRET_NAME=\"rhdh-image-registry-token\"
 if [ -n \"\$QUAY_DOCKERCONFIGJSON\" ]; then
   echo -n \"* \$SECRET_NAME secret: \"
@@ -142,17 +151,19 @@ if [ -n \"\$QUAY_DOCKERCONFIGJSON\" ]; then
   done
   echo \"OK\"
 fi"
+
 DEV_SETUP_TASK=$(echo "${DEV_SETUP_TASK}" | yq ".spec.steps[0].script = strenv(TASK_SCRIPT)" -M)
 if [ $? -ne 0 ]; then
-    echo -n "FAIL"
+    log_fail
     exit 1
 fi
-echo -n "."
+
+log "Applying Tekton Task definition..."
 cat <<EOF | kubectl apply -n ${NAMESPACE} -f - >/dev/null
 ${DEV_SETUP_TASK}
 EOF
 if [ $? -ne 0 ]; then
-    echo -n "FAIL"
+    log_fail
     exit 1
 fi
-echo "OK"
+

@@ -449,7 +449,7 @@ backstage:
                 baseUrl: http://localhost:9090
             github:
               providerId:
-                organization: "ai-rolling-demo"
+                organization: "${GITHUB_ORG}"
                 schedule:
                   frequency:
                     minutes: 15
@@ -459,7 +459,7 @@ backstage:
                     minutes: 15
             githubOrg:
               githubUrl: https://github.com
-              orgs: ["ai-rolling-demo"]
+              orgs: ["${GITHUB_ORG}"]
               schedule:
                 frequency:
                   minutes: 15

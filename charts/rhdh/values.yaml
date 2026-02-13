@@ -104,10 +104,6 @@ global:
                     importName: TektonCI
                     mountPoint: entity.page.ci/cards
 
-      # Quay Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-scaffolder-backend-module-quay:bs_1.45.3__2.14.0
-        disabled: false
-
       ##### Default Backstage Dynamic Plugins #####
       # Plugin for global header customization
       # We follow the default plugins setup with a slight diff
@@ -338,7 +334,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.9-174"
+        tag: "1.9-192"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -588,6 +584,8 @@ backstage:
         # tmp backstage volume for scaffolder tasks
         - name: backstage-tmp
           mountPath: /tmp
+        - name: extensions-catalog
+          mountPath: /extensions
       extraVolumes:
         - name: dynamic-plugins-root
           ephemeral:
@@ -618,6 +616,8 @@ backstage:
           emptyDir: {}
         - name: rag-data-volume
           emptyDir: {}
+        - name: extensions-catalog
+          emptyDir: {}
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'
@@ -627,6 +627,10 @@ backstage:
           env:
             - name: NPM_CONFIG_USERCONFIG
               value: /opt/app-root/src/.npmrc.dynamic-plugins
+            - name: CATALOG_INDEX_IMAGE
+              value: '{{ .Values.global.catalogIndex.image.registry }}/{{ .Values.global.catalogIndex.image.repository }}:{{ .Values.global.catalogIndex.image.tag }}'
+            - name: CATALOG_ENTITIES_EXTRACT_DIR
+              value: '/extensions'
           imagePullPolicy: Always
           volumeMounts:
             - mountPath: /dynamic-plugins-root
@@ -639,6 +643,8 @@ backstage:
               name: dynamic-plugins-npmrc
               readOnly: true
               subPath: .npmrc
+            - mountPath: /extensions
+              name: extensions-catalog
         - name: init-rag-data
           image: 'quay.io/redhat-ai-dev/rag-content:release-1.7-lcs'
           command:

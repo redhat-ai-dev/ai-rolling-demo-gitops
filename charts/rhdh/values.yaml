@@ -609,6 +609,9 @@ backstage:
         - name: lightspeed-stack
           configMap:
             name: lightspeed-stack
+        - name: llama-stack-run-no-guard
+          configMap:
+            name: llama-stack-run-no-guard
         # tmp backstage volume for scaffolder tasks
         - name: backstage-tmp
           emptyDir: {}
@@ -646,7 +649,7 @@ backstage:
             - mountPath: /extensions
               name: extensions-catalog
         - name: init-rag-data
-          image: 'quay.io/redhat-ai-dev/rag-content:release-1.7-lcs'
+          image: 'quay.io/redhat-ai-dev/rag-content:release-1.9-lcs'
           command:
             - "sh"
             - "-c"

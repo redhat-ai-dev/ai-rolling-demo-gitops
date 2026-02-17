@@ -321,6 +321,7 @@ SECRET_NAME="llama-stack-secrets"
 echo -n "* $SECRET_NAME secret: "
 kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
+    --from-literal=ENABLE_VLLM="true" \
     --from-literal=VLLM_URL="$VLLM_URL" \
     --from-literal=VLLM_API_KEY="$VLLM_API_KEY" \
     --from-literal=VALIDATION_PROVIDER="$VALIDATION_PROVIDER" \

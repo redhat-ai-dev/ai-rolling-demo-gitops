@@ -646,7 +646,7 @@ backstage:
             - mountPath: /extensions
               name: extensions-catalog
         - name: init-rag-data
-          image: 'quay.io/redhat-ai-dev/rag-content:release-1.7-lcs'
+          image: 'quay.io/redhat-ai-dev/rag-content:release-1.9-lcs'
           command:
             - "sh"
             - "-c"

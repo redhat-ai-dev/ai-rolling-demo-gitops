@@ -116,7 +116,8 @@ spec:
                 "volumeMounts": [
                   { "mountPath": "/app-root/.llama", "name": "shared-storage" },
                   { "mountPath": "/rag-content/embeddings_model", "name": "rag-data-volume", "subPath": "embeddings_model" },
-                  { "mountPath": "/rag-content/vector_db/rhdh_product_docs", "name": "rag-data-volume", "subPath": "rhdh_product_docs" }
+                  { "mountPath": "/rag-content/vector_db/rhdh_product_docs", "name": "rag-data-volume", "subPath": "rhdh_product_docs" },
+                  { "mountPath": "/app-root/run.yaml", "name": "llama-stack-run-no-guard", "subPath": "run.yaml" }
                 ]
               }
               EOF

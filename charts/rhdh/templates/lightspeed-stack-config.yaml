@@ -2,7 +2,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: lightspeed-stack
-  namespace: rolling-demo-ns
+  namespace: {{ .Release.Namespace }}
 data:
   lightspeed-stack.yaml: |
     name: "lightspeed-core-stack"
@@ -28,4 +28,4 @@ data:
     mcp_servers:
       - name: mcp-integration-tools
         provider_id: "model-context-protocol"
-        url: "http://rolling-demo-backstage.rolling-demo-ns.svc.cluster.local:7007/api/mcp-actions/v1"
+        url: "http://rolling-demo-backstage.{{ .Release.Namespace }}.svc.cluster.local:7007/api/mcp-actions/v1"

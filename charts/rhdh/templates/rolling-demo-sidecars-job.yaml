@@ -14,7 +14,7 @@ spec:
           args:
             - |
               DEPLOYMENT="rolling-demo-backstage"
-              NAMESPACE="rolling-demo-ns"
+              NAMESPACE="{{ .Release.Namespace }}"
 
               echo "Waiting deployment ${DEPLOYMENT} to be available.."
               kubectl rollout status deployment/$DEPLOYMENT -n $NAMESPACE --timeout=600s

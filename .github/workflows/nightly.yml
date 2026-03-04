@@ -1,0 +1,73 @@
+name: Nightly UI Tests
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  ui-tests:
+    name: Run UI Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.0.2
+
+      - name: Install dependencies
+        working-directory: tests
+        run: uv sync
+
+      - name: Install Playwright browsers
+        working-directory: tests
+        run: uv run playwright install chromium --with-deps
+
+      - name: Run tests
+        working-directory: tests
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          RH_USERNAME: ${{ secrets.RH_USERNAME }}
+          RH_PASSWORD: ${{ secrets.RH_PASSWORD }}
+          OTP_SECRET: ${{ secrets.OTP_SECRET }}
+        run: uv run pytest -v
+
+      - name: Notify Slack on failure
+        if: failure()
+        run: |
+          curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            --data-binary '{
+              "text": "[FIRING] NightlyRollingDemoTestsFailed",
+              "attachments": [
+                {
+                  "color": "#FF0000",
+                  "fields": [
+                    {
+                      "title": "Summary",
+                      "value": "Nightly UI tests failed on the `main` branch.",
+                      "short": false
+                    },
+                    {
+                      "title": "Description",
+                      "value": "One or more tests failed. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>",
+                      "short": false
+                    },
+                    {
+                      "title": "Severity",
+                      "value": "critical",
+                      "short": true
+                    }
+                  ]
+                }
+              ]
+            }'

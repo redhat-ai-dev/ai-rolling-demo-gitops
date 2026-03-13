@@ -36,8 +36,9 @@ export GITOPS_TARGET_REVISION="dev"
 # ODH_SETUP_DIR: the local path to the cloned odh-kubeflow-model-registry-setup repo.
 export ODH_SETUP_DIR="/path/to/odh-kubeflow-model-registry-setup"
 # RHDH_NAMESPACE: the namespace where RHDH and related resources are deployed.
-# Defaults to "rolling-demo-ns" if not set.
 export RHDH_NAMESPACE="rolling-demo-ns"
+# ARGOCD_APP_NAME: the argoCD application name.
+export ARGOCD_APP_NAME="rolling-demo"
 
 # Github secrets
 # For more information on how to setup your github app
@@ -263,3 +264,7 @@ The `setup.sh` script uses `yq` to inject these values into `gitops/application.
 #### How clusterRouterBase is configured
 
 The `clusterRouterBase` value in `charts/rhdh/values.yaml` is a Helm chart value and cannot use `${ENV_VAR}` substitution at runtime. Instead, `setup.sh` injects it as an ArgoCD Helm parameter override when applying `gitops/application.yaml`. This means the value from `RHDH_CLUSTER_ROUTER_BASE` in your `private-env` is used without modifying any files in git.
+
+### Running tests locally
+
+See [docs/TESTING.md](./TESTING.md) for setup instructions, required environment variables, and how to run the tests locally.

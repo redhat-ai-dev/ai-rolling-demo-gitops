@@ -8,6 +8,7 @@ export GITOPS_REPO_URL=
 export GITOPS_TARGET_REVISION=
 export ODH_SETUP_DIR=
 export RHDH_NAMESPACE=rolling-demo-ns
+export ARGOCD_APP_NAME=rolling-demo
 
 # Github secrets
 export GITHUB_APP_APP_ID=

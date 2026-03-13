@@ -55,6 +55,10 @@ The repository maintains a `development` branch that serves as the integration b
 
 Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)
 
+## Testing
+
+Information on the E2E test suite, required environment variables, and how to run tests locally can be found in [docs/TESTING.md](./docs/TESTING.md)
+
 ## Troubleshooting
 
 ### I cannot login to the rolling demo

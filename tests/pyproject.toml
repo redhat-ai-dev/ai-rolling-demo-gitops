@@ -1,0 +1,22 @@
+[project]
+name = "ai-rolling-demo-tests"
+version = "0.1.0"
+description = "Playwright UI tests for AI Rolling Demo"
+requires-python = ">=3.11"
+dependencies = ["playwright>=1.44", "pytest-playwright>=0.5", "pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "test_login.py",
+    "test_navbar.py",
+    "test_sidebar.py",
+    "test_extensions.py",
+    "test_lightspeed.py",
+]
+markers = [
+    "smoke: quick sanity checks that do not require authentication",
+    "auth_required: tests that require a logged-in session",
+]
+filterwarnings = [
+    "ignore::urllib3.exceptions.InsecureRequestWarning",
+]

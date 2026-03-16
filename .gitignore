@@ -4,3 +4,7 @@
 *private-env
 *cosign.pub
 *argocd.yaml
+
+# python files
+
+__pycache__/

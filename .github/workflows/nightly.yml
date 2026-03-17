@@ -48,7 +48,7 @@ jobs:
           curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
             --data-binary '{
-              "text": "[FIRING] NightlyRollingDemoTestsFailed",
+              "text": "*<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|[FIRING] NightlyRollingDemoTestsFailed>*",
               "attachments": [
                 {
                   "color": "#FF0000",
@@ -60,7 +60,7 @@ jobs:
                     },
                     {
                       "title": "Description",
-                      "value": "One or more tests failed. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>",
+                      "value": "One or more tests failed.",
                       "short": false
                     },
                     {

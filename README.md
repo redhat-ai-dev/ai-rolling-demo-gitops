@@ -1,5 +1,8 @@
 # RHDHPAI Rolling Demo GitOps
 
+[![Nightly UI Tests](https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/actions/workflows/nightly.yml/badge.svg)](https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/actions/workflows/nightly.yml)
+[![ShellCheck](https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/actions/workflows/shellcheck.yaml/badge.svg)](https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/actions/workflows/shellcheck.yaml)
+
 The repository contains the gitops resources required to deploy an instance of the RHDHPAI rolling demo. The project is currently live at [rolling-demo-backstage-rolling-demo-ns.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com](https://rolling-demo-backstage-rolling-demo-ns.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com).
 
 ## Contents

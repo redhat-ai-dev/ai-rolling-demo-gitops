@@ -14,8 +14,8 @@ data:
       color_log: true
       access_log: true
     llama_stack:
-      use_as_library_client: false
-      url: http://localhost:8321
+      use_as_library_client: true
+      library_client_config_path: /app-root/config.yaml
     user_data_collection:
       feedback_enabled: true
       feedback_storage: '/tmp/data/feedback'
@@ -25,6 +25,8 @@ data:
       type: 'sqlite'
       sqlite:
         db_path: '/tmp/cache.db'
+    customization:
+      profile_path: '/app-root/rhdh-profile.py'
     mcp_servers:
       - name: mcp-integration-tools
         provider_id: "model-context-protocol"

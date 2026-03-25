@@ -632,6 +632,9 @@ backstage:
         - name: llama-stack-config
           configMap:
             name: llama-stack-config
+        - name: rhdh-profile
+          configMap:
+            name: rhdh-profile
         # tmp llama-stack-run-no-guard
         - name: llama-stack-run-no-guard
           emptyDir: {}

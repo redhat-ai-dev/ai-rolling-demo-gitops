@@ -115,6 +115,7 @@ spec:
                   { "mountPath": "/app-root/lightspeed-stack.yaml", "name": "lightspeed-stack", "subPath": "lightspeed-stack.yaml" },
                   { "mountPath": "/app-root/config.yaml", "name": "llama-stack-config", "subPath": "config.yaml" },
                   { "mountPath": "/app-root/rhdh-profile.py", "name": "rhdh-profile", "subPath": "rhdh-profile.py" },
+                  { "mountPath": "/rag-content", "name": "rag-data-volume" },
                   { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
                 ]
               }

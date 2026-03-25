@@ -45,6 +45,7 @@ spec:
                   { "mountPath": "/app-root/lightspeed-stack.yaml", "name": "lightspeed-stack", "subPath": "lightspeed-stack.yaml" },
                   { "mountPath": "/app-root/config.yaml", "name": "llama-stack-config", "subPath": "config.yaml" },
                   { "mountPath": "/app-root/rhdh-profile.py", "name": "rhdh-profile", "subPath": "rhdh-profile.py" },
+                  { "mountPath": "/rag-content", "name": "rag-data-volume" },
                   { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
                 ]
               }'
@@ -58,7 +59,7 @@ spec:
                     --patch="[{\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/$LIGHTSPEED_CORE_INDEX\", \"value\": $LIGHTSPEED_CORE_DEF}]"
                   echo "Replaced 'lightspeed-core' container."
                 else
-                  echo "Container 'lightspeed-core' already has rhdh-profile mount, skipping replace."
+                  echo "Container 'lightspeed-core' already up to date, skipping replace."
                 fi
               else
                 echo "Container 'lightspeed-core' not found, skipping replace."

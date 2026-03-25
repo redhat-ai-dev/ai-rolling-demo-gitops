@@ -629,9 +629,9 @@ backstage:
         - name: lightspeed-stack
           configMap:
             name: lightspeed-stack
-        - name: llama-stack-run-no-guard
+        - name: llama-stack-config
           configMap:
-            name: llama-stack-run-no-guard
+            name: llama-stack-config
         # tmp backstage volume for scaffolder tasks
         - name: backstage-tmp
           emptyDir: {}

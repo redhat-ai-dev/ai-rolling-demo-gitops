@@ -632,6 +632,9 @@ backstage:
         - name: llama-stack-config
           configMap:
             name: llama-stack-config
+        # tmp llama-stack-run-no-guard
+        - name: llama-stack-run-no-guard
+          emptyDir: {}
         # tmp backstage volume for scaffolder tasks
         - name: backstage-tmp
           emptyDir: {}

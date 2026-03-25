@@ -140,15 +140,6 @@ spec:
               }
               EOF
 
-              # One-off: Remove llama-stack container if it still exists from a previous install
-              if echo "$CONTAINERS" | grep -q '"llama-stack"'; then
-                echo "Removing legacy 'llama-stack' container..."
-                LLAMA_STACK_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "llama-stack") | index(true)')
-                kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' \
-                  --patch="[{\"op\": \"remove\", \"path\": \"/spec/template/spec/containers/$LLAMA_STACK_INDEX\"}]"
-                CONTAINERS=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers[] | .name')
-              fi
-
               # build the file used for patching
               echo "[" > "$PATCH_FILE"
 

@@ -35,7 +35,7 @@ spec:
                 CONTAINERS=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers[] | .name')
               fi
 
-              # Replace lightspeed-core container with the latest definition
+              # Replace lightspeed-core container only if rhdh-profile mount is missing
               LIGHTSPEED_CORE_DEF='{
                 "name": "lightspeed-core",
                 "image": "quay.io/lightspeed-core/lightspeed-stack:dev-20260316-b2f54cf",
@@ -50,11 +50,16 @@ spec:
               }'
 
               if echo "$CONTAINERS" | grep -q '"lightspeed-core"'; then
-                echo "Replacing 'lightspeed-core' container..."
-                LIGHTSPEED_CORE_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
-                kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' \
-                  --patch="[{\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/$LIGHTSPEED_CORE_INDEX\", \"value\": $LIGHTSPEED_CORE_DEF}]"
-                echo "Replaced 'lightspeed-core' container."
+                HAS_PROFILE_MOUNT=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers[] | select(.name == "lightspeed-core") | .volumeMounts[]? | select(.name == "rhdh-profile")' | wc -l)
+                if [ "$HAS_PROFILE_MOUNT" -eq 0 ]; then
+                  echo "Replacing 'lightspeed-core' container (rhdh-profile mount missing)..."
+                  LIGHTSPEED_CORE_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
+                  kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' \
+                    --patch="[{\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/$LIGHTSPEED_CORE_INDEX\", \"value\": $LIGHTSPEED_CORE_DEF}]"
+                  echo "Replaced 'lightspeed-core' container."
+                else
+                  echo "Container 'lightspeed-core' already has rhdh-profile mount, skipping replace."
+                fi
               else
                 echo "Container 'lightspeed-core' not found, skipping replace."
               fi

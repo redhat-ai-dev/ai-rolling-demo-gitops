@@ -105,23 +105,6 @@ spec:
               }
               EOF
 
-              cat > "${TEMP_DIR}/llama-stack-sidecar.json" <<EOF
-              {
-                "name": "llama-stack",
-                "envFrom": [
-                  { "secretRef": { "name": "llama-stack-secrets" } }
-                ],
-                "image": "",
-                "imagePullPolicy": "Always",
-                "volumeMounts": [
-                  { "mountPath": "/app-root/.llama", "name": "shared-storage" },
-                  { "mountPath": "/rag-content/embeddings_model", "name": "rag-data-volume", "subPath": "embeddings_model" },
-                  { "mountPath": "/rag-content/vector_db/rhdh_product_docs", "name": "rag-data-volume", "subPath": "rhdh_product_docs" },
-                  { "mountPath": "/app-root/config.yaml", "name": "llama-stack-config", "subPath": "config.yaml" }
-                ]
-              }
-              EOF
-
               cat > "${TEMP_DIR}/lightspeed-core-sidecar.json" <<EOF
               {
                 "name": "lightspeed-core",
@@ -130,6 +113,7 @@ spec:
                 "ports": [{ "containerPort": 8080, "name": "lcs-backend", "protocol": "TCP" }],
                 "volumeMounts": [
                   { "mountPath": "/app-root/lightspeed-stack.yaml", "name": "lightspeed-stack", "subPath": "lightspeed-stack.yaml" },
+                  { "mountPath": "/app-root/config.yaml", "name": "llama-stack-config", "subPath": "config.yaml" },
                   { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
                 ]
               }
@@ -153,6 +137,15 @@ spec:
                 ]
               }
               EOF
+
+              # One-off: Remove llama-stack container if it still exists from a previous install
+              if echo "$CONTAINERS" | grep -q '"llama-stack"'; then
+                echo "Removing legacy 'llama-stack' container..."
+                LLAMA_STACK_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "llama-stack") | index(true)')
+                kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' \
+                  --patch="[{\"op\": \"remove\", \"path\": \"/spec/template/spec/containers/$LLAMA_STACK_INDEX\"}]"
+                CONTAINERS=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers[] | .name')
+              fi
 
               # build the file used for patching
               echo "[" > "$PATCH_FILE"
@@ -226,20 +219,10 @@ spec:
               if echo "$CONTAINERS" | grep -q '"feedback-harvester"'; then
                 echo "Container 'feedback-harvester' already exists, will replace..."
                 FEEDBACK_HARVESTER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "feedback-harvester") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "false"
+                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
               else
                 echo "Container 'feedback-harvester' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "false"
-              fi
-
-              # Llama Stack: Add/Replace
-              if echo "$CONTAINERS" | grep -q '"llama-stack"'; then
-                echo "Container 'llama-stack' already exists, will replace..."
-                LLAMA_STACK_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "llama-stack") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$LLAMA_STACK_INDEX" "${TEMP_DIR}/llama-stack-sidecar.json" "true"
-              else
-                echo "Container 'llama-stack' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/llama-stack-sidecar.json" "true"
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
               fi
 
               echo "]" >> "$PATCH_FILE"

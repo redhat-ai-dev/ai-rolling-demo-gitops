@@ -25,8 +25,6 @@ data:
       type: 'sqlite'
       sqlite:
         db_path: '/tmp/cache.db'
-    customization:
-      profile_path: '/app-root/rhdh-profile.py'
     mcp_servers:
       - name: mcp-integration-tools
         provider_id: "model-context-protocol"

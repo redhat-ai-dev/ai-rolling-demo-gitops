@@ -38,13 +38,14 @@ spec:
               # Replace lightspeed-core container only if rhdh-profile mount is missing
               LIGHTSPEED_CORE_DEF='{
                 "name": "lightspeed-core",
+                "envFrom": [
+                  { "secretRef": { "name": "llama-stack-secrets" } }
+                ],
                 "image": "quay.io/lightspeed-core/lightspeed-stack:dev-20260316-b2f54cf",
                 "imagePullPolicy": "Always",
                 "ports": [{ "containerPort": 8080, "name": "lcs-backend", "protocol": "TCP" }],
                 "volumeMounts": [
                   { "mountPath": "/app-root/lightspeed-stack.yaml", "name": "lightspeed-stack", "subPath": "lightspeed-stack.yaml" },
-                  { "mountPath": "/app-root/config.yaml", "name": "llama-stack-config", "subPath": "config.yaml" },
-                  { "mountPath": "/app-root/rhdh-profile.py", "name": "rhdh-profile", "subPath": "rhdh-profile.py" },
                   { "mountPath": "/rag-content", "name": "rag-data-volume" },
                   { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
                 ]

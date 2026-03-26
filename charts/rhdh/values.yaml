@@ -45,7 +45,7 @@ global:
         disabled: false
 
       # Lightspeed Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.45.3__1.2.3
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.45.3__1.4.0
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -72,7 +72,7 @@ global:
                     config:
                       id: lightspeed
                       priority: 100
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.45.3__1.2.3
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.45.3__1.4.0
         disabled: false
 
       # MCP Actions plugins
@@ -629,9 +629,12 @@ backstage:
         - name: lightspeed-stack
           configMap:
             name: lightspeed-stack
-        - name: llama-stack-run-no-guard
+        - name: llama-stack-config
           configMap:
-            name: llama-stack-run-no-guard
+            name: llama-stack-config
+        - name: rhdh-profile
+          configMap:
+            name: rhdh-profile
         # tmp backstage volume for scaffolder tasks
         - name: backstage-tmp
           emptyDir: {}
@@ -641,6 +644,12 @@ backstage:
           emptyDir: {}
         - name: extensions-catalog
           emptyDir: {}
+        - name: mcp-auth-token
+          secret:
+            secretName: rhdh-secrets
+            items:
+              - key: MCP_TOKEN
+                path: mcp-auth-token
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'

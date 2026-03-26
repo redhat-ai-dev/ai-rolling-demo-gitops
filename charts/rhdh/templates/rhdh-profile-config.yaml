@@ -1,0 +1,8 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: rhdh-profile
+  namespace: {{ .Release.Namespace }}
+data:
+  rhdh-profile.py: |
+{{ .Files.Get "rhdh-profile.py" | indent 4 }}

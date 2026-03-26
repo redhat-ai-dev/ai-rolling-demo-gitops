@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cleanup-deployment-containers
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      containers:
+        - name: cleanup
+          image: quay.io/redhat-ai-dev/utils:latest
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              DEPLOYMENT="{{ .Release.Name }}-backstage"
+              NAMESPACE="{{ .Release.Namespace }}"
+
+              echo "Checking for containers to clean up in deployment ${DEPLOYMENT}..."
+              CONTAINERS=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json 2>/dev/null | jq '.spec.template.spec.containers[] | .name' 2>/dev/null || echo "")
+
+              if [ -z "$CONTAINERS" ]; then
+                echo "Deployment not found or no containers, skipping cleanup."
+                exit 0
+              fi
+
+              # Remove llama-stack container if it still exists
+              if echo "$CONTAINERS" | grep -q '"llama-stack"'; then
+                echo "Removing 'llama-stack' container..."
+                LLAMA_STACK_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "llama-stack") | index(true)')
+                kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' \
+                  --patch="[{\"op\": \"remove\", \"path\": \"/spec/template/spec/containers/$LLAMA_STACK_INDEX\"}]"
+                echo "Removed 'llama-stack' container."
+                CONTAINERS=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers[] | .name')
+              fi
+
+              # Replace lightspeed-core container only if rhdh-profile mount is missing
+              LIGHTSPEED_CORE_DEF='{
+                "name": "lightspeed-core",
+                "envFrom": [
+                  { "secretRef": { "name": "llama-stack-secrets" } }
+                ],
+                "image": "quay.io/lightspeed-core/lightspeed-stack:dev-20260316-b2f54cf",
+                "imagePullPolicy": "Always",
+                "ports": [{ "containerPort": 8080, "name": "lcs-backend", "protocol": "TCP" }],
+                "volumeMounts": [
+                  { "mountPath": "/app-root/lightspeed-stack.yaml", "name": "lightspeed-stack", "subPath": "lightspeed-stack.yaml" },
+                  { "mountPath": "/rag-content", "name": "rag-data-volume" },
+                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
+                ]
+              }'
+
+              if echo "$CONTAINERS" | grep -q '"lightspeed-core"'; then
+                HAS_PROFILE_MOUNT=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers[] | select(.name == "lightspeed-core") | .volumeMounts[]? | select(.name == "rhdh-profile")' | wc -l)
+                if [ "$HAS_PROFILE_MOUNT" -eq 0 ]; then
+                  echo "Replacing 'lightspeed-core' container (rhdh-profile mount missing)..."
+                  LIGHTSPEED_CORE_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
+                  kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' \
+                    --patch="[{\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/$LIGHTSPEED_CORE_INDEX\", \"value\": $LIGHTSPEED_CORE_DEF}]"
+                  echo "Replaced 'lightspeed-core' container."
+                else
+                  echo "Container 'lightspeed-core' already up to date, skipping replace."
+                fi
+              else
+                echo "Container 'lightspeed-core' not found, skipping replace."
+              fi
+      restartPolicy: OnFailure
+  backoffLimit: 2

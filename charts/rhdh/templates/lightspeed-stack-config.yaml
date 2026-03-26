@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   lightspeed-stack.yaml: |
-    name: "lightspeed-core-stack"
+    name: lightspeed-core-stack
     service:
       host: 0.0.0.0
       port: 8080

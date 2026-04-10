@@ -68,7 +68,7 @@ The plugin updater workflow runs nightly (and can be triggered manually via `wor
 4. Opens a **pull request**, targeting the `development` branch, for each plugin that has a new version available.
 
 This automation ensures that our gitops environment uses always the latest stable versions of rhdh plugins.
-
+Once we have sufficiently validated the changes to the `development` branch and want to update the `main` branch, we will manually open a PR from `development` to `main`.
 ## Rolling demo setup
 
 Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)

@@ -2,6 +2,6 @@
 * @thepetk @johnmcollier @gabemontero
 
 # Lightspeed and Llama Stack owners
-charts/rhdh/templates/lightspeed-postgres.yaml @maysunfaisal @Jdubrick @JslYoon
+charts/rhdh/templates/lightspeed-postgres.yaml @maysunfaisal @Jdubrick @JslYoon @yangcao77
 # TODO: replace this with llama-stack-config for 1.10 release
-charts/rhdh/templates/llama-stack-run-no-guard-config.yaml @maysunfaisal @Jdubrick @JslYoon
+charts/rhdh/templates/llama-stack-run-no-guard-config.yaml @maysunfaisal @Jdubrick @JslYoon @yangcao77

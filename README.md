@@ -54,6 +54,21 @@ The repository maintains a `development` branch that serves as the integration b
 2. **Validate** — The `rhdhai-rhdh-dev` ArgoCD application automatically syncs from the `development` branch, deploying the changes to the `rhdhai-development` namespace for testing.
 3. **Promote** — Once validated, changes are merged into `main`. The `rolling-demo` production application picks them up automatically via ArgoCD's self-heal and auto-sync policies.
 
+## Keeping RHDH Plugins Up-to-Date
+
+### The Plugin Updater (`plugins-updater.yaml`) Workflow
+
+The plugin updater workflow runs nightly (and can be triggered manually via `workflow_dispatch`) to keep all RHDH plugins pinned to their latest available versions.
+
+**What it does:**
+
+1. Checks out the repository.
+2. Runs the [`redhat-ai-dev/rhdh-plugin-gitops-updater`](https://github.com/redhat-ai-dev/rhdh-plugin-gitops-updater) action against `charts/rhdh/values.yaml`.
+3. Scans all `oci:` plugin image tags with the prefixes `bs_`, and resolves the latest available version for each.
+4. Opens a **pull request**, targeting the `development` branch, for each plugin that has a new version available.
+
+This automation ensures that our gitops environment uses always the latest stable versions of rhdh plugins.
+
 ## Rolling demo setup
 
 Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)

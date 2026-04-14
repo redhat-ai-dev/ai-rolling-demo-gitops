@@ -15,7 +15,7 @@ global:
 
       ##### Red Hat Plugins without wrappers #####
       # Plugins for ArgoCD integration
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.48.3__2.4.6
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.45.3__2.4.4
         pluginConfig:
           dynamicPlugins:
             frontend:
@@ -39,13 +39,13 @@ global:
                       if:
                         allOf:
                           - isArgocdConfigured
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-argo-cd-backend:bs_1.45.3__4.7.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-argo-cd-backend:bs_1.45.3__4.6.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-argocd:bs_1.45.3__1.8.1
         disabled: false
 
       # Lightspeed Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.45.3__1.4.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.45.3__1.2.3
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -72,11 +72,11 @@ global:
                     config:
                       id: lightspeed
                       priority: 100
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.45.3__1.4.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.45.3__1.2.3
         disabled: false
 
       # MCP Actions plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.45.3__0.1.5
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.48.3__0.1.9
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-tool:bs_1.45.3__0.4.1
         disabled: false
@@ -240,7 +240,7 @@ global:
                     props:
                       title: Openshift AI
                       icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
-                      link: https://rhods-dashboard-redhat-ods-applications.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
+                      link: https://data-science-gateway.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
 
                 - mountPoint: global.header/application-launcher
                   importName: MenuItemLink
@@ -348,7 +348,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.10-88"
+        tag: "1.9-192"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -629,12 +629,9 @@ backstage:
         - name: lightspeed-stack
           configMap:
             name: lightspeed-stack
-        - name: llama-stack-config
+        - name: llama-stack-run-no-guard
           configMap:
-            name: llama-stack-config
-        - name: rhdh-profile
-          configMap:
-            name: rhdh-profile
+            name: llama-stack-run-no-guard
         # tmp backstage volume for scaffolder tasks
         - name: backstage-tmp
           emptyDir: {}
@@ -644,12 +641,6 @@ backstage:
           emptyDir: {}
         - name: extensions-catalog
           emptyDir: {}
-        - name: mcp-auth-token
-          secret:
-            secretName: rhdh-secrets
-            items:
-              - key: MCP_TOKEN
-                path: mcp-auth-token
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'
@@ -678,7 +669,7 @@ backstage:
             - mountPath: /extensions
               name: extensions-catalog
         - name: init-rag-data
-          image: 'quay.io/redhat-ai-dev/rag-content:release-1.9-lls-0.5.0-642c567fe10a62b5ff711654306b72912f341e05'
+          image: 'quay.io/redhat-ai-dev/rag-content:release-1.9-lcs'
           command:
             - "sh"
             - "-c"

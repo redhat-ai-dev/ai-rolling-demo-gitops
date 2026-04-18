@@ -232,29 +232,33 @@ install_deps() {
     wait_for_csv "$PIPELINES_OPERATOR_NAMESPACE" "$PIPELINES_OPERATOR_PACKAGE"
   fi
 
-  # install Node Feature Discovery Operator if it doesn't exist
-  if check_operator_exists "$NFD_OPERATOR_NAMESPACE" "$NFD_OPERATOR_PACKAGE"; then
-    log "Node Feature Discovery Operator already installed. Skipping."
+  if [[ "${SKIP_RHOAI_SETUP}" == "true" ]]; then
+    log "SKIP_RHOAI_SETUP=true — skipping NFD and GPU operator installation."
   else
-    log "Node Feature Discovery Operator not found. Installing..."
-    resolve_nfd_starting_csv
-    install_namespaced_operator "$NFD_OPERATOR_NAMESPACE" "nfd-operator-group.yaml" "nfd-subscription.yaml" "$NFD_OPERATOR_PACKAGE"
-    wait_for_csv "$NFD_OPERATOR_NAMESPACE" "$NFD_OPERATOR_PACKAGE"
-    # create NFD instance
-    create_nfd_instance
-    wait_for_nfd_instance
-  fi
+    # install Node Feature Discovery Operator if it doesn't exist
+    if check_operator_exists "$NFD_OPERATOR_NAMESPACE" "$NFD_OPERATOR_PACKAGE"; then
+      log "Node Feature Discovery Operator already installed. Skipping."
+    else
+      log "Node Feature Discovery Operator not found. Installing..."
+      resolve_nfd_starting_csv
+      install_namespaced_operator "$NFD_OPERATOR_NAMESPACE" "nfd-operator-group.yaml" "nfd-subscription.yaml" "$NFD_OPERATOR_PACKAGE"
+      wait_for_csv "$NFD_OPERATOR_NAMESPACE" "$NFD_OPERATOR_PACKAGE"
+      # create NFD instance
+      create_nfd_instance
+      wait_for_nfd_instance
+    fi
 
-  # install Nvidia GPU Operator if it doesn't exist
-  if check_operator_exists "$GPU_OPERATOR_NAMESPACE" "$GPU_OPERATOR_PACKAGE"; then
-    log "NVIDIA GPU Operator already installed. Skipping."
-  else
-    log "NVIDIA GPU Operator not found. Installing..."
-    install_namespaced_operator "$GPU_OPERATOR_NAMESPACE" "gpu-operator-group.yaml" "gpu-operator-subscription.yaml" "$GPU_OPERATOR_PACKAGE"
-    wait_for_csv "$GPU_OPERATOR_NAMESPACE" "$GPU_OPERATOR_PACKAGE"
-    # create ClusterPolicy instance
-    create_cluster_policy
-    wait_for_cluster_policy
+    # install Nvidia GPU Operator if it doesn't exist
+    if check_operator_exists "$GPU_OPERATOR_NAMESPACE" "$GPU_OPERATOR_PACKAGE"; then
+      log "NVIDIA GPU Operator already installed. Skipping."
+    else
+      log "NVIDIA GPU Operator not found. Installing..."
+      install_namespaced_operator "$GPU_OPERATOR_NAMESPACE" "gpu-operator-group.yaml" "gpu-operator-subscription.yaml" "$GPU_OPERATOR_PACKAGE"
+      wait_for_csv "$GPU_OPERATOR_NAMESPACE" "$GPU_OPERATOR_PACKAGE"
+      # create ClusterPolicy instance
+      create_cluster_policy
+      wait_for_cluster_policy
+    fi
   fi
 }
 

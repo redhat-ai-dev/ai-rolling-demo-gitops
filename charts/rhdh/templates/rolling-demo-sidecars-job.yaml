@@ -124,8 +124,7 @@ spec:
                   { "mountPath": "/app-root/config.yaml", "name": "llama-stack-config", "subPath": "config.yaml" },
                   { "mountPath": "/app-root/rhdh-profile.py", "name": "rhdh-profile", "subPath": "rhdh-profile.py" },
                   { "mountPath": "/rag-content", "name": "rag-data-volume" },
-                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" },
-                  { "mountPath": "/app-root/lightspeed-stack/mcp-auth-token", "name": "mcp-auth-token", "subPath": "mcp-auth-token" }
+                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
                 ]
               }
               EOF

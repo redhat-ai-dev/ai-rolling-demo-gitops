@@ -10,6 +10,9 @@ spec:
       containers:
         - name: patch-deployment
           image: quay.io/redhat-ai-dev/utils:latest
+          env:
+            - name: RHOAI_ENABLED
+              value: "{{ .Values.rhoai.enabled }}"
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -31,6 +34,7 @@ spec:
               PATCH_FILE="${TEMP_DIR}/patch.json"
 
               # Create the container definition files
+              if [ "$RHOAI_ENABLED" = "true" ]; then
               cat > "${TEMP_DIR}/location.json" <<EOF
               {
                 "name": "location",
@@ -104,6 +108,7 @@ spec:
                 "workingDir": "/opt/app-root/src"
               }
               EOF
+              fi
 
               cat > "${TEMP_DIR}/lightspeed-core-sidecar.json" <<EOF
               {
@@ -172,6 +177,7 @@ spec:
               }
 
               # check action for each one of the containers
+              if [ "$RHOAI_ENABLED" = "true" ]; then
               # Location: Add/Replace
               if echo "$CONTAINERS" | grep -q '"location"'; then
                 echo "Container 'location' already exists, will replace..."
@@ -200,6 +206,7 @@ spec:
               else
                 echo "Container 'rhoai-normalizer' does not exist, will add..."
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "false"
+              fi
               fi
 
               # Lightspeed Core: Add/Replace

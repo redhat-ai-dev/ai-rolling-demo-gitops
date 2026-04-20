@@ -735,4 +735,4 @@ backstage:
       destinationCACertificate: ""
       insecureEdgeTerminationPolicy: "Redirect"
 rhoai:
-  enabled: false
+  enabled: true

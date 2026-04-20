@@ -644,12 +644,6 @@ backstage:
           emptyDir: {}
         - name: extensions-catalog
           emptyDir: {}
-        - name: mcp-auth-token
-          secret:
-            secretName: rhdh-secrets
-            items:
-              - key: MCP_TOKEN
-                path: mcp-auth-token
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'

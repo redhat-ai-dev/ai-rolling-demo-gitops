@@ -73,6 +73,12 @@ data:
             persistence:
               namespace: vector_io::faiss
               backend: kv_rag
+        - provider_id: notebooks
+          provider_type: inline::faiss
+          config:
+            persistence:
+              namespace: vector_io::faiss
+              backend: kv_notebooks
       files:
         - provider_id: localfs
           provider_type: inline::localfs
@@ -162,6 +168,9 @@ data:
         kv_rag:
           type: kv_sqlite
           db_path: /rag-content/vector_db/rhdh_product_docs/1.9/faiss_store.db
+        kv_notebooks:
+          type: kv_sqlite
+          db_path: /rag-content/vector_db/notebooks/faiss_store.db
       stores:
         metadata:
           namespace: registry

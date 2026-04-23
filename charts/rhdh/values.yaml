@@ -347,8 +347,8 @@ backstage:
     backstage:
       image:
         registry: quay.io
-        repository: rhdh/rhdh-hub-rhel9
-        tag: "1.10-109"
+        repository: rhdh-community/rhdh
+        tag: "next-fafb890a-amd64"
         pullSecrets:
           - quay-pull-secret
       command: []

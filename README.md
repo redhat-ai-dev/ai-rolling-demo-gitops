@@ -69,6 +69,11 @@ The plugin updater workflow runs nightly (and can be triggered manually via `wor
 
 This automation ensures that our gitops environment uses always the latest stable versions of rhdh plugins.
 Once we have sufficiently validated the changes to the `development` branch and want to update the `main` branch, we will manually open a PR from `development` to `main`.
+
+### The RHDH Image Updater (`rhdh-image-updater.yaml`) Workflow
+
+Runs nightly (or manually via `workflow_dispatch`). Checks the latest `next-<hash>` tag from `quay.io/rhdh-community/rhdh` and, if newer than what is set in `charts/rhdh/values.yaml`, opens a PR against `development` with the updated image tag. Any previously open PR for the same update is automatically closed and its branch deleted.
+
 ## Rolling demo setup
 
 Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)

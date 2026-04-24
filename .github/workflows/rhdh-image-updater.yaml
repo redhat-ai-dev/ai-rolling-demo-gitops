@@ -1,0 +1,125 @@
+name: Update RHDH Community Image
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-rhdh-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: development
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      # read the image repo and tag currently set in values.yaml, then query the
+      # quay.io API for the latest active next-<hash> tag. Outputs update_needed,
+      # current_tag, and latest_tag for use in subsequent steps.
+      - name: Check for newer next-<hash> image
+        id: check-image
+        run: |
+          VALUES_FILE="charts/rhdh/values.yaml"
+
+          CURRENT_REPO=$(grep -A2 'registry: quay.io' "$VALUES_FILE" | grep 'repository:' | head -1 | awk '{print $2}')
+          CURRENT_TAG=$(grep -A3 'registry: quay.io' "$VALUES_FILE" | grep 'tag:' | head -1 | sed 's/.*tag: *"\?\([^"]*\)"\?.*/\1/')
+
+          echo "Current repo: $CURRENT_REPO"
+          echo "Current tag:  $CURRENT_TAG"
+
+          LATEST_TAG=$(curl -sf \
+            "https://quay.io/api/v1/repository/rhdh-community/rhdh/tag/?filter_tag_name=like:next-&limit=1&page=1&onlyActiveTags=true" \
+            | jq -r '.tags[0].name')
+
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            echo "Failed to fetch latest tag from Quay.io"
+            exit 1
+          fi
+
+          echo "Latest community tag: $LATEST_TAG"
+          echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "current_tag=$CURRENT_TAG" >> "$GITHUB_OUTPUT"
+
+          if [ "$CURRENT_TAG" = "$LATEST_TAG" ] && [ "$CURRENT_REPO" = "rhdh-community/rhdh" ]; then
+            echo "Image is already up to date."
+            echo "update_needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Update needed: $CURRENT_TAG -> $LATEST_TAG (repo: rhdh-community/rhdh)"
+            echo "update_needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # patch values.yaml in-place: switch the repository to rhdh-community/rhdh
+      # and set the new tag.
+      - name: Update values.yaml
+        if: steps.check-image.outputs.update_needed == 'true'
+        run: |
+          VALUES_FILE="charts/rhdh/values.yaml"
+          LATEST_TAG="${{ steps.check-image.outputs.latest_tag }}"
+
+          # Update repository to rhdh-community/rhdh
+          sed -i "s|repository: rhdh/rhdh-hub-rhel9|repository: rhdh-community/rhdh|g" "$VALUES_FILE"
+          # Update tag (handles both quoted and unquoted values)
+          sed -i "s|tag: \"[^\"]*\"|tag: \"$LATEST_TAG\"|g" "$VALUES_FILE"
+
+          echo "Updated $VALUES_FILE:"
+          grep -A4 'registry: quay.io' "$VALUES_FILE" | head -5
+
+      # commit the updated values.yaml to a new branch and open a PR against development.
+      # if a PR for this exact image tag is already open, do nothing.
+      # if a PR for an older tag is open, close it and replace with the new one.
+      - name: Open pull request
+        if: steps.check-image.outputs.update_needed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          LATEST_TAG="${{ steps.check-image.outputs.latest_tag }}"
+          CURRENT_TAG="${{ steps.check-image.outputs.current_tag }}"
+          BRANCH="automation/rhdh-image-$LATEST_TAG"
+          PR_TITLE="(chore): update rhdh community image"
+
+          EXISTING_PR=$(gh pr list --state open --json number,title,headRefName \
+            --jq ".[] | select(.title == \"$PR_TITLE\")" | head -1)
+
+          if [ -n "$EXISTING_PR" ]; then
+            EXISTING_PR_BRANCH=$(echo "$EXISTING_PR" | jq -r '.headRefName')
+            if [ "$EXISTING_PR_BRANCH" = "$BRANCH" ]; then
+              # A PR for this exact image tag is already open — nothing to do.
+              echo "PR for $LATEST_TAG already exists, skipping."
+              exit 0
+            fi
+            # A PR for an older tag exists — close it and replace with the new one.
+            EXISTING_PR_NUMBER=$(echo "$EXISTING_PR" | jq -r '.number')
+            echo "Closing outdated PR #$EXISTING_PR_NUMBER (branch: $EXISTING_PR_BRANCH)"
+            gh pr close "$EXISTING_PR_NUMBER" --comment "Superseded by a newer automated update."
+            git push origin --delete "$EXISTING_PR_BRANCH" || true
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+          git add charts/rhdh/values.yaml
+          git commit -m "chore(rhdh): update RHDH community image to $LATEST_TAG"
+          git push origin "$BRANCH"
+
+          WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          printf '## PR Description\n\nAutomated update triggered by the [Update RHDH Community Image](%s) workflow.\n\nUpdates the RHDH community image in `charts/rhdh/values.yaml` from `%s` to:\n- `rhdh`: `quay.io/rhdh-community/rhdh:%s`\n' \
+            "$WORKFLOW_URL" "$CURRENT_TAG" "$LATEST_TAG" > /tmp/pr-body.md
+
+          gh pr create \
+            --base development \
+            --head "$BRANCH" \
+            --title "$PR_TITLE" \
+            --body-file /tmp/pr-body.md

@@ -348,7 +348,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh-community/rhdh
-        tag: "next-c6a928c4"
+        tag: "next-66c92076"
         pullSecrets:
           - quay-pull-secret
       command: []

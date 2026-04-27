@@ -110,25 +110,6 @@ spec:
               EOF
               fi
 
-              cat > "${TEMP_DIR}/lightspeed-core-sidecar.json" <<EOF
-              {
-                "name": "lightspeed-core",
-                "envFrom": [
-                  { "secretRef": { "name": "llama-stack-secrets" } }
-                ],
-                "image": "quay.io/lightspeed-core/lightspeed-stack:0.5.1",
-                "imagePullPolicy": "Always",
-                "ports": [{ "containerPort": 8080, "name": "lcs-backend", "protocol": "TCP" }],
-                "volumeMounts": [
-                  { "mountPath": "/app-root/lightspeed-stack.yaml", "name": "lightspeed-stack", "subPath": "lightspeed-stack.yaml" },
-                  { "mountPath": "/app-root/config.yaml", "name": "llama-stack-config", "subPath": "config.yaml" },
-                  { "mountPath": "/app-root/rhdh-profile.py", "name": "rhdh-profile", "subPath": "rhdh-profile.py" },
-                  { "mountPath": "/rag-content", "name": "rag-data-volume" },
-                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
-                ]
-              }
-              EOF
-
               cat > "${TEMP_DIR}/feedback-harvester-sidecar.json" <<EOF
               {
                 "name": "feedback-harvester",
@@ -143,7 +124,7 @@ spec:
                 ],
                 "image": "quay.io/redhat-ai-dev/feedback-harvester:v0.1.0",
                 "volumeMounts": [
-                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
+                  { "mountPath": "/tmp/data/feedback", "name": "lightspeed-data" }
                 ]
               }
               EOF
@@ -206,16 +187,6 @@ spec:
                 echo "Container 'rhoai-normalizer' does not exist, will add..."
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "false"
               fi
-              fi
-
-              # Lightspeed Core: Add/Replace
-              if echo "$CONTAINERS" | grep -q '"lightspeed-core"'; then
-                echo "Container 'lightspeed-core' already exists, will replace..."
-                LIGHTSPEED_CORE_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$LIGHTSPEED_CORE_INDEX" "${TEMP_DIR}/lightspeed-core-sidecar.json" "false"
-              else
-                echo "Container 'lightspeed-core' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/lightspeed-core-sidecar.json" "false"
               fi
 
               # Feedback Harvester: Add/Replace

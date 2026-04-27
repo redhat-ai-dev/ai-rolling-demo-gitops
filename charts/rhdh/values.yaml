@@ -44,37 +44,6 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-argocd:bs_1.49.4__1.8.1
         disabled: false
 
-      # Lightspeed Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.2.1
-        disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-lightspeed:
-                translationResources:
-                  - importName: lightspeedTranslations
-                    module: Alpha
-                    ref: lightspeedTranslationRef
-                dynamicRoutes:
-                  - path: /lightspeed
-                    importName: LightspeedPage
-                mountPoints:
-                  - mountPoint: application/listener
-                    importName: LightspeedFAB
-                  - mountPoint: application/provider
-                    importName: LightspeedDrawerProvider
-                  - mountPoint: application/internal/drawer-state
-                    importName: LightspeedDrawerStateExposer
-                    config:
-                      id: lightspeed
-                  - mountPoint: application/internal/drawer-content
-                    importName: LightspeedChatContainer
-                    config:
-                      id: lightspeed
-                      priority: 100
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.2.1
-        disabled: false
-
       # MCP Actions plugins
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.49.4__0.1.11
         disabled: false
@@ -336,6 +305,67 @@ global:
       enabled: true
       existingSecret: ""
       value: ""
+
+  # Configure lightspeed post GA
+  lightspeed:
+    enabled: true
+    plugins:
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.2.1
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-lightspeed:
+                translationResources:
+                  - importName: lightspeedTranslations
+                    module: Alpha
+                    ref: lightspeedTranslationRef
+                dynamicRoutes:
+                  - path: /lightspeed
+                    importName: LightspeedPage
+                mountPoints:
+                  - mountPoint: application/listener
+                    importName: LightspeedFAB
+                  - mountPoint: application/provider
+                    importName: LightspeedDrawerProvider
+                  - mountPoint: application/internal/drawer-state
+                    importName: LightspeedDrawerStateExposer
+                    config:
+                      id: lightspeed
+                  - mountPoint: application/internal/drawer-content
+                    importName: LightspeedChatContainer
+                    config:
+                      id: lightspeed
+                      priority: 100
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.2.1
+        disabled: false
+    secret:
+      create: false
+      name: "llama-stack-secrets"
+    sidecar:
+      image: quay.io/lightspeed-core/lightspeed-stack:0.5.1
+    configMaps:
+      - name: stack
+        create: true
+        mountPath: /app-root/lightspeed-stack.yaml
+        subPath: lightspeed-stack.yaml
+        sourceFile: lightspeed-stack.yaml
+        optional: false
+      # override llama-stack-config to keep the gpt allowed models customization
+      - name: config
+        create: false
+        nameOverride: "llama-stack-config"
+        mountPath: /app-root/config.yaml
+        subPath: config.yaml
+        sourceFile: config.yaml
+        optional: false
+      - name: rhdh-profile
+        create: false
+        nameOverride: "rhdh-profile"
+        mountPath: /app-root/rhdh-profile.py
+        subPath: rhdh-profile.py
+        sourceFile: rhdh-profile.py
+        optional: false
 
 backstage:
   # override the default name to stay in the context
@@ -626,21 +656,8 @@ backstage:
             defaultMode: 420
             optional: true
             secretName: dynamic-plugins-npmrc
-        - name: lightspeed-stack
-          configMap:
-            name: lightspeed-stack
-        - name: llama-stack-config
-          configMap:
-            name: llama-stack-config
-        - name: rhdh-profile
-          configMap:
-            name: rhdh-profile
         # tmp backstage volume for scaffolder tasks
         - name: backstage-tmp
-          emptyDir: {}
-        - name: shared-storage
-          emptyDir: {}
-        - name: rag-data-volume
           emptyDir: {}
         - name: extensions-catalog
           emptyDir: {}
@@ -671,15 +688,6 @@ backstage:
               subPath: .npmrc
             - mountPath: /extensions
               name: extensions-catalog
-        - name: init-rag-data
-          image: 'quay.io/redhat-ai-dev/rag-content:release-1.9-lls-0.5.0-642c567fe10a62b5ff711654306b72912f341e05'
-          command:
-            - "sh"
-            - "-c"
-            - "echo 'Copying RAG data...'; cp -r /rag/vector_db/rhdh_product_docs /data/ && cp -r /rag/embeddings_model /data/ && echo 'Copy complete.'"
-          volumeMounts:
-            - mountPath: /data
-              name: rag-data-volume
       installDir: /opt/app-root/src
       podAnnotations:
         checksum/dynamic-plugins: >-

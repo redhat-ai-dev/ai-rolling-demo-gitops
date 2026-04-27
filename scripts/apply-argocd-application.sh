@@ -23,13 +23,13 @@ apply_argocd_application() {
     helm_params="[
        {\"name\": \"global.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
        {\"name\": \"global.isSecondaryInstance\", \"value\": \"${IS_SECONDARY_INSTANCE:-false}\"}
+       {\"name\": \"rhoai.enabled\", \"value\": \"false\"}
      ]"
   else
     helm_params="[
        {\"name\": \"global.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
        {\"name\": \"global.isSecondaryInstance\", \"value\": \"${IS_SECONDARY_INSTANCE:-false}\"},
        {\"name\": \"$openshift_ai_param\", \"value\": \"$openshift_ai_url\"},
-       {\"name\": \"rhoai.enabled\", \"value\": \"true\"}
      ]"
   fi
   if ! yq eval \

@@ -72,6 +72,6 @@ When updating plugin config in `charts/rhdh/values.yaml`, always cross-reference
 
 Use subagents for focused, context-heavy tasks:
 
-- **rhdh-config-reviewer**: Reviews `charts/rhdh/values.yaml` changes, validates plugin tag formats, checks for config regressions, and cross-references RHDH release notes. Invoke with: `Use the rhdh-config-reviewer subagent to review my values.yaml changes.`
+- **pr-reviewer**: Reviews PR changes on the ai-rolling-demo-gitops Repo. Invoke with: `Use the pr-reviewer subagent to review my values.yaml changes.`
 - **workflow-analyst**: Analyzes `.github/workflows/` files for correctness, secret usage, and automation logic. Invoke with: `Use the workflow-analyst subagent to check this workflow.`
 - **tester**: Runs the Playwright E2E test suite and reports results. Invoke with: `Use the tester subagent to run the E2E tests.`

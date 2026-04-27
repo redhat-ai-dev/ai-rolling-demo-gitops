@@ -124,7 +124,7 @@ spec:
                 ],
                 "image": "quay.io/redhat-ai-dev/feedback-harvester:v0.1.0",
                 "volumeMounts": [
-                  { "mountPath": "/tmp/data/feedback", "name": "lightspeed-data" }
+                  { "mountPath": "/tmp/data/feedback", "name": "lightspeed-data", "subPath": "data/feedback" }
                 ]
               }
               EOF

@@ -309,11 +309,6 @@ global:
   # Configure lightspeed post GA
   lightspeed:
     enabled: true
-    notebooks:
-      enabled: true
-      queryDefaults:
-        model: ${NOTEBOOKS_QUERY_MODEL}
-        provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
     plugins:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.5.0
         disabled: false
@@ -527,6 +522,11 @@ backstage:
                   resolvers:
                     - resolver: emailMatchingUserEntityProfileEmail
         lightspeed:
+          notebooks:
+            enabled: true
+            queryDefaults:
+              model: ${NOTEBOOKS_QUERY_MODEL}
+              provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
           mcpServers:
             - name: mcp-integration-tools
               token: ${MCP_TOKEN}

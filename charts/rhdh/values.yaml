@@ -310,7 +310,7 @@ global:
   lightspeed:
     enabled: true
     notebooks:
-      enabled: false
+      enabled: true
       queryDefaults:
         model: ${NOTEBOOKS_QUERY_MODEL}
         provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}

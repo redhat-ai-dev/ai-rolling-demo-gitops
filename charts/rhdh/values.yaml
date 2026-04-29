@@ -309,8 +309,13 @@ global:
   # Configure lightspeed post GA
   lightspeed:
     enabled: true
+    notebooks:
+      enabled: true
+      queryDefaults:
+        model: ${NOTEBOOKS_QUERY_MODEL}
+        provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
     plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.2.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.5.0
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -337,7 +342,7 @@ global:
                     config:
                       id: lightspeed
                       priority: 100
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.2.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.5.0
         disabled: false
     secret:
       create: false

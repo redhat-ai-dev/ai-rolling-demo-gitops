@@ -530,6 +530,8 @@ backstage:
           mcpServers:
             - name: mcp-integration-tools
               token: ${MCP_TOKEN}
+        mcpActions:
+          namespacedToolNames: false
         integrations:
           github:
             - apps:

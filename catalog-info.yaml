@@ -1,0 +1,8 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: ai-rolling-demo-catalog
+  description: Catalog entries for the AI Rolling Demo environment
+spec:
+  targets:
+    - ./catalog/rhdh-getting-started.yaml

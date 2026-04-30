@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: rhdh-getting-started
+  title: Getting Started with RHDH
+  description: A first-time user guide for Red Hat Developer Hub
+  annotations:
+    backstage.io/techdocs-ref: url:https://github.com/redhat-developer/rhdh-local/tree/main/
+spec:
+  type: documentation
+  lifecycle: production
+  owner: rhdh-team

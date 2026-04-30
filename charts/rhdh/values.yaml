@@ -475,6 +475,10 @@ backstage:
           rules:
             - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API]
           locations:
+            - target: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/catalog-info.yaml
+              rules:
+                - allow: [Component]
+              type: url
             - target: https://github.com/benwilcock/rhdh-techdocs/blob/main/rhdh-catalog-info.yaml
               rules:
                 - allow: [Component, System]

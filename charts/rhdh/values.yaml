@@ -47,11 +47,9 @@ global:
       # MCP Actions plugins
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.49.4__0.1.11
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras:bs_1.49.4__0.2.2
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-tool:bs_1.45.3__0.4.1
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras:bs_1.49.4__0.2.3
-        disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras:bs_1.49.4__0.4.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-tool:bs_1.45.3__0.3.2
         disabled: false
 
       # Model Catalog Plugins
@@ -421,9 +419,8 @@ backstage:
         backend:
           actions:
             pluginSources:
-              - 'software-catalog-mcp-extras'
-              - 'techdocs-mcp-extras'
-              - 'scaffolder-mcp-extras'
+              - 'software-catalog-mcp-tool'
+              - 'techdocs-mcp-tool'
           auth:
             externalAccess:
               - type: static
@@ -479,6 +476,10 @@ backstage:
             - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API]
           locations:
             - target: https://github.com/benwilcock/rhdh-techdocs/blob/main/rhdh-catalog-info.yaml
+              rules:
+                - allow: [Component, System]
+              type: url
+            - target: https://github.com/thepetk/ai-rolling-demo-gitops/blob/add-getting-started-techdocs/catalog-info.yaml
               rules:
                 - allow: [Component, System]
               type: url

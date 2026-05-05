@@ -29,6 +29,10 @@ The rolling demo combines the following components so far:
 - The github organization set to serve the demo is `ai-rolling-demo`, that said you need to keep it as the `Repository Owner`.
 - Same applies for the `Image Organization` value. The `quay.io` repository corresponding to the demo is `rhdhpai-rolling-demo`.
 
+### Gitlab Plugins Not Suported
+
+- The GitLab catalog discovery plugins (`catalog-backend-module-gitlab-dynamic` and `catalog-backend-module-gitlab-org-dynamic`) are currently disabled. The demo uses GitHub as its only SCM integration and these plugins require a `catalog.providers.gitlab.default.host` configuration that is not available.
+
 ### Model Catalog Bridge
 
 - A pre-requisite for the model catalog bridge to work is a running Red Hat OpenShift AI instance, so the bridge can fetch all registered models and add them to RHDH as catalog entities.

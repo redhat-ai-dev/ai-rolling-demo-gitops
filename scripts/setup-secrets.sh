@@ -34,6 +34,8 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=VLLM_API_KEY="$VLLM_API_KEY" \
     --from-literal=VALIDATION_PROVIDER="$VALIDATION_PROVIDER" \
     --from-literal=VALIDATION_MODEL_NAME="$VALIDATION_MODEL_NAME" \
+    --from-literal=NOTEBOOKS_QUERY_PROVIDER_ID="$NOTEBOOKS_QUERY_PROVIDER_ID" \
+    --from-literal=NOTEBOOKS_QUERY_MODEL="$NOTEBOOKS_QUERY_MODEL" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 

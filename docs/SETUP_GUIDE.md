@@ -99,6 +99,10 @@ export VLLM_API_KEY="your-llama-stack-token"
 export VALIDATION_PROVIDER="vllm"
 # VALIDATION_MODEL_NAME: The name of the model to use for validation
 export VALIDATION_MODEL_NAME="llama-31-8b-version1"
+# NOTEBOOKS_QUERY_PROVIDER_ID: The provider ID to use for notebook queries
+export NOTEBOOKS_QUERY_PROVIDER_ID="your-provider-id"
+# NOTEBOOKS_QUERY_MODEL: The model name to use for notebook queries
+export NOTEBOOKS_QUERY_MODEL="your-model-name"
 
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD="your-preffered-lightspeed-psql-password"
@@ -149,7 +153,7 @@ No changes.
 
 - New **GitOps repo settings** section: `GITOPS_REPO_URL`, `GITOPS_TARGET_REVISION`, `ODH_SETUP_DIR`, `RHDH_NAMESPACE` (defaults to `rolling-demo-ns`)
 - `RHDH_CLUSTER_ROUTER_BASE` — cluster domain suffix, replaces `RHDH_CALLBACK_URL` and `RHDH_BASE_URL`
-- New **Llama Stack secrets** section: `VLLM_URL`, `VLLM_API_KEY`, `VALIDATION_PROVIDER`, `VALIDATION_MODEL_NAME` — replaces the Ollama and Lightspeed URL/token variables
+- New **Llama Stack secrets** section: `VLLM_URL`, `VLLM_API_KEY`, `VALIDATION_PROVIDER`, `VALIDATION_MODEL_NAME`, `NOTEBOOKS_QUERY_PROVIDER_ID`, `NOTEBOOKS_QUERY_MODEL` — replaces the Ollama and Lightspeed URL/token variables
 
 **Removed:**
 

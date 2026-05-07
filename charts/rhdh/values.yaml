@@ -479,9 +479,9 @@ backstage:
               rules:
                 - allow: [Component, System]
               type: url
-            - target: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/docs/getting-started/catalog-info.yaml
+            - target: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/main/catalog-info.yaml
               rules:
-                - allow: [Component]
+                - allow: [System]
               type: url
             - target: https://github.com/redhat-ai-dev/ai-lab-template/blob/ai-rolling-demo-1_9/all.yaml
               type: url

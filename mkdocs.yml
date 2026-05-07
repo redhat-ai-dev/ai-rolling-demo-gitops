@@ -1,6 +1,6 @@
 site_name: Getting Started With Red Hat Developer Hub
 site_description: A guide for new users of Red Hat Developer Hub
-docs_dir: docs
+docs_dir: catalog-docs
 plugins:
   - techdocs-core
 nav:

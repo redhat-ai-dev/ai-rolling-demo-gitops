@@ -1,5 +1,5 @@
 apiVersion: backstage.io/v1alpha1
-kind: Component
+kind: System
 metadata:
   name: rhdh-getting-started
   title: Getting Started With Red Hat Developer Hub
@@ -30,6 +30,8 @@ metadata:
       icon: github
       type: sourcecode
 spec:
-  type: documentation
+  type: product
   lifecycle: production
-  owner: rhdh-team
+  owner: user:default/guest
+  profile:
+    displayName: Red Hat Developer Hub Getting Started Guide

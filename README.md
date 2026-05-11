@@ -80,7 +80,16 @@ Runs nightly (or manually via `workflow_dispatch`). Checks the latest `next-<has
 
 ## Rolling demo setup
 
-Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)
+Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md).
+
+Two install paths are available:
+
+| Command                 | Cluster requirements                     | What's included                                                                |
+| ----------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
+| `make install`          | GPU-capable nodes (`g5.2xlarge`+), RHOAI | Full stack: RHDH, Lightspeed, Model Catalog Bridge, AI Software Templates      |
+| `make install-no-rhoai` | Any OCP cluster (no GPU required)        | RHDH, Lightspeed, AI Software Templates — **no** Model Catalog Bridge or RHOAI |
+
+Use `make install-no-rhoai` when you want to run the demo on a smaller cluster that does not have GPU nodes or Red Hat OpenShift AI.
 
 ## Testing
 

@@ -29,6 +29,7 @@ log "Creating $SECRET_NAME secret..."
 kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
     --from-literal=ENABLE_VLLM="true" \
+    --from-literal=ENABLE_VALIDATION="true" \
     --from-literal=VLLM_URL="$VLLM_URL" \
     --from-literal=VLLM_API_KEY="$VLLM_API_KEY" \
     --from-literal=VALIDATION_PROVIDER="$VALIDATION_PROVIDER" \

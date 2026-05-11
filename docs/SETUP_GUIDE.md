@@ -163,12 +163,16 @@ No changes.
 After configuring your `scripts/private-env` file, run the setup from the repository root:
 
 ```bash
+# Full install (GPU + RHOAI + Model Catalog)
 make install
+
+# Install without GPU and RHOAI (no NFD, no GPU operator, no Model Catalog sidecars)
+make install-no-rhoai
 ```
 
 The `setup.sh` script automates the entire setup process by calling focused subscripts in order:
 
-1. [`install-operators.sh`](../scripts/install-operators.sh) — installs the required operators (OpenShift GitOps, OpenShift Pipelines, Node Feature Discovery, NVIDIA GPU) and creates the NFD instance and NVIDIA ClusterPolicy.
+1. [`install-operators.sh`](../scripts/install-operators.sh) — installs the required operators (OpenShift GitOps, OpenShift Pipelines, Node Feature Discovery, NVIDIA GPU) and creates the NFD instance and NVIDIA ClusterPolicy. Skipped for NFD and GPU when `SKIP_RHOAI_SETUP=true`.
 2. [`setup-rhoai.sh`](../scripts/setup-rhoai.sh) — applies the ODH Kubeflow Model Registry kustomize and waits for the setup job to complete.
 3. [`setup-argocd.sh`](../scripts/setup-argocd.sh) — retrieves ArgoCD admin credentials and generates an API token.
 4. [`setup-namespaces.sh`](../scripts/setup-namespaces.sh) — creates the RHDH and LightSpeed Postgres namespaces.
@@ -181,8 +185,8 @@ The `setup.sh` script automates the entire setup process by calling focused subs
 
 You can skip earlier steps if they have already been completed on your cluster:
 
-- `SKIP_INSTALL_DEPS=true` — skips operator and instance installation.
-- `SKIP_RHOAI_SETUP=true` — skips the ODH Kubeflow Model Registry setup.
+- `SKIP_INSTALL_DEPS=true` — skips all operator and instance installation.
+- `SKIP_RHOAI_SETUP=true` — skips NFD + GPU operator installation, RHOAI setup, and disables Model Catalog sidecars (`location`, `storage-rest`, `rhoai-normalizer`) and RBAC in the deployed chart. This is what `make install-no-rhoai` sets.
 
 For example, to jump straight to the rolling demo preparation:
 

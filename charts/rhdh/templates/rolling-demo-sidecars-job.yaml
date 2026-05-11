@@ -10,6 +10,9 @@ spec:
       containers:
         - name: patch-deployment
           image: quay.io/redhat-ai-dev/utils:latest
+          env:
+            - name: RHOAI_ENABLED
+              value: "{{ .Values.rhoai.enabled }}"
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -31,6 +34,7 @@ spec:
               PATCH_FILE="${TEMP_DIR}/patch.json"
 
               # Create the container definition files
+              if [ "$RHOAI_ENABLED" = "true" ]; then
               cat > "${TEMP_DIR}/location.json" <<EOF
               {
                 "name": "location",
@@ -104,36 +108,7 @@ spec:
                 "workingDir": "/opt/app-root/src"
               }
               EOF
-
-              cat > "${TEMP_DIR}/llama-stack-sidecar.json" <<EOF
-              {
-                "name": "llama-stack",
-                "envFrom": [
-                  { "secretRef": { "name": "llama-stack-secrets" } }
-                ],
-                "image": "quay.io/redhat-ai-dev/llama-stack:0.1.4",
-                "imagePullPolicy": "Always",
-                "volumeMounts": [
-                  { "mountPath": "/app-root/.llama", "name": "shared-storage" },
-                  { "mountPath": "/rag-content/embeddings_model", "name": "rag-data-volume", "subPath": "embeddings_model" },
-                  { "mountPath": "/rag-content/vector_db/rhdh_product_docs", "name": "rag-data-volume", "subPath": "rhdh_product_docs" },
-                  { "mountPath": "/app-root/run.yaml", "name": "llama-stack-run-no-guard", "subPath": "run.yaml" }
-                ]
-              }
-              EOF
-
-              cat > "${TEMP_DIR}/lightspeed-core-sidecar.json" <<EOF
-              {
-                "name": "lightspeed-core",
-                "image": "quay.io/lightspeed-core/lightspeed-stack:0.4.0",
-                "imagePullPolicy": "Always",
-                "ports": [{ "containerPort": 8080, "name": "lcs-backend", "protocol": "TCP" }],
-                "volumeMounts": [
-                  { "mountPath": "/app-root/lightspeed-stack.yaml", "name": "lightspeed-stack", "subPath": "lightspeed-stack.yaml" },
-                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
-                ]
-              }
-              EOF
+              fi
 
               cat > "${TEMP_DIR}/feedback-harvester-sidecar.json" <<EOF
               {
@@ -149,7 +124,7 @@ spec:
                 ],
                 "image": "quay.io/redhat-ai-dev/feedback-harvester:v0.1.0",
                 "volumeMounts": [
-                  { "mountPath": "/tmp/data/feedback", "name": "shared-storage" }
+                  { "mountPath": "/tmp/data/feedback", "name": "lightspeed-data", "subPath": "data/feedback" }
                 ]
               }
               EOF
@@ -182,6 +157,7 @@ spec:
               }
 
               # check action for each one of the containers
+              if [ "$RHOAI_ENABLED" = "true" ]; then
               # Location: Add/Replace
               if echo "$CONTAINERS" | grep -q '"location"'; then
                 echo "Container 'location' already exists, will replace..."
@@ -211,35 +187,16 @@ spec:
                 echo "Container 'rhoai-normalizer' does not exist, will add..."
                 add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/rhoai-normalizer.json" "false"
               fi
-
-              # Lightspeed Core: Add/Replace
-              if echo "$CONTAINERS" | grep -q '"lightspeed-core"'; then
-                echo "Container 'lightspeed-core' already exists, will replace..."
-                LIGHTSPEED_CORE_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$LIGHTSPEED_CORE_INDEX" "${TEMP_DIR}/lightspeed-core-sidecar.json" "false"
-              else
-                echo "Container 'lightspeed-core' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/lightspeed-core-sidecar.json" "false"
               fi
 
               # Feedback Harvester: Add/Replace
               if echo "$CONTAINERS" | grep -q '"feedback-harvester"'; then
                 echo "Container 'feedback-harvester' already exists, will replace..."
                 FEEDBACK_HARVESTER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "feedback-harvester") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "false"
+                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
               else
                 echo "Container 'feedback-harvester' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "false"
-              fi
-
-              # Llama Stack: Add/Replace
-              if echo "$CONTAINERS" | grep -q '"llama-stack"'; then
-                echo "Container 'llama-stack' already exists, will replace..."
-                LLAMA_STACK_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "llama-stack") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$LLAMA_STACK_INDEX" "${TEMP_DIR}/llama-stack-sidecar.json" "true"
-              else
-                echo "Container 'llama-stack' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/llama-stack-sidecar.json" "true"
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
               fi
 
               echo "]" >> "$PATCH_FILE"

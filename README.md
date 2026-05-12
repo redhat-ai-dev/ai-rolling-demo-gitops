@@ -78,6 +78,10 @@ Once we have sufficiently validated the changes to the `development` branch and 
 
 Runs nightly (or manually via `workflow_dispatch`). Checks the latest `next-<hash>` tag from `quay.io/rhdh-community/rhdh` and, if newer than what is set in `charts/rhdh/values.yaml`, opens a PR against `development` with the updated image tag. Any previously open PR for the same update is automatically closed and its branch deleted.
 
+## Getting Started Guide
+
+A guide covering RHDH fundamentals—navigation, the Software Catalog, TechDocs, APIs, Templates, Search, and Developer Lightspeed—can be found in [catalog-docs/getting-started-rhdh/index.md](./catalog-docs/getting-started-rhdh/index.md).
+
 ## Rolling demo setup
 
 Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md).

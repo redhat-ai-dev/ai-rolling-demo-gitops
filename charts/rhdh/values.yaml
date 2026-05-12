@@ -101,6 +101,12 @@ global:
                     title: Administration
                     textKey: menuItem.administration
                     icon: admin
+                  default.help:
+                    title: RHDH Guide
+                    icon: techdocs
+                    priority: 5
+                    to: /catalog/default/system/rhdh-getting-started/docs
+                    enabled: true
               red-hat-developer-hub.backstage-plugin-global-header:
                 translationResources:
                 - importName: globalHeaderTranslations
@@ -490,6 +496,10 @@ backstage:
               type: url
               rules:
                 - allow: [Component, Location, Template]
+            - target: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/development/catalog-info.yaml
+              type: url
+              rules:
+                - allow: [Component, System]
           providers:
             modelCatalog:
               development:

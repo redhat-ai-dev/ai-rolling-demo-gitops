@@ -99,10 +99,12 @@ export VLLM_API_KEY="your-llama-stack-token"
 export VALIDATION_PROVIDER="vllm"
 # VALIDATION_MODEL_NAME: The name of the model to use for validation
 export VALIDATION_MODEL_NAME="llama-31-8b-version1"
-# NOTEBOOKS_QUERY_PROVIDER_ID: The provider ID to use for notebook queries
-export NOTEBOOKS_QUERY_PROVIDER_ID="your-provider-id"
-# NOTEBOOKS_QUERY_MODEL: The model name to use for notebook queries
-export NOTEBOOKS_QUERY_MODEL="your-model-name"
+# NOTEBOOKS_QUERY_PROVIDER_ID: The Llama Stack provider ID used to route notebook queries to the
+# inference backend. Its set of values is similar to VALIDATION_PROVIDER.
+export NOTEBOOKS_QUERY_PROVIDER_ID="vllm"
+# NOTEBOOKS_QUERY_MODEL: The model identifier as exposed by Llama Stack. Note this may differ
+# from the kserve deployment name or vLLM model path. It takes values similar to VALIDATION_MODEL_NAME.
+export NOTEBOOKS_QUERY_MODEL="llama-31-8b-version1"
 
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD="your-preffered-lightspeed-psql-password"

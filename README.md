@@ -76,7 +76,7 @@ Once we have sufficiently validated the changes to the `development` branch and 
 
 ### The RHDH Image Updater (`rhdh-image-updater.yaml`) Workflow
 
-Runs nightly (or manually via `workflow_dispatch`). Checks the latest `next-<hash>` tag from `quay.io/rhdh-community/rhdh` and, if newer than what is set in `charts/rhdh/values.yaml`, opens a PR against `development` with the updated image tag. Any previously open PR for the same update is automatically closed and its branch deleted.
+Runs nightly (or manually via `workflow_dispatch`). Reads the current `MAJOR.MAJOR-MINOR` tag (e.g. `1.10-123`) from `charts/rhdh/values.yaml`, queries `quay.io/rhdh/rhdh-hub-rhel9` for the highest minor number available under the same `MAJOR.MAJOR-` prefix, and opens a PR against `development` if a newer tag is found. The major version is never bumped automatically. Any previously open PR for an older tag is automatically closed and its branch deleted.
 
 ## Getting Started Guide
 

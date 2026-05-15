@@ -1,0 +1,37 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: rhdh-getting-started
+  title: Getting Started With Red Hat Developer Hub
+  description: |
+    A comprehensive getting started guide for new users of Red Hat Developer Hub.
+    Covers fundamentals, core features (Software Catalog, TechDocs, Templates, APIs),
+    navigation, search, extensions, and AI-powered assistance with Developer Lightspeed.
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    github.com/project-slug: redhat-ai-dev/ai-rolling-demo-gitops
+  tags:
+    - backstage
+    - rhdh
+    - developer-hub
+    - getting-started
+    - documentation
+  links:
+    - url: https://red.ht/rhdh
+      title: RHDH Homepage
+      icon: star
+      type: website
+    - url: https://docs.redhat.com/en/documentation/red_hat_developer_hub/
+      title: RHDH Official Documentation
+      icon: docs
+      type: docs
+    - url: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops
+      title: AI Rolling Demo GitOps
+      icon: github
+      type: sourcecode
+spec:
+  type: product
+  lifecycle: production
+  owner: user:default/guest
+  profile:
+    displayName: Red Hat Developer Hub Getting Started Guide

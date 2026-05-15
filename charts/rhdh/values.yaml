@@ -101,6 +101,12 @@ global:
                     title: Administration
                     textKey: menuItem.administration
                     icon: admin
+                  default.help:
+                    title: RHDH Guide
+                    icon: techdocs
+                    priority: 5
+                    to: /catalog/default/system/rhdh-getting-started/docs
+                    enabled: true
               red-hat-developer-hub.backstage-plugin-global-header:
                 translationResources:
                 - importName: globalHeaderTranslations
@@ -312,7 +318,7 @@ global:
   lightspeed:
     enabled: true
     plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.6.5
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.8.0
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -339,7 +345,7 @@ global:
                     config:
                       id: lightspeed
                       priority: 100
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.6.5
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.8.0
         disabled: false
     secret:
       create: false
@@ -379,8 +385,8 @@ backstage:
     backstage:
       image:
         registry: quay.io
-        repository: rhdh-community/rhdh
-        tag: "next-bd8484b0"
+        repository: rhdh/rhdh-hub-rhel9
+        tag: "1.10-122"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -490,6 +496,10 @@ backstage:
               type: url
               rules:
                 - allow: [Component, Location, Template]
+            - target: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/development/catalog-info.yaml
+              type: url
+              rules:
+                - allow: [Component, System]
           providers:
             modelCatalog:
               development:

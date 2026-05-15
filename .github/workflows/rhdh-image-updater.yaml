@@ -1,4 +1,4 @@
-name: Update RHDH Community Image
+name: Update RHDH Image
 
 on:
   schedule:
@@ -24,52 +24,53 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      # read the image repo and tag currently set in values.yaml, then query the
-      # quay.io API for the latest active next-<hash> tag. Outputs update_needed,
+      # read the current tag from values.yaml, extract the MAJOR.MAJOR prefix
+      # (e.g. "1.10" from "1.10-123"), then query quay.io for the highest minor
+      # number available under that same prefix. Outputs update_needed,
       # current_tag, and latest_tag for use in subsequent steps.
-      - name: Check for newer next-<hash> image
+      - name: Check for newer minor version of rhdh/rhdh-hub-rhel9
         id: check-image
         run: |
           VALUES_FILE="charts/rhdh/values.yaml"
 
-          CURRENT_REPO=$(grep -A2 'registry: quay.io' "$VALUES_FILE" | grep 'repository:' | head -1 | awk '{print $2}')
           CURRENT_TAG=$(grep -A3 'registry: quay.io' "$VALUES_FILE" | grep 'tag:' | head -1 | sed 's/.*tag: *"\?\([^"]*\)"\?.*/\1/')
+          echo "Current tag: $CURRENT_TAG"
 
-          echo "Current repo: $CURRENT_REPO"
-          echo "Current tag:  $CURRENT_TAG"
+          # Extract the MAJOR.MAJOR prefix (everything before the last "-")
+          TAG_PREFIX="${CURRENT_TAG%-*}-"
+
+          echo "Looking for tags with prefix: $TAG_PREFIX"
 
           LATEST_TAG=$(curl -sf \
-            "https://quay.io/api/v1/repository/rhdh-community/rhdh/tag/?filter_tag_name=like:next-&limit=1&page=1&onlyActiveTags=true" \
-            | jq -r '.tags[0].name')
+            "https://quay.io/api/v1/repository/rhdh/rhdh-hub-rhel9/tag/?filter_tag_name=like:${TAG_PREFIX}&limit=100&onlyActiveTags=true" \
+            | jq -r --arg prefix "$TAG_PREFIX" \
+              '[.tags[].name | select(startswith($prefix) and test("^[^-]+-[0-9]+$"))]
+               | sort_by(split("-")[-1] | tonumber) | last')
 
           if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
-            echo "Failed to fetch latest tag from Quay.io"
+            echo "Failed to fetch tags from Quay.io"
             exit 1
           fi
 
-          echo "Latest community tag: $LATEST_TAG"
+          echo "Latest tag: $LATEST_TAG"
           echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
           echo "current_tag=$CURRENT_TAG" >> "$GITHUB_OUTPUT"
 
-          if [ "$CURRENT_TAG" = "$LATEST_TAG" ] && [ "$CURRENT_REPO" = "rhdh-community/rhdh" ]; then
+          if [ "$CURRENT_TAG" = "$LATEST_TAG" ]; then
             echo "Image is already up to date."
             echo "update_needed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Update needed: $CURRENT_TAG -> $LATEST_TAG (repo: rhdh-community/rhdh)"
+            echo "Update needed: $CURRENT_TAG -> $LATEST_TAG"
             echo "update_needed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # patch values.yaml in-place: switch the repository to rhdh-community/rhdh
-      # and set the new tag.
+      # patch values.yaml in-place: update only the tag, keeping rhdh/rhdh-hub-rhel9.
       - name: Update values.yaml
         if: steps.check-image.outputs.update_needed == 'true'
         run: |
           VALUES_FILE="charts/rhdh/values.yaml"
           LATEST_TAG="${{ steps.check-image.outputs.latest_tag }}"
 
-          # Update repository to rhdh-community/rhdh
-          sed -i "s|repository: rhdh/rhdh-hub-rhel9|repository: rhdh-community/rhdh|g" "$VALUES_FILE"
-          # Update tag (handles both quoted and unquoted values)
           sed -i "s|tag: \"[^\"]*\"|tag: \"$LATEST_TAG\"|g" "$VALUES_FILE"
 
           echo "Updated $VALUES_FILE:"
@@ -86,7 +87,7 @@ jobs:
           LATEST_TAG="${{ steps.check-image.outputs.latest_tag }}"
           CURRENT_TAG="${{ steps.check-image.outputs.current_tag }}"
           BRANCH="automation/rhdh-image-$LATEST_TAG"
-          PR_TITLE="(chore): update rhdh community image"
+          PR_TITLE="(chore): update rhdh image"
 
           EXISTING_PR=$(gh pr list --state open --json number,title,headRefName \
             --jq ".[] | select(.title == \"$PR_TITLE\")" | head -1)
@@ -110,12 +111,12 @@ jobs:
 
           git checkout -b "$BRANCH"
           git add charts/rhdh/values.yaml
-          git commit -m "chore(rhdh): update RHDH community image to $LATEST_TAG"
+          git commit -m "chore(rhdh): update RHDH image to $LATEST_TAG"
           git push origin "$BRANCH"
 
           WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          printf '## PR Description\n\nAutomated update triggered by the [Update RHDH Community Image](%s) workflow.\n\nUpdates the RHDH community image in `charts/rhdh/values.yaml` from `%s` to:\n- `rhdh`: `quay.io/rhdh-community/rhdh:%s`\n' \
+          printf '## PR Description\n\nAutomated update triggered by the [Update RHDH Image](%s) workflow.\n\nUpdates the RHDH image in `charts/rhdh/values.yaml` from `%s` to:\n- `rhdh`: `quay.io/rhdh/rhdh-hub-rhel9:%s`\n' \
             "$WORKFLOW_URL" "$CURRENT_TAG" "$LATEST_TAG" > /tmp/pr-body.md
 
           gh pr create \

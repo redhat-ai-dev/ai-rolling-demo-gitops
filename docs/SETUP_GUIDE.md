@@ -4,9 +4,18 @@ Here are the steps required to setup an instance of the rolling demo on your own
 
 ### Pre-requisites
 
-You need an [OpenShift cluster (version 4.19+)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html-single/web_console/index) of type `g5.2xlarge` or bigger.
+#### Cluster requirements
 
-You have cloned locally the [odh-kubeflow-model-registry-setup](https://github.com/redhat-ai-dev/odh-kubeflow-model-registry-setup) repo.
+Two install paths are available depending on your cluster size:
+
+| Install command         | Minimum node type      | GPU nodes | RHOAI required |
+| ----------------------- | ---------------------- | --------- | -------------- |
+| `make install`          | `g5.2xlarge` or bigger | Yes       | Yes            |
+| `make install-no-rhoai` | Any OCP node           | No        | No             |
+
+For `make install` (full stack), you need an [OpenShift cluster (version 4.19+)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html-single/web_console/index) with GPU-capable nodes (`g5.2xlarge` or bigger), and you must also clone the [odh-kubeflow-model-registry-setup](https://github.com/redhat-ai-dev/odh-kubeflow-model-registry-setup) repo locally.
+
+For `make install-no-rhoai` (lightweight), any OCP 4.19+ cluster works — no GPU nodes, no RHOAI, and no `odh-kubeflow-model-registry-setup` repo is needed. Set `ODH_SETUP_DIR` to any non-empty placeholder value (e.g., `"n/a"`) in your `private-env` since the script validates it is set but will not use it when `SKIP_RHOAI_SETUP=true`.
 
 #### Dependencies
 
@@ -99,6 +108,12 @@ export VLLM_API_KEY="your-llama-stack-token"
 export VALIDATION_PROVIDER="vllm"
 # VALIDATION_MODEL_NAME: The name of the model to use for validation
 export VALIDATION_MODEL_NAME="llama-31-8b-version1"
+# NOTEBOOKS_QUERY_PROVIDER_ID: The Llama Stack provider ID used to route notebook queries to the
+# inference backend. Its set of values is similar to VALIDATION_PROVIDER.
+export NOTEBOOKS_QUERY_PROVIDER_ID="vllm"
+# NOTEBOOKS_QUERY_MODEL: The model identifier as exposed by Llama Stack. Note this may differ
+# from the kserve deployment name or vLLM model path. It takes values similar to VALIDATION_MODEL_NAME.
+export NOTEBOOKS_QUERY_MODEL="llama-31-8b-version1"
 
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD="your-preffered-lightspeed-psql-password"
@@ -149,7 +164,7 @@ No changes.
 
 - New **GitOps repo settings** section: `GITOPS_REPO_URL`, `GITOPS_TARGET_REVISION`, `ODH_SETUP_DIR`, `RHDH_NAMESPACE` (defaults to `rolling-demo-ns`)
 - `RHDH_CLUSTER_ROUTER_BASE` — cluster domain suffix, replaces `RHDH_CALLBACK_URL` and `RHDH_BASE_URL`
-- New **Llama Stack secrets** section: `VLLM_URL`, `VLLM_API_KEY`, `VALIDATION_PROVIDER`, `VALIDATION_MODEL_NAME` — replaces the Ollama and Lightspeed URL/token variables
+- New **Llama Stack secrets** section: `VLLM_URL`, `VLLM_API_KEY`, `VALIDATION_PROVIDER`, `VALIDATION_MODEL_NAME`, `NOTEBOOKS_QUERY_PROVIDER_ID`, `NOTEBOOKS_QUERY_MODEL` — replaces the Ollama and Lightspeed URL/token variables
 
 **Removed:**
 
@@ -166,8 +181,36 @@ After configuring your `scripts/private-env` file, run the setup from the reposi
 # Full install (GPU + RHOAI + Model Catalog)
 make install
 
-# Install without GPU and RHOAI (no NFD, no GPU operator, no Model Catalog sidecars)
+# Lightweight install — no GPU, no RHOAI, no Model Catalog Bridge
 make install-no-rhoai
+```
+
+#### `make install-no-rhoai` — lightweight install for smaller clusters
+
+`make install-no-rhoai` sets `SKIP_RHOAI_SETUP=true` and runs the same `setup.sh` entry point as the full install. It is the right choice when your cluster has no GPU nodes or you do not need the Model Catalog Bridge.
+
+**What is skipped:**
+
+- Node Feature Discovery (NFD) operator and instance
+- NVIDIA GPU operator and ClusterPolicy
+- ODH Kubeflow Model Registry setup (`setup-rhoai.sh`)
+- Model Catalog sidecars (`location`, `storage-rest`, `rhoai-normalizer`) and their RBAC in the deployed Helm chart
+
+**What is still installed:**
+
+- OpenShift GitOps operator (ArgoCD)
+- OpenShift Pipelines operator and Pipelines-as-Code
+- RHDH (via ArgoCD + the `rhdh-chart`)
+- Developer Lightspeed and its PostgreSQL instance
+- AI Software Templates
+- All Kubernetes secrets, service accounts, and namespaces
+
+**`private-env` note for `make install-no-rhoai`:**
+
+`ODH_SETUP_DIR` is validated as a required variable even when `SKIP_RHOAI_SETUP=true`. Set it to any non-empty placeholder so the check passes:
+
+```bash
+export ODH_SETUP_DIR="n/a"
 ```
 
 The `setup.sh` script automates the entire setup process by calling focused subscripts in order:

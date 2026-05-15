@@ -76,15 +76,40 @@ Once we have sufficiently validated the changes to the `development` branch and 
 
 ### The RHDH Image Updater (`rhdh-image-updater.yaml`) Workflow
 
-Runs nightly (or manually via `workflow_dispatch`). Checks the latest `next-<hash>` tag from `quay.io/rhdh-community/rhdh` and, if newer than what is set in `charts/rhdh/values.yaml`, opens a PR against `development` with the updated image tag. Any previously open PR for the same update is automatically closed and its branch deleted.
+Runs nightly (or manually via `workflow_dispatch`). Reads the current `MAJOR.MAJOR-MINOR` tag (e.g. `1.10-123`) from `charts/rhdh/values.yaml`, queries `quay.io/rhdh/rhdh-hub-rhel9` for the highest minor number available under the same `MAJOR.MAJOR-` prefix, and opens a PR against `development` if a newer tag is found. The major version is never bumped automatically. Any previously open PR for an older tag is automatically closed and its branch deleted.
+
+## Getting Started Guide
+
+A guide covering RHDH fundamentals—navigation, the Software Catalog, TechDocs, APIs, Templates, Search, and Developer Lightspeed—can be found in [catalog-docs/getting-started-rhdh/index.md](./catalog-docs/getting-started-rhdh/index.md).
 
 ## Rolling demo setup
 
-Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)
+Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md).
+
+Two install paths are available:
+
+| Command                 | Cluster requirements                     | What's included                                                                |
+| ----------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
+| `make install`          | GPU-capable nodes (`g5.2xlarge`+), RHOAI | Full stack: RHDH, Lightspeed, Model Catalog Bridge, AI Software Templates      |
+| `make install-no-rhoai` | Any OCP cluster (no GPU required)        | RHDH, Lightspeed, AI Software Templates — **no** Model Catalog Bridge or RHOAI |
+
+Use `make install-no-rhoai` when you want to run the demo on a smaller cluster that does not have GPU nodes or Red Hat OpenShift AI.
 
 ## Testing
 
 Information on the E2E test suite, required environment variables, and how to run tests locally can be found in [docs/TESTING.md](./docs/TESTING.md)
+
+## Claude Code Integration
+
+This repository includes configuration for [Claude Code](https://claude.ai/code) to assist with development tasks.
+
+| File | Purpose |
+| ---- | ------- |
+| `CLAUDE.md` | Project-specific instructions for Claude Code (key commands, branch strategy, code standards) |
+| `CLAUDE-ORG.md` | Organizational context — how this repo fits within the broader `redhat-ai-dev` org, component map, and cross-repo automation |
+| `.claude/agents/pr-reviewer.md` | Subagent for reviewing PRs — validates plugin OCI tag formats, checks config regressions, and cross-references RHDH release notes |
+| `.claude/agents/tester.md` | Subagent for running the Playwright E2E test suite and reporting results |
+| `.claude/agents/workflow-analyst.md` | Subagent for analyzing `.github/workflows/` files for correctness, secret usage, and automation logic |
 
 ## Troubleshooting
 

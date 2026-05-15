@@ -1,0 +1,106 @@
+name: CI PR Check
+
+on:
+  pull_request:
+    branches:
+      - development
+      - main
+
+jobs:
+  e2e-tests:
+    name: CI PR Check - E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install tooling (kind, helm, yq)
+        run: |
+          # kind
+          curl -sSLo /tmp/kind \
+            "https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64"
+          sudo install /tmp/kind /usr/local/bin/kind
+
+          # helm
+          curl -sSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
+
+          # yq
+          curl -sSLo /tmp/yq \
+            "https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64"
+          sudo install /tmp/yq /usr/local/bin/yq
+
+      - name: Deploy RHDH on Kind
+        env:
+          GH_APP_APP_ID: ${{ secrets.GH_APP_APP_ID }}
+          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+          GH_APP_CLIENT_SECRET: ${{ secrets.GH_APP_CLIENT_SECRET }}
+          GH_APP_WEBHOOK_URL: ${{ secrets.GH_APP_WEBHOOK_URL }}
+          GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          GITOPS_GIT_ORG: ${{ secrets.GITOPS_GIT_ORG }}
+          KEYCLOAK_METADATA_URL: ${{ secrets.KEYCLOAK_METADATA_URL }}
+          KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+          KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+          KEYCLOAK_REALM: ${{ secrets.KEYCLOAK_REALM }}
+          KEYCLOAK_BASE_URL: ${{ secrets.KEYCLOAK_BASE_URL }}
+          KEYCLOAK_LOGIN_REALM: ${{ secrets.KEYCLOAK_LOGIN_REALM }}
+          QUAY_DOCKERCONFIGJSON: ${{ secrets.QUAY_DOCKERCONFIGJSON }}
+          VLLM_URL: ${{ secrets.VLLM_URL }}
+          VLLM_API_KEY: ${{ secrets.VLLM_API_KEY }}
+          VALIDATION_PROVIDER: ${{ secrets.VALIDATION_PROVIDER }}
+          VALIDATION_MODEL_NAME: ${{ secrets.VALIDATION_MODEL_NAME }}
+          LIGHTSPEED_POSTGRES_USER: ${{ secrets.LIGHTSPEED_POSTGRES_USER }}
+          LIGHTSPEED_POSTGRES_PASSWORD: ${{ secrets.LIGHTSPEED_POSTGRES_PASSWORD }}
+          LIGHTSPEED_POSTGRES_DB: ${{ secrets.LIGHTSPEED_POSTGRES_DB }}
+          NOTEBOOKS_QUERY_PROVIDER_ID: ${{ secrets.NOTEBOOKS_QUERY_PROVIDER_ID }}
+          NOTEBOOKS_QUERY_MODEL: ${{ secrets.NOTEBOOKS_QUERY_MODEL }}
+          ARGOCD_USER: ${{ secrets.ARGOCD_USER }}
+          ARGOCD_PASSWORD: ${{ secrets.ARGOCD_PASSWORD }}
+          ARGOCD_HOSTNAME: ${{ secrets.ARGOCD_HOSTNAME }}
+          ARGOCD_API_TOKEN: ${{ secrets.ARGOCD_API_TOKEN }}
+        run: make ci-install
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.0.2
+
+      - name: Install test dependencies
+        working-directory: tests
+        run: uv sync
+
+      - name: Install Playwright browsers
+        working-directory: tests
+        run: uv run playwright install chromium --with-deps
+
+      - name: Run E2E tests
+        env:
+          RHDH_BASE_URL: "https://rhdh-ci.apps.testing"
+          RHDH_ENVIRONMENT: ${{ secrets.RHDH_ENVIRONMENT }}
+          ROLLING_DEMO_TEST_USERNAME: ${{ secrets.ROLLING_DEMO_TEST_USERNAME }}
+          KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+          KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+        run: make ci-tests
+
+      - name: Collect RHDH logs
+        if: always()
+        run: |
+          kubectl logs -n rolling-demo-ns \
+            -l app.kubernetes.io/component=backstage \
+            --all-containers --tail=-1 \
+            > /tmp/rhdh.log 2>&1 || true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-results
+          path: |
+            tests/playwright-report/
+            /tmp/rhdh.log
+          retention-days: 7

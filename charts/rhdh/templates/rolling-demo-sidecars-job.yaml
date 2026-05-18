@@ -1,3 +1,4 @@
+{{- if not .Values.global.ci }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -208,3 +209,4 @@ spec:
               kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' --patch="$(cat $PATCH_FILE)"
       restartPolicy: OnFailure
   backoffLimit: 4
+{{- end }}

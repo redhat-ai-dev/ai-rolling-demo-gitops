@@ -99,17 +99,21 @@ Use `make install-no-rhoai` when you want to run the demo on a smaller cluster t
 
 Information on the E2E test suite, required environment variables, and how to run tests locally can be found in [docs/TESTING.md](./docs/TESTING.md)
 
+### Running tests locally
+
+See [docs/TESTING.md](./docs/TESTING.md#running-ci-tests-locally) for setup instructions, required environment variables, and how to run the tests locally.
+
 ## Claude Code Integration
 
 This repository includes configuration for [Claude Code](https://claude.ai/code) to assist with development tasks.
 
-| File | Purpose |
-| ---- | ------- |
-| `CLAUDE.md` | Project-specific instructions for Claude Code (key commands, branch strategy, code standards) |
-| `CLAUDE-ORG.md` | Organizational context — how this repo fits within the broader `redhat-ai-dev` org, component map, and cross-repo automation |
-| `.claude/agents/pr-reviewer.md` | Subagent for reviewing PRs — validates plugin OCI tag formats, checks config regressions, and cross-references RHDH release notes |
-| `.claude/agents/tester.md` | Subagent for running the Playwright E2E test suite and reporting results |
-| `.claude/agents/workflow-analyst.md` | Subagent for analyzing `.github/workflows/` files for correctness, secret usage, and automation logic |
+| File                                 | Purpose                                                                                                                           |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `CLAUDE.md`                          | Project-specific instructions for Claude Code (key commands, branch strategy, code standards)                                     |
+| `CLAUDE-ORG.md`                      | Organizational context — how this repo fits within the broader `redhat-ai-dev` org, component map, and cross-repo automation      |
+| `.claude/agents/pr-reviewer.md`      | Subagent for reviewing PRs — validates plugin OCI tag formats, checks config regressions, and cross-references RHDH release notes |
+| `.claude/agents/tester.md`           | Subagent for running the Playwright E2E test suite and reporting results                                                          |
+| `.claude/agents/workflow-analyst.md` | Subagent for analyzing `.github/workflows/` files for correctness, secret usage, and automation logic                             |
 
 ## Troubleshooting
 

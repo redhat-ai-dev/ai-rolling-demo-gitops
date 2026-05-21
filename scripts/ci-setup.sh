@@ -39,10 +39,10 @@ export GITHUB_APP_PRIVATE_KEY="${GH_APP_PRIVATE_KEY:-${GITHUB_APP_PRIVATE_KEY:-c
 # use stub values for services not deployed in CI
 export OLLAMA_URL="${OLLAMA_URL:-}"
 export OLLAMA_TOKEN="${OLLAMA_TOKEN:-}"
-export ARGOCD_USER="${ARGOCD_USER:-admin}"
-export ARGOCD_PASSWORD="${ARGOCD_PASSWORD:-$(openssl rand -base64 16)}"
-export ARGOCD_HOSTNAME="${ARGOCD_HOSTNAME:-}"
-export ARGOCD_API_TOKEN="${ARGOCD_API_TOKEN:-}"
+export ARGOCD_USER="${ARGOCD_USER:-dummy-argocd-user}"
+export ARGOCD_PASSWORD="${ARGOCD_PASSWORD:-dummy-argocd-password}"
+export ARGOCD_HOSTNAME="${ARGOCD_HOSTNAME:-dummy-argocd-hostname}"
+export ARGOCD_API_TOKEN="${ARGOCD_API_TOKEN:-dummy-argocd-token}"
 
 # setup lightspeed required secret values
 export ENABLE_VLLM="true"

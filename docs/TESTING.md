@@ -57,9 +57,10 @@ export GITHUB_APP_WEBHOOK_SECRET="<webhook-secret>"
 export GITHUB_APP_PRIVATE_KEY="<pem-key>"
 export GITOPS_GIT_ORG="<github-org>"
 
-# Whil the argoCD creds are not required for our
-# current testing suite, you have to minimally export dummy values
-# for the tests to pass
+# Optional: The argoCD creds are not required for our
+# current testing suite, so you can export dummy values
+# here too OR leave them empty and they will get assigned with
+# random values automatically
 export ARGOCD_USER="<user>"
 export ARGOCD_PASSWORD="<password>"
 export ARGOCD_HOSTNAME="<argocd-host>"

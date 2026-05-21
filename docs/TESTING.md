@@ -58,7 +58,7 @@ export GITHUB_APP_PRIVATE_KEY="<pem-key>"
 export GITOPS_GIT_ORG="<github-org>"
 
 # Optional: The argoCD creds are not required for our
-# current testing suite, so you can export dummy values
+# current testing suite, you have to minimally export dummy values
 # here too.
 export ARGOCD_USER="<user>"
 export ARGOCD_PASSWORD="<password>"

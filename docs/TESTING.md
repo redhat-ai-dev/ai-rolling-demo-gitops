@@ -59,7 +59,7 @@ export GITOPS_GIT_ORG="<github-org>"
 
 # Whil the argoCD creds are not required for our
 # current testing suite, you have to minimally export dummy values
-# here too.
+# for the tests to pass
 export ARGOCD_USER="<user>"
 export ARGOCD_PASSWORD="<password>"
 export ARGOCD_HOSTNAME="<argocd-host>"

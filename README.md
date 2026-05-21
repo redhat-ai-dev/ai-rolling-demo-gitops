@@ -41,48 +41,11 @@ The rolling demo combines the following components so far:
 
 - In order to avoid overprovisioning of resources, the rolling demo uses a `pruner` cronjob that deletes all Software Template applications that are older than 24 hours. That means that all the openshift **and** github resources (deployments, repositories, argocd applications, etc.) are removed.
 
-## Development Branch & Lifecycle
-
-The repository maintains a `development` branch that serves as the integration branch for new changes before they reach the production (AI Rolling Demo) instance in RHDHAI DevCluster.
-
-### Branch Strategy
-
-| Branch        | ArgoCD Application | Namespace            | Purpose                                |
-| ------------- | ------------------ | -------------------- | -------------------------------------- |
-| `main`        | `rolling-demo`     | `rolling-demo-ns`    | Production instance, tracks `HEAD`     |
-| `development` | `rhdhai-rhdh-dev`  | `rhdhai-development` | Staging instance, tracks `development` |
-
-### Lifecycle
-
-1. **Develop** — New changes (plugin updates, config changes, chart updates) are committed to the `development` branch.
-2. **Validate** — The `rhdhai-rhdh-dev` ArgoCD application automatically syncs from the `development` branch, deploying the changes to the `rhdhai-development` namespace for testing.
-3. **Promote** — Once validated, changes are merged into `main`. The `rolling-demo` production application picks them up automatically via ArgoCD's self-heal and auto-sync policies.
-
-## Keeping RHDH Plugins Up-to-Date
-
-### The Plugin Updater (`plugins-updater.yaml`) Workflow
-
-The plugin updater workflow runs nightly (and can be triggered manually via `workflow_dispatch`) to keep all RHDH plugins pinned to their latest available versions.
-
-**What it does:**
-
-1. Checks out the repository.
-2. Runs the [`redhat-ai-dev/rhdh-plugin-gitops-updater`](https://github.com/redhat-ai-dev/rhdh-plugin-gitops-updater) action against `charts/rhdh/values.yaml`.
-3. Scans all `oci:` plugin image tags with the prefixes `bs_`, and resolves the latest available version for each.
-4. Opens a **pull request**, targeting the `development` branch, for each plugin that has a new version available.
-
-This automation ensures that our gitops environment uses always the latest stable versions of rhdh plugins.
-Once we have sufficiently validated the changes to the `development` branch and want to update the `main` branch, we will manually open a PR from `development` to `main`.
-
-### The RHDH Image Updater (`rhdh-image-updater.yaml`) Workflow
-
-Runs nightly (or manually via `workflow_dispatch`). Reads the current `MAJOR.MAJOR-MINOR` tag (e.g. `1.10-123`) from `charts/rhdh/values.yaml`, queries `quay.io/rhdh/rhdh-hub-rhel9` for the highest minor number available under the same `MAJOR.MAJOR-` prefix, and opens a PR against `development` if a newer tag is found. The major version is never bumped automatically. Any previously open PR for an older tag is automatically closed and its branch deleted.
-
 ## Getting Started Guide
 
 A guide covering RHDH fundamentals—navigation, the Software Catalog, TechDocs, APIs, Templates, Search, and Developer Lightspeed—can be found in [catalog-docs/getting-started-rhdh/index.md](./catalog-docs/getting-started-rhdh/index.md).
 
-## Rolling demo setup
+## Setup Rolling Demo on a Test Cluster
 
 Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md).
 
@@ -102,6 +65,10 @@ Information on the E2E test suite, required environment variables, and how to ru
 ### Running tests locally
 
 See [docs/TESTING.md](./docs/TESTING.md#running-ci-tests-locally) for setup instructions, required environment variables, and how to run the tests locally.
+
+## Development & Maintenance
+
+Information on the branch strategy, development process, release lifecycle, and maintenance automations can be found in [docs/LIFECYCLE.md](./docs/LIFECYCLE.md).
 
 ## Claude Code Integration
 

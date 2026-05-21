@@ -18,7 +18,7 @@ A user is also able to run our testing suite locally (`make ci-install && make c
 
 ### Prepare `scripts/private-env`
 
-`ci-setup.sh` automatically sources `scripts/private-env`. Make sure your file has the following environment variables exported. For more details check the [docs/SETUP_GUIDE.md#setup-the-private-env-file](./SETUP_GUIDE.md#setup-the-private-env-file) section:
+`ci-setup.sh` automatically sources `scripts/private-env`. Make sure your file has the following environment variables exported. For more details check the [docs/SETUP_GUIDE.md#setup-the-private-env-file](./SETUP_GUIDE.md#setup-the-private-env-file) section.
 
 ```bash
 # Keycloak / OIDC
@@ -72,6 +72,8 @@ export ARGOCD_API_TOKEN="<api-token>"
 export ROLLING_DEMO_TEST_USERNAME="<keycloak-username>"
 export RHDH_ENVIRONMENT="production"
 ```
+
+**Note**: The `RHDH_CLUSTER_ROUTER_BASE` is overriden automatically by `ci-setup.sh` in testing mode, so the `scripts/private-env` value is ignored. The value used for testing is `apps.testing`
 
 ### Run
 
@@ -127,3 +129,5 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 ## Troubleshooting
 
 - **Test suite fails on first `test_navbar.py` test**: If Kind cluster is created successfully but then your tests are failing when an authenticated session is required (e.g. `test_navbar` which is the first group of tests ran where auth is required), you have most probably haven't exported correctly the variables mentioned in [Prepare `scripts/private-env`](#prepare-scriptsprivate-env).
+
+- **Tests hit wrong RHDH URL (e.g. your OCP cluster's hostname instead of `rhdh-ci.apps.testing`)**: This usually means `RHDH_BASE_URL` was set to a custom value before running `make ci-tests`. The CI scripts derive `RHDH_BASE_URL` from `CI_HOSTNAME` (default: `rhdh-ci.apps.testing`). Do not set `RHDH_BASE_URL` manually when running local CI tests — unset it and let `run-tests.sh` compute it. Note that `RHDH_CLUSTER_ROUTER_BASE` (used for OCP deployments) does **not** affect the local Kind CI hostname; `clusterRouterBase` is fixed to `apps.testing` in `ci/values-ci.yaml`.

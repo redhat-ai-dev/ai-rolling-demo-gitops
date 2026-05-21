@@ -78,7 +78,7 @@ export RHDH_ENVIRONMENT="production"
 ### Run
 
 ```bash
-make ci-install   # creates Kind cluster and deploys RHDH (~20 min)
+make ci-install   # creates Kind cluster and deploys RHDH (~40 min)
 make ci-tests     # runs the Playwright E2E suite
 ```
 

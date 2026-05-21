@@ -77,7 +77,7 @@ done
 kubectl wait --namespace ingress-nginx \
   --for=condition=ready pod \
   --selector=app.kubernetes.io/component=controller \
-  --timeout=120s
+  --timeout=240s
 log "Adding $CI_HOSTNAME to /etc/hosts..."
 echo "127.0.0.1 $CI_HOSTNAME" | sudo tee -a /etc/hosts
 
@@ -106,7 +106,7 @@ helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
   -f "$GITOPS_DIR/ci/values-ci.yaml" \
   --set 'global.dynamic.plugins[8].disabled=true' \
   --set 'global.dynamic.plugins[9].disabled=true' \
-  --timeout 20m \
+  --timeout 40m \
   --wait
 
 # generate a self-signed TLS certificate so node-openid-client accepts the HTTPS callback URL
@@ -154,7 +154,7 @@ EOF
 
 log "Waiting for RHDH to be ready..."
 kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
-  -n "$RHDH_NAMESPACE" --timeout=300s
+  -n "$RHDH_NAMESPACE" --timeout=600s
 
 # Kind limited resources (better not to install Argo): render the job
 # template with global.ci=false to override values-ci.yaml, then apply
@@ -173,10 +173,10 @@ log "Waiting for sidecars job to complete..."
 kubectl wait job/update-deployment-containers \
   -n "$RHDH_NAMESPACE" \
   --for=condition=complete \
-  --timeout=600s
+  --timeout=1200s
 
 log "Waiting for RHDH to be ready after sidecars patch..."
 kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
-  -n "$RHDH_NAMESPACE" --timeout=300s
+  -n "$RHDH_NAMESPACE" --timeout=600s
 
 log "CI setup complete. RHDH is available at http://$CI_HOSTNAME"

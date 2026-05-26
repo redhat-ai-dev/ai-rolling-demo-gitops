@@ -1,8 +1,8 @@
 # Global owner for the repository
-* @thepetk @johnmcollier @gabemontero
+* @thepetk @johnmcollier @gabemontero @JslYoon @michael-valdron
 
 # Lightspeed and Llama Stack owners
-charts/rhdh/templates/lightspeed-postgres.yaml @maysunfaisal @Jdubrick @JslYoon @yangcao77
-charts/rhdh/templates/llama-stack-config.yaml @maysunfaisal @Jdubrick @JslYoon @yangcao77
-charts/rhdh/templates/rhdh-profile-config.yaml @maysunfaisal @Jdubrick @JslYoon @yangcao77
-charts/rhdh/rhdh-profile.py @maysunfaisal @Jdubrick @JslYoon @yangcao77
+charts/rhdh/templates/lightspeed-postgres.yaml @maysunfaisal @Jdubrick @yangcao77
+charts/rhdh/templates/llama-stack-config.yaml @maysunfaisal @Jdubrick @yangcao77
+charts/rhdh/templates/rhdh-profile-config.yaml @maysunfaisal @Jdubrick @yangcao77
+charts/rhdh/rhdh-profile.py @maysunfaisal @Jdubrick @yangcao77

@@ -8,14 +8,15 @@ source "$SCRIPTS_DIR/logging.sh"
 # PRIVATE_ENV: the private-env file containing environment variables needed for the tests
 PRIVATE_ENV="$SCRIPTS_DIR/private-env"
 
-# Check if private-env file exists
-if [ ! -f "$PRIVATE_ENV" ]; then
-  log_fail "private-env not found at $PRIVATE_ENV. Please create it before running tests."
-  exit 1
+# Source private-env if it exists; otherwise rely on env vars already being set (e.g. in CI).
+if [ -f "$PRIVATE_ENV" ]; then
+  # shellcheck source=/dev/null
+  source "$PRIVATE_ENV"
 fi
 
-# shellcheck source=/dev/null
-source "$PRIVATE_ENV"
+# Default RHDH_BASE_URL from CI_HOSTNAME if not already set (matches ci-setup.sh and the CI workflow)
+CI_HOSTNAME="${CI_HOSTNAME:-rhdh-ci.apps.testing}"
+RHDH_BASE_URL="${RHDH_BASE_URL:-https://$CI_HOSTNAME}"
 
 # Required environment variables for the test suite (see tests/README.md)
 required_vars=(
@@ -35,7 +36,7 @@ done
 
 if (( ${#missing[@]} )); then
   for var in "${missing[@]}"; do
-    log_fail "$var is not set in private-env. Exiting..."
+    log_fail "$var is not set. Exiting..."
   done
   exit 1
 fi
@@ -60,12 +61,6 @@ fi
 # shellcheck source=/dev/null
 source "$VENV_ACTIVATE"
 
-# Check if uv is available after activating the virtual environment
-if ! command -v uv >/dev/null 2>&1; then
-  log_fail "uv not found after activating the virtual environment. Make sure uv is installed."
-  exit 1
-fi
-
 # Check if pytest is available through uv
 if ! uv run pytest --version >/dev/null 2>&1; then
   log_fail "pytest not found. Run 'uv sync' inside tests/ first."
@@ -75,8 +70,8 @@ fi
 log "Environment variables for tests:"
 log "RHDH_BASE_URL=$RHDH_BASE_URL"
 log "RHDH_ENVIRONMENT=$RHDH_ENVIRONMENT"
-log "ROLLING_DEMO_TEST_USERNAME=$ROLLING_DEMO_TEST_USERNAME"
-log "KEYCLOAK_CLIENT_ID=$KEYCLOAK_CLIENT_ID"
+log "ROLLING_DEMO_TEST_USERNAME=***"
+log "KEYCLOAK_CLIENT_ID=***"
 log "KEYCLOAK_CLIENT_SECRET=****"
 log "PLAYWRIGHT_HEADLESS=${PLAYWRIGHT_HEADLESS:-true}"
 
@@ -89,4 +84,4 @@ cd "$TESTS_DIR" && env \
   KEYCLOAK_CLIENT_ID="$KEYCLOAK_CLIENT_ID" \
   KEYCLOAK_CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET" \
   PLAYWRIGHT_HEADLESS="${PLAYWRIGHT_HEADLESS:-true}" \
-  uv run pytest -v
+  uv run pytest -v "${PYTEST_EXTRA_ARGS:-}"

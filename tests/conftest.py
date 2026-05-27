@@ -72,7 +72,7 @@ class KeycloakRealm:
             params={"env": rhdh_env},
             allow_redirects=False,
         )
-        return start_resp.headers["Location"] 
+        return start_resp.headers["Location"]
 
     def get_token(self) -> "str":
         """

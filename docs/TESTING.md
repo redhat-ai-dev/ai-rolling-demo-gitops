@@ -57,14 +57,14 @@ export GITHUB_APP_WEBHOOK_SECRET="<webhook-secret>"
 export GITHUB_APP_PRIVATE_KEY="<pem-key>"
 export GITOPS_GIT_ORG="<github-org>"
 
-# Optional: The argoCD creds are not required for our
-# current testing suite, so you can export dummy values
-# here too OR leave them empty and they will get assigned with
-# random values automatically
-export ARGOCD_USER="<user>"
-export ARGOCD_PASSWORD="<password>"
-export ARGOCD_HOSTNAME="<argocd-host>"
-export ARGOCD_API_TOKEN="<api-token>"
+# ArgoCD credentials
+# For local Kind cluster testing, set values from
+# "ArgoCD Devcluster Test User Creds" in the team Bitwarden.
+export ARGOCD_APP_NAME="rolling-demo"
+export ARGOCD_USER="<user>"         # see "ArgoCD Devcluster Test User Creds" on team Bitwarden
+export ARGOCD_PASSWORD="<password>" # see "ArgoCD Devcluster Test User Creds" on team Bitwarden
+export ARGOCD_HOSTNAME="<hostname>" # see "ArgoCD Devcluster Test User Creds" on team Bitwarden
+export ARGOCD_API_TOKEN="<token>"   # see "ArgoCD Devcluster Test User Creds" on team Bitwarden
 
 # E2E test identity: ROLLING_DEMO_TEST_USERNAME is an important
 # value. You can use your own keycloak username as a test user.

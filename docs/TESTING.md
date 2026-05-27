@@ -58,8 +58,8 @@ export GITHUB_APP_PRIVATE_KEY="<pem-key>"
 export GITOPS_GIT_ORG="<github-org>"
 
 # ArgoCD credentials
-# For local Kind cluster testing, set values from
-# "ArgoCD Devcluster Test User Creds" in the team Bitwarden.
+# For Kind cluster testing, set real values from "ArgoCD Devcluster Test User Creds" in the team Bitwarden.
+# To run against the actual devcluster, these can be left empty.
 export ARGOCD_APP_NAME="rolling-demo"
 export ARGOCD_USER="<user>"         # see "ArgoCD Devcluster Test User Creds" on team Bitwarden
 export ARGOCD_PASSWORD="<password>" # see "ArgoCD Devcluster Test User Creds" on team Bitwarden
@@ -131,4 +131,4 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 
 - **Test suite fails on first `test_navbar.py` test**: If Kind cluster is created successfully but then your tests are failing when an authenticated session is required (e.g. `test_navbar` which is the first group of tests ran where auth is required), you have most probably haven't exported correctly the variables mentioned in [Prepare `scripts/private-env`](#prepare-scriptsprivate-env).
 
-- **Tests hit wrong RHDH URL (e.g. your OCP cluster's hostname instead of `rhdh-ci.apps.testing`)**: This usually means `RHDH_BASE_URL` was set to a custom value before running `make ci-tests`. The CI scripts derive `RHDH_BASE_URL` from `CI_HOSTNAME` (default: `rhdh-ci.apps.testing`). Do not set `RHDH_BASE_URL` manually when running local CI tests — unset it and let `run-tests.sh` compute it. Note that `RHDH_CLUSTER_ROUTER_BASE` (used for OCP deployments) does **not** affect the local Kind CI hostname; `clusterRouterBase` is fixed to `apps.testing` in `ci/values-ci.yaml`.
+- **Tests hit wrong RHDH URL (e.g. your OCP cluster's hostname instead of `rhdh-ci.apps.testing`)**: This usually means `RHDH_BASE_URL` was set to a custom value before running `make ci-tests`. The CI scripts derive `RHDH_BASE_URL` from `CI_HOSTNAME` (default: `rhdh-ci.apps.testing`). Do not set `RHDH_BASE_URL` manually when running local CI tests — unset it and let `run-tests.sh` compute it. Note that `RHDH_CLUSTER_ROUTER_BASE` (used for OCP deployments) does **not** affect the local Kind CI hostname; `clusterRouterBase` is fixed to `apps.testing` in `ci/values-ci.yaml` because `ci-setup.sh` writes `127.0.0.1 rhdh-ci.apps.testing` to `/etc/hosts` and configures the Kind ingress to that same hostname — changing the variable alone without re-running the cluster setup would break the routing.

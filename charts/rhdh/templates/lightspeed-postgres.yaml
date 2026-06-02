@@ -1,4 +1,4 @@
-{{- if not .Values.global.isSecondaryInstance }}
+{{- if and (not .Values.global.ci) (not .Values.global.isSecondaryInstance) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

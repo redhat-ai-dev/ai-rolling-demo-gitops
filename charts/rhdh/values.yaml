@@ -1,4 +1,5 @@
 global:
+  ci: false
   dynamic:
     includes:
       - "dynamic-plugins.default.yaml"
@@ -386,7 +387,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.10-126"
+        tag: "1.10-128"
         pullSecrets:
           - quay-pull-secret
       command: []

@@ -4,6 +4,14 @@ from playwright.sync_api import Page
 
 from pages.lightspeed_page import LightspeedPage, MCP_PROMPT
 
+# NOTE: Those tests have been silenced and not included anymore in tests/pyproject.toml.
+# They are still available here for reference and future use, but they are not run by
+# default with the rest of the test suite. The main reason is they were being a bit
+# flaky in CI, and we want to stabilize them before re-enabling - as the RHDH UI had
+# changes over the releases.
+
+# Ideally they should be completely replaced by an integration with the e2e tests of
+# the overlays repo.
 
 @pytest.fixture(scope="module")
 def lightspeed_home(authenticated_page: "Page", base_url: "str") -> "LightspeedPage":

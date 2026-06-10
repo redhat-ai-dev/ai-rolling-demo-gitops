@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rbac-policy
+  namespace: {{ .Release.Namespace }}
+data:
+  rbac-policy.csv: |
+    p, role:default/mcp-admin, catalog.entity.read, read, allow
+    p, role:default/mcp-admin, catalog.entity.create, create, allow
+    p, role:default/mcp-admin, catalog.entity.delete, delete, allow
+    p, role:default/mcp-admin, catalog.entity.refresh, update, allow
+    p, role:default/mcp-admin, catalog.location.read, read, allow
+    p, role:default/mcp-admin, catalog.location.create, create, allow
+    p, role:default/mcp-admin, scaffolder.task.create, create, allow
+    p, role:default/mcp-admin, scaffolder.task.read, read, allow
+    p, role:default/mcp-admin, lightspeed.chat.read, read, allow
+    p, role:default/mcp-admin, lightspeed.chat.create, create, allow
+    p, role:default/mcp-admin, lightspeed.chat.delete, delete, allow
+    p, role:default/mcp-admin, lightspeed.chat.update, update, allow
+    p, role:default/mcp-admin, lightspeed.mcp.read, read, allow
+    p, role:default/mcp-admin, lightspeed.mcp.manage, update, allow
+    p, role:default/mcp-admin, lightspeed.notebooks.use, update, allow
+    g, user:default/mfaisal, role:default/mcp-admin

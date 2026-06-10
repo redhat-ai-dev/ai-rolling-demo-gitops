@@ -4,6 +4,24 @@ global:
     includes:
       - "dynamic-plugins.default.yaml"
     plugins:
+      ##### Disable upstream lightspeed (replaced by custom DCR builds) #####
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.8.5
+        disabled: true
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.8.5
+        disabled: true
+
+      ##### OAuth2 consent page plugin (required for DCR) #####
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:pr_2498__0.1.6
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage.plugin-auth:
+                dynamicRoutes:
+                  - path: /oauth2
+                    importName: Router
+                    module: PluginRoot
+
       ##### Custom sign in page plugin #####
       - package: oci://quay.io/redhat-ai-dev/rolling-demo-customized-sign-in-page:v0.1.1
         disabled: false
@@ -329,7 +347,7 @@ global:
   lightspeed:
     enabled: true
     plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.9.0
+      - package: oci://quay.io/maysunfaisal/rhdh-plugin-lightspeed:dcr-0.6.0!red-hat-developer-hub-backstage-plugin-lightspeed
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -340,7 +358,7 @@ global:
                     module: Alpha
                     ref: lightspeedTranslationRef
                 dynamicRoutes:
-                  - path: /lightspeed
+                  - path: /intelligent-assistant
                     importName: LightspeedPage
                 mountPoints:
                   - mountPoint: application/listener
@@ -356,7 +374,7 @@ global:
                     config:
                       id: lightspeed
                       priority: 100
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.9.0
+      - package: oci://quay.io/maysunfaisal/rhdh-plugin-lightspeed-backend:dcr-0.6.0!red-hat-developer-hub-backstage-plugin-lightspeed-backend
         disabled: false
     secret:
       create: false
@@ -418,6 +436,10 @@ backstage:
             enabled: true
           experimentalRefreshToken:
             enabled: true
+          experimentalDynamicClientRegistration:
+            enabled: true
+            allowedRedirectUriPatterns:
+              - '*'
           session:
             secret: "${BACKEND_SECRET}"
           providers:
@@ -556,15 +578,22 @@ backstage:
                     - resolver: emailMatchingUserEntityProfileEmail
         lightspeed:
           notebooks:
-            enabled: true
+            enabled: false
             queryDefaults:
-              model: ${NOTEBOOKS_QUERY_MODEL}
-              provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
+              model: "${NOTEBOOKS_QUERY_MODEL}"
+              provider_id: "${NOTEBOOKS_QUERY_PROVIDER_ID}"
           mcpServers:
             - name: mcp-integration-tools
-              token: ${MCP_TOKEN}
+              auth: dcr
         mcpActions:
           namespacedToolNames: false
+        permission:
+          enabled: true
+          rbac:
+            policies-csv-file: /opt/app-root/src/rbac-policy.csv
+            admin:
+              users:
+                - name: user:default/mfaisal
         integrations:
           github:
             - apps:
@@ -671,6 +700,10 @@ backstage:
       extraVolumeMounts:
         - name: dynamic-plugins-root
           mountPath: /opt/app-root/src/dynamic-plugins-root
+        - name: rbac-policy
+          mountPath: /opt/app-root/src/rbac-policy.csv
+          subPath: rbac-policy.csv
+          readOnly: true
         # tmp backstage volume for scaffolder tasks
         - name: backstage-tmp
           mountPath: /tmp
@@ -701,6 +734,9 @@ backstage:
           emptyDir: {}
         - name: extensions-catalog
           emptyDir: {}
+        - name: rbac-policy
+          configMap:
+            name: rbac-policy
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'

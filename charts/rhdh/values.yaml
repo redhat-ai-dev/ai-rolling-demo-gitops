@@ -352,7 +352,7 @@ global:
       create: false
       name: "llama-stack-secrets"
     sidecar:
-      image: quay.io/lightspeed-core/lightspeed-stack:0.5.1
+      image: quay.io/lightspeed-core/lightspeed-stack:dev-20260610-be591ad
     configMaps:
       - name: stack
         create: true

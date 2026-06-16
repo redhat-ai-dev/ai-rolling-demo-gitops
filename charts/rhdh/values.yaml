@@ -15,6 +15,16 @@ global:
                   importName: RollingDemoCustomizedSignInPage
 
       ##### Red Hat Plugins without wrappers #####
+      # Plugin for backstage auth
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.49.4__0.1.6
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage.plugin-auth:
+                dynamicRoutes:
+                  - path: /oauth2/*
+                    importName: Router
       # Plugins for ArgoCD integration
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.49.4__2.8.0
         pluginConfig:
@@ -403,6 +413,11 @@ backstage:
               licensedUsers: 50
         auth:
           environment: production
+          # Enable experimental features for OIDC auth
+          experimentalClientIdMetadataDocuments:
+            enabled: true
+          experimentalRefreshToken:
+            enabled: true
           session:
             secret: "${BACKEND_SECRET}"
           providers:

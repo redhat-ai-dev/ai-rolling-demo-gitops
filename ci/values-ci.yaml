@@ -10,6 +10,7 @@ global:
         - >-
           mkdir -m 777 -p /rag-content/vector_db/notebooks &&
           mkdir -m 777 -p /rag-content/vector_db/rhdh_product_docs/1.10 &&
+          mkdir -m 777 -p /rag-content/vector_db/custom_docs &&
           mkdir -m 777 -p /rag-content/embeddings_model &&
           echo 'CI: RAG directories initialized.'
 
@@ -18,6 +19,46 @@ backstage:
   route:
     enabled: false
   upstream:
+    backstage:
+      initContainers:
+        - name: install-dynamic-plugins
+          image: '{{ include "backstage.image" . }}'
+          command:
+            - ./install-dynamic-plugins.sh
+            - /dynamic-plugins-root
+          env:
+            - name: NPM_CONFIG_USERCONFIG
+              value: /opt/app-root/src/.npmrc.dynamic-plugins
+            - name: CATALOG_INDEX_IMAGE
+              value: '{{ .Values.global.catalogIndex.image.registry }}/{{ .Values.global.catalogIndex.image.repository }}:{{ .Values.global.catalogIndex.image.tag }}'
+            - name: CATALOG_ENTITIES_EXTRACT_DIR
+              value: '/extensions'
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /dynamic-plugins-root
+              name: dynamic-plugins-root
+            - mountPath: /opt/app-root/src/dynamic-plugins.yaml
+              name: dynamic-plugins
+              readOnly: true
+              subPath: dynamic-plugins.yaml
+            - mountPath: /opt/app-root/src/.npmrc.dynamic-plugins
+              name: dynamic-plugins-npmrc
+              readOnly: true
+              subPath: .npmrc
+            - mountPath: /extensions
+              name: extensions-catalog
+        - name: byok-rag-init
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+          args:
+            - >-
+              mkdir -m 777 -p /rag-content/vector_db/custom_docs &&
+              echo 'CI: BYOK RAG directory initialized.'
+          volumeMounts:
+            - name: lightspeed-rag
+              mountPath: /rag-content
     postgresql:
       # Use the bundled bitnami image (default for this chart) instead of
       # registry.redhat.io/rhel9/postgresql-15 which requires Red Hat registry auth.

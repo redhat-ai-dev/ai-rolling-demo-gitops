@@ -734,7 +734,7 @@ backstage:
               name: extensions-catalog
         - name: byok-rag-init
           image: quay.io/rh-ee-rkichann/byok-sample:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           command:
             - sh
             - -c

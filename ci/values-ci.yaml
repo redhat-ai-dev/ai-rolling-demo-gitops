@@ -9,7 +9,7 @@ global:
       args:
         - >-
           mkdir -m 777 -p /rag-content/vector_db/notebooks &&
-          mkdir -m 777 -p /rag-content/vector_db/rhdh_product_docs/1.9 &&
+          mkdir -m 777 -p /rag-content/vector_db/rhdh_product_docs/1.10 &&
           mkdir -m 777 -p /rag-content/embeddings_model &&
           echo 'CI: RAG directories initialized.'
 

@@ -1,22 +1,5 @@
 global:
   ci: false
-  lightspeed:
-    initContainer:
-      name: lightspeed-rag-init
-      args:
-        - >-
-          mkdir -p /tmp/data &&
-          echo 'Copying Lightspeed RAG data...' &&
-          cp -r /rag/vector_db /rag-content/ &&
-          cp -r /rag/embeddings_model /rag-content/ &&
-          echo 'Standard RAG copy complete.' &&
-          if [ -d /rag-content/byok-staging/vector_db ]; then
-            echo 'Merging BYOK data...' &&
-            cp -r /rag-content/byok-staging/vector_db/* /rag-content/vector_db/ &&
-            echo 'BYOK merge complete.';
-          else
-            echo 'No BYOK staging data, skipping.';
-          fi
   dynamic:
     includes:
       - "dynamic-plugins.default.yaml"
@@ -406,6 +389,22 @@ global:
         subPath: rhdh-profile.py
         sourceFile: rhdh-profile.py
         optional: false
+    initContainer:
+      name: lightspeed-rag-init
+      args:
+        - >-
+          mkdir -p /tmp/data &&
+          echo 'Copying Lightspeed RAG data...' &&
+          cp -r /rag/vector_db /rag-content/ &&
+          cp -r /rag/embeddings_model /rag-content/ &&
+          echo 'Standard RAG copy complete.' &&
+          if [ -d /rag-content/byok-staging/vector_db ]; then
+            echo 'Merging BYOK data...' &&
+            cp -r /rag-content/byok-staging/vector_db/* /rag-content/vector_db/ &&
+            echo 'BYOK merge complete.';
+          else
+            echo 'No BYOK staging data, skipping.';
+          fi
 
 backstage:
   # override the default name to stay in the context

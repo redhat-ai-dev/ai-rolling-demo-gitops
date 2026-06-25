@@ -45,6 +45,12 @@ export ARGOCD_HOSTNAME="${ARGOCD_HOSTNAME:-dummy-argocd-hostname}"
 export ARGOCD_API_TOKEN="${ARGOCD_API_TOKEN:-dummy-argocd-token}"
 
 # setup lightspeed required secret values
+if [ -z "${VLLM_URL:-}" ] || [ -z "${VLLM_API_KEY:-}" ] || [ -z "${VALIDATION_PROVIDER:-}" ] || \
+   [ -z "${VALIDATION_MODEL_NAME:-}" ] || [ -z "${LIGHTSPEED_POSTGRES_USER:-}" ] || \
+   [ -z "${LIGHTSPEED_POSTGRES_PASSWORD:-}" ] || [ -z "${LIGHTSPEED_POSTGRES_DB:-}" ] || \
+   [ -z "${NOTEBOOKS_QUERY_PROVIDER_ID:-}" ] || [ -z "${NOTEBOOKS_QUERY_MODEL:-}" ]; then
+  echo "WARNING: Required secrets are not set. If you are working from a fork, push your branch to the upstream repo and re-open the PR from there. For local runs, see docs/TESTING.md." >&2
+fi
 export ENABLE_VLLM="true"
 export VLLM_URL="${VLLM_URL:?VLLM_URL must be set}"
 export VLLM_API_KEY="${VLLM_API_KEY:?VLLM_API_KEY must be set}"

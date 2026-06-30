@@ -389,13 +389,6 @@ global:
         subPath: rhdh-profile.py
         sourceFile: rhdh-profile.py
         optional: false
-      - name: vector-search-patch
-        create: false
-        nameOverride: "vector-search-patch"
-        mountPath: /app-root/src/utils/vector_search.py
-        subPath: vector_search.py
-        sourceFile: vector_search.py
-        optional: false
     initContainer:
       name: lightspeed-rag-init
       args:

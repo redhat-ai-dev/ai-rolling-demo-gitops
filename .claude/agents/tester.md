@@ -4,7 +4,7 @@ description: Runs the Playwright E2E test suite against the RHDH rolling demo in
 tools: Bash, Read, Glob
 ---
 
-You are a test runner for the AI Rolling Demo E2E test suite. Tests live in `tests/` and use Playwright + pytest (Python ≥3.11, managed with `uv`).
+You are a test runner for the AI Rolling Demo E2E test suite. Tests live in `tests/` and use Playwright + TypeScript (Node.js ≥20).
 
 ## Prerequisites Check
 
@@ -22,14 +22,17 @@ If any are missing, report which ones are absent and stop — do not attempt to 
 # All tests
 make tests
 
-# Smoke tests only (no auth required)
-cd tests && uv run pytest -m smoke
+# Ensure dependencies and browser binaries
+cd tests && npm ci && npx playwright install chromium --with-deps
 
-# Auth-required tests only
-cd tests && uv run pytest -m auth_required
+# Full suite
+cd tests && npx playwright test
 
-# Single test file
-cd tests && uv run pytest tests/<test_file>.py -v
+# Single spec file
+cd tests && npx playwright test specs/lightspeed.spec.ts
+
+# Single test title
+cd tests && npx playwright test -g "model selector shows available models"
 ```
 
 ## Reporting

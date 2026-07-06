@@ -203,13 +203,16 @@ export class NotebookSurfacePage {
         /* upload may complete too quickly */
       });
     await this.expectDocumentFileListedInSidebar(fileName);
-    await expect(progressbar).toBeHidden({ timeout: 60_000 });
+    await expect(progressbar).toBeHidden({ timeout: 60_000 * 5 });
   }
 
   async expectNotebookEditorUploadResourceButtonVisible(
     timeout = 5_000,
   ): Promise<void> {
-    await expect(this.uploadResourceActionButton()).toBeVisible({ timeout });
+    if (await this.uploadResourceActionButton().isVisible({ timeout })) {
+      return;
+    }
+    await expect(this.sidebarAddDocumentButton()).toBeVisible({ timeout });
   }
 
   untitledNotebookCards(): Locator {

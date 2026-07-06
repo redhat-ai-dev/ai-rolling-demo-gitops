@@ -16,7 +16,10 @@ import {
   submitFeedback,
   verifyFeedbackButtons,
 } from "../support/conversation-helper";
-import { loginViaKeycloakImpersonation } from "../support/auth";
+import {
+  hidePostLoginBannerIfVisible,
+  loginViaKeycloakImpersonation,
+} from "../support/auth";
 
 const RENAMED_NOTEBOOK_TITLE = "E2E Notebook Renamed";
 
@@ -54,6 +57,7 @@ test.describe("Lightspeed notebooks", () => {
 
   test("fullscreen list: header and empty state", async () => {
     await notebooks.gotoFullscreenNotebooksTab();
+    await hidePostLoginBannerIfVisible(page);
     await notebooks.expectNotebookListHeaderControlsVisible();
     await notebooks.expectEmptyNotebookListMatchesAriaSnapshot();
   });
@@ -83,6 +87,7 @@ test.describe("Lightspeed notebooks", () => {
     await uploadModal.clickAddFilesForStagedCount(1);
     await expect(uploadModal.dialog()).toBeHidden();
     await notebooks.expectDocumentUploadCompletes(fileName);
+    await page.waitForTimeout(5000);
 
     await notebooks.clickOpenUploadDocumentModal();
     uploadModal = notebooks.uploadDocumentModal();

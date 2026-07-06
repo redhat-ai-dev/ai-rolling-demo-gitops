@@ -193,4 +193,19 @@ export async function loginViaKeycloakImpersonation(
   }
 
   await page.waitForLoadState("networkidle");
+  await hidePostLoginBannerIfVisible(page);
+}
+
+/**
+ * Some deployments show a post-login dismissible panel/button.
+ * Click it when present so tests start from a consistent UI state.
+ */
+export async function hidePostLoginBannerIfVisible(
+  page: Page,
+  timeout = 5_000,
+): Promise<void> {
+  const hideButton = page.getByRole("button", { name: "Hide" });
+  if (await hideButton.isVisible({ timeout })) {
+    await hideButton.click();
+  }
 }

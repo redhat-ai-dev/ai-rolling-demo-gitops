@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # SCRIPTS_DIR: the scripts/ subdirectory relative to this file
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,7 +19,7 @@ fi
 CI_HOSTNAME="${CI_HOSTNAME:-rhdh-ci.apps.testing}"
 RHDH_BASE_URL="${RHDH_BASE_URL:-https://$CI_HOSTNAME}"
 
-# Required environment variables for the test suite (see tests/README.md)
+# Required environment variables for the auth-impersonation test suite
 required_vars=(
   RHDH_BASE_URL
   RHDH_ENVIRONMENT
@@ -29,7 +30,7 @@ required_vars=(
 
 missing=()
 for var in "${required_vars[@]}"; do
-  if [ -z "${!var}" ]; then
+  if [ -z "${!var:-}" ]; then
     missing+=("$var")
   fi
 done
@@ -49,21 +50,18 @@ GITOPS_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
 # TESTS_DIR: the tests/ subdirectory containing the test suite
 TESTS_DIR="$GITOPS_DIR/tests"
 
-# VENV_ACTIVATE: the path to the activate script of the virtual environment
-VENV_ACTIVATE="$TESTS_DIR/.venv/bin/activate"
-
-# Check if the virtual environment exists
-if [ ! -f "$VENV_ACTIVATE" ]; then
-  log_fail "Virtual environment not found at $TESTS_DIR/.venv. Run 'uv sync' inside tests/ first."
+if ! command -v node >/dev/null 2>&1; then
+  log_fail "Node.js is not installed. Install Node.js 20+ and retry."
   exit 1
 fi
 
-# shellcheck source=/dev/null
-source "$VENV_ACTIVATE"
+if ! command -v npm >/dev/null 2>&1; then
+  log_fail "npm is not installed. Install npm and retry."
+  exit 1
+fi
 
-# Check if pytest is available through uv
-if ! uv run pytest --version >/dev/null 2>&1; then
-  log_fail "pytest not found. Run 'uv sync' inside tests/ first."
+if [ ! -f "$TESTS_DIR/package.json" ]; then
+  log_fail "Missing tests/package.json. Cannot run Playwright tests."
   exit 1
 fi
 
@@ -75,13 +73,20 @@ log "KEYCLOAK_CLIENT_ID=***"
 log "KEYCLOAK_CLIENT_SECRET=****"
 log "PLAYWRIGHT_HEADLESS=${PLAYWRIGHT_HEADLESS:-true}"
 
-# Run the tests using pytest
-log "Running tests in $TESTS_DIR..."
-cd "$TESTS_DIR" && env \
+log "Installing Node dependencies in $TESTS_DIR..."
+cd "$TESTS_DIR"
+if [ -f package-lock.json ]; then
+  npm ci
+else
+  npm install
+fi
+
+log "Running Playwright tests..."
+env \
   RHDH_BASE_URL="$RHDH_BASE_URL" \
   RHDH_ENVIRONMENT="$RHDH_ENVIRONMENT" \
   ROLLING_DEMO_TEST_USERNAME="$ROLLING_DEMO_TEST_USERNAME" \
   KEYCLOAK_CLIENT_ID="$KEYCLOAK_CLIENT_ID" \
   KEYCLOAK_CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET" \
   PLAYWRIGHT_HEADLESS="${PLAYWRIGHT_HEADLESS:-true}" \
-  uv run pytest -v "${PYTEST_EXTRA_ARGS:-}"
+  npx playwright test ${PLAYWRIGHT_EXTRA_ARGS:-}

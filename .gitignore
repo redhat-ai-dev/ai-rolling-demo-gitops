@@ -8,3 +8,8 @@
 # python files
 
 __pycache__/
+tests/.venv/
+tests/.pytest_cache/
+tests/node_modules/
+tests/playwright-report/
+tests/test-results/

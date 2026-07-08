@@ -12,8 +12,8 @@ A user is also able to run our testing suite locally (`make ci-install && make c
 - `helm` v3+
 - `kubectl`
 - `openssl`
-- `python` version greater than `3.11`.
-- [uv](https://docs.astral.sh/uv/) installed (`pip install uv` or via the official installer).
+- `node` version greater than or equal to `20` (CI uses Node 24).
+- `npm` (bundled with Node).
 - `sudo` access (the script writes to `/etc/hosts`)
 
 ### Prepare `scripts/private-env`
@@ -83,6 +83,15 @@ make ci-install   # creates Kind cluster and deploys RHDH (~40 min)
 make ci-tests     # runs the Playwright E2E suite
 ```
 
+If you want to run only the Lightspeed suite manually:
+
+```bash
+cd tests
+npm ci
+npx playwright install chromium --with-deps
+npx playwright test
+```
+
 To tear down the cluster afterwards:
 
 ```bash
@@ -129,6 +138,6 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 
 ## Troubleshooting
 
-- **Test suite fails on first `test_navbar.py` test**: If Kind cluster is created successfully but then your tests are failing when an authenticated session is required (e.g. `test_navbar` which is the first group of tests ran where auth is required), you have most probably haven't exported correctly the variables mentioned in [Prepare `scripts/private-env`](#prepare-scriptsprivate-env).
+- **Test suite fails on first authenticated Lightspeed spec**: If Kind cluster is created successfully but tests fail before the first `/lightspeed` assertions, the likely issue is missing or wrong auth variables used by the Keycloak impersonation flow (`RHDH_ENVIRONMENT`, `ROLLING_DEMO_TEST_USERNAME`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`).
 
 - **Tests hit wrong RHDH URL (e.g. your OCP cluster's hostname instead of `rhdh-ci.apps.testing`)**: This usually means `RHDH_BASE_URL` was set to a custom value before running `make ci-tests`. The CI scripts derive `RHDH_BASE_URL` from `CI_HOSTNAME` (default: `rhdh-ci.apps.testing`). Do not set `RHDH_BASE_URL` manually when running local CI tests — unset it and let `run-tests.sh` compute it. Note that `RHDH_CLUSTER_ROUTER_BASE` (used for OCP deployments) does **not** affect the local Kind CI hostname; `clusterRouterBase` is fixed to `apps.testing` in `ci/values-ci.yaml` because `ci-setup.sh` writes `127.0.0.1 rhdh-ci.apps.testing` to `/etc/hosts` and configures the Kind ingress to that same hostname — changing the variable alone without re-running the cluster setup would break the routing.

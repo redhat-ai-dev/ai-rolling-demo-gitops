@@ -1,0 +1,19 @@
+{
+  "name": "ai-rolling-demo-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright TypeScript tests for AI Rolling Demo",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "test:ci": "playwright test --max-failures=1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.59.1",
+    "@types/node": "24.7.2",
+    "typescript": "5.9.3"
+  }
+}

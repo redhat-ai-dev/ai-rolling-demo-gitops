@@ -574,7 +574,7 @@ backstage:
                 signIn:
                   resolvers:
                     - resolver: emailMatchingUserEntityProfileEmail
-        lightspeed:
+        intelligent-assistant:
           notebooks:
             enabled: true
             queryDefaults:

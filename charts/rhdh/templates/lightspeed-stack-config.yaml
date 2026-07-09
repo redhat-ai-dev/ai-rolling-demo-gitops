@@ -64,6 +64,6 @@ data:
         db_path: /rag-content/vector_db/custom_docs/faiss_store.db
         score_multiplier: 1.0
     rag:
-      tool:
+      inline:
         - rhdh-docs
         - custom-org-docs

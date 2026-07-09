@@ -574,6 +574,12 @@ backstage:
                 signIn:
                   resolvers:
                     - resolver: emailMatchingUserEntityProfileEmail
+        lightspeed:
+          notebooks:
+            enabled: true
+            queryDefaults:
+              model: ${NOTEBOOKS_QUERY_MODEL}
+              provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
         intelligent-assistant:
           notebooks:
             enabled: true

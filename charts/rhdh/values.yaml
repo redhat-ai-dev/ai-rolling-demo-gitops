@@ -365,7 +365,8 @@ global:
       image: quay.io/lightspeed-core/lightspeed-stack:dev-20260710-2c3e52e
     configMaps:
       - name: stack
-        create: true
+        create: false
+        nameOverride: "lightspeed-stack-config"
         mountPath: /app-root/lightspeed-stack.yaml
         subPath: lightspeed-stack.yaml
         sourceFile: lightspeed-stack.yaml

@@ -1,0 +1,57 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: lightspeed-stack-config
+  namespace: {{ .Release.Namespace }}
+data:
+  lightspeed-stack.yaml: |
+    name: lightspeed-core-stack
+    service:
+      host: ${env.SERVICE_HOST:=127.0.0.1}
+      port: 8080
+      auth_enabled: false
+      workers: 1
+      color_log: true
+      access_log: true
+    llama_stack:
+      use_as_library_client: true
+      config:
+        profile: /app-root/config.yaml
+    inference:
+      providers:
+        - type: vllm
+          id: vllm
+          api_key_env: VLLM_API_KEY
+          extra:
+            base_url: ${env.VLLM_URL:=}
+            max_tokens: ${env.VLLM_MAX_TOKENS:=4096}
+            network:
+              tls:
+                verify: ${env.VLLM_TLS_VERIFY:=true}
+        - type: openai
+          id: openai
+          api_key_env: OPENAI_API_KEY
+          extra:
+            allowed_models:
+              - gpt-4o-mini
+              - gpt-5.1
+              - gpt-4.1-mini
+              - gpt-4.1-nano
+        - type: sentence_transformers
+    user_data_collection:
+      feedback_enabled: true
+      feedback_storage: '/tmp/data/feedback'
+    authentication:
+      module: 'noop'
+    conversation_cache:
+      type: 'sqlite'
+      sqlite:
+        db_path: '/tmp/cache.db'
+    customization:
+      profile_path: '/app-root/rhdh-profile.py'
+    mcp_servers:
+      - name: mcp-integration-tools
+        provider_id: 'model-context-protocol'
+        url: 'http://localhost:7007/api/mcp-actions/v1'
+        authorization_headers:
+          Authorization: 'client'

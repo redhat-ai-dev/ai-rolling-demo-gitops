@@ -28,37 +28,6 @@ data:
                 backend: sql_default
           provider_id: meta-reference
           provider_type: inline::meta-reference
-      inference:
-        - provider_id: ${env.ENABLE_VLLM:+vllm}
-          provider_type: remote::vllm
-          config:
-            base_url: ${env.VLLM_URL:=}
-            api_token: ${env.VLLM_API_KEY:=}
-            max_tokens: ${env.VLLM_MAX_TOKENS:=4096}
-            network:
-              tls:
-                verify: ${env.VLLM_TLS_VERIFY:=true}
-        - provider_id: ${env.ENABLE_OLLAMA:+ollama}
-          provider_type: remote::ollama
-          config:
-            base_url: ${env.OLLAMA_URL:=http://localhost:11434/v1}
-        - provider_id: ${env.ENABLE_OPENAI:+openai}
-          provider_type: remote::openai
-          config:
-            api_key: ${env.OPENAI_API_KEY:=}
-            allowed_models:
-              - gpt-4o-mini
-              - gpt-5.1
-              - gpt-4.1-mini
-              - gpt-4.1-nano
-        - provider_id: ${env.ENABLE_VERTEX_AI:+vertexai}
-          provider_type: remote::vertexai
-          config:
-            project: ${env.VERTEX_AI_PROJECT:=}
-            location: ${env.VERTEX_AI_LOCATION:=global}
-        - provider_id: sentence-transformers
-          provider_type: inline::sentence-transformers
-          config: {}
       tool_runtime:
         - provider_id: model-context-protocol
           provider_type: remote::model-context-protocol

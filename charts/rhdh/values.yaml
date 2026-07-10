@@ -16,7 +16,7 @@ global:
 
       ##### Red Hat Plugins without wrappers #####
       # Plugin for backstage auth
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.49.4__0.1.6
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.52.0__0.1.9
         disabled: false
         pluginConfig:
           dynamicPlugins:

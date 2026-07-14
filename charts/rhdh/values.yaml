@@ -362,10 +362,14 @@ global:
       create: false
       name: "llama-stack-secrets"
     sidecar:
-      image: quay.io/lightspeed-core/lightspeed-stack:dev-20260702-c62c782
+      image: quay.io/lightspeed-core/lightspeed-stack:dev-20260710-2c3e52e
+      args:
+        - --synthesized-config-output
+        - /tmp/.generated/run.yaml
     configMaps:
       - name: stack
-        create: true
+        create: false
+        nameOverride: "lightspeed-stack-config"
         mountPath: /app-root/lightspeed-stack.yaml
         subPath: lightspeed-stack.yaml
         sourceFile: lightspeed-stack.yaml

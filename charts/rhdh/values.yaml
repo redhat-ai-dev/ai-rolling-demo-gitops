@@ -401,7 +401,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.10-151"
+        tag: "1.10-152"
         pullSecrets:
           - quay-pull-secret
       command: []

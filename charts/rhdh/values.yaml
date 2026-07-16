@@ -352,8 +352,7 @@ global:
       create: false
       name: "llama-stack-secrets"
     sidecar:
-<<<<<<< HEAD
-      image: quay.io/lightspeed-core/lightspeed-stack:0.5.1
+      image: quay.io/lightspeed-core/lightspeed-stack:0.5.2
       resources:
         requests:
           memory: "1Gi"
@@ -361,9 +360,6 @@ global:
         limits:
           memory: "4Gi"
           cpu: "2"
-=======
-      image: quay.io/lightspeed-core/lightspeed-stack:0.5.2
->>>>>>> upstream/main
     configMaps:
       - name: stack
         create: true

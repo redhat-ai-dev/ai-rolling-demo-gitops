@@ -74,11 +74,22 @@ data:
               namespace: vector_io::faiss
               backend: kv_rag
         - provider_id: notebooks
-          provider_type: inline::faiss
+          provider_type: remote::pgvector
           config:
+            host: ${env.PGVECTOR_HOST:={{ .Release.Name }}-postgresql}
+            port: ${env.PGVECTOR_PORT:=5432}
+            db: ${env.PGVECTOR_DB}
+            user: ${env.PGVECTOR_USER}
+            password: ${env.PGVECTOR_PASSWORD}
+            distance_metric: COSINE
+            vector_index:
+              type: HNSW
+              m: 16
+              ef_construction: 64
+              ef_search: 40
             persistence:
-              namespace: vector_io::faiss
-              backend: kv_notebooks
+              namespace: vector_io::pgvector
+              backend: kv_default
       files:
         - provider_id: localfs
           provider_type: inline::localfs
@@ -157,10 +168,7 @@ data:
           db_path: /tmp/sql_store.db
         kv_rag:
           type: kv_sqlite
-          db_path: /rag-content/vector_db/rhdh_product_docs/1.9/faiss_store.db
-        kv_notebooks:
-          type: kv_sqlite
-          db_path: /rag-content/vector_db/notebooks/faiss_store.db
+          db_path: /rag-content/vector_db/rhdh_product_docs/1.10/faiss_store.db
       stores:
         metadata:
           namespace: registry
@@ -185,7 +193,7 @@ data:
         - provider_id: rag-runtime
           toolgroup_id: builtin::rag
       vector_stores:
-        - vector_store_id: vs_cda156a6-64fe-436d-bc51-566fb1b09702 # see readme for this value
+        - vector_store_id: vs_757285d9-b657-4bed-b18c-3359844e8c0d # see readme for this value
           embedding_model: sentence-transformers//rag-content/embeddings_model
           embedding_dimension: 768
           provider_id: rhdh-docs

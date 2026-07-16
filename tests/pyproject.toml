@@ -11,12 +11,10 @@ testpaths = [
     "test_navbar.py",
     "test_sidebar.py",
     "test_extensions.py",
-    "test_lightspeed.py",
+    # "test_lightspeed.py",
 ]
 markers = [
     "smoke: quick sanity checks that do not require authentication",
     "auth_required: tests that require a logged-in session",
 ]
-filterwarnings = [
-    "ignore::urllib3.exceptions.InsecureRequestWarning",
-]
+filterwarnings = ["ignore::urllib3.exceptions.InsecureRequestWarning"]

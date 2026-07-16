@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":gitSignOff"
+  ],
+  "timezone": "America/Toronto",
+  "baseBranches": ["main", "development"],
+  "schedule": [
+    "* 19-23 * * 0",
+    "* 0-2 * * 1"
+  ],
+  "enabledManagers": [
+    "github-actions",
+    "helm-values",
+    "helmv3"
+  ],
+  "packageRules": [
+    {
+      "matchBaseBranches": ["main"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "groupSlug": "github-actions",
+      "commitMessageTopic": "{{depName}}"
+    },
+    {
+      "matchManagers": ["helm-values"],
+      "groupName": "helm values",
+      "groupSlug": "helm-values",
+      "commitMessageTopic": "{{depName}}"
+    },
+    {
+      "matchManagers": ["helmv3"],
+      "groupName": "helm v3",
+      "groupSlug": "helmv3",
+      "commitMessageTopic": "{{depName}}"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "prHourlyLimit": 20,
+  "prConcurrentLimit": 10,
+  "labels": ["renovatebot"]
+}

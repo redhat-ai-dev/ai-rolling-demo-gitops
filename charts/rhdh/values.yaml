@@ -352,7 +352,18 @@ global:
       create: false
       name: "llama-stack-secrets"
     sidecar:
+<<<<<<< HEAD
       image: quay.io/lightspeed-core/lightspeed-stack:0.5.1
+      resources:
+        requests:
+          memory: "1Gi"
+          cpu: "500m"
+        limits:
+          memory: "4Gi"
+          cpu: "2"
+=======
+      image: quay.io/lightspeed-core/lightspeed-stack:0.5.2
+>>>>>>> upstream/main
     configMaps:
       - name: stack
         create: true
@@ -387,7 +398,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.10-128"
+        tag: "1.10-152"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -722,11 +733,11 @@ backstage:
       host: "{{ .Values.global.host }}"
     postgresql:
       enabled: true
-      postgresqlDataDir: /var/lib/pgsql/data/userdata
+      postgresqlDataDir: /var/lib/postgresql/data/userdata
       image:
-        registry: registry.redhat.io
-        repository: rhel9/postgresql-15
-        tag: latest
+        registry: docker.io
+        repository: pgvector/pgvector
+        tag: pg15
       auth:
         username: postgres
         existingSecret: "{{ .Release.Name }}-postgresql"
@@ -739,14 +750,18 @@ backstage:
           enabled: false
         persistence:
           enabled: true
-          size: 1Gi
-          mountPath: /var/lib/pgsql/data
+          size: 2Gi
+          mountPath: /var/lib/postgresql/data
         extraEnvVars:
           - name: POSTGRESQL_ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: postgres-password
                 name: "{{ .Release.Name }}-postgresql"
+        initdb:
+          scripts:
+            init-pgvector.sql: |
+              CREATE EXTENSION IF NOT EXISTS vector;
   route:
     annotations: {}
     enabled: true

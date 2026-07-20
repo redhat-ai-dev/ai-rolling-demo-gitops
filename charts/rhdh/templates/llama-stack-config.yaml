@@ -29,9 +29,6 @@ data:
           provider_id: meta-reference
           provider_type: inline::meta-reference
       tool_runtime:
-        - provider_id: model-context-protocol
-          provider_type: remote::model-context-protocol
-          config: {}
         - provider_id: rag-runtime
           provider_type: inline::rag-runtime
           config: {}

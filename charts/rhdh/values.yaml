@@ -729,11 +729,11 @@ backstage:
       host: "{{ .Values.global.host }}"
     postgresql:
       enabled: true
-      postgresqlDataDir: /var/lib/postgresql/data/userdata
+      postgresqlDataDir: /var/lib/pgsql/data/userdata
       image:
-        registry: docker.io
-        repository: pgvector/pgvector
-        tag: pg15
+        registry: registry.redhat.io
+        repository: rhel9/postgresql-15
+        tag: latest
       auth:
         username: postgres
         existingSecret: "{{ .Release.Name }}-postgresql"
@@ -746,18 +746,14 @@ backstage:
           enabled: false
         persistence:
           enabled: true
-          size: 2Gi
-          mountPath: /var/lib/postgresql/data
+          size: 1Gi
+          mountPath: /var/lib/pgsql/data
         extraEnvVars:
           - name: POSTGRESQL_ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: postgres-password
                 name: "{{ .Release.Name }}-postgresql"
-        initdb:
-          scripts:
-            init-pgvector.sql: |
-              CREATE EXTENSION IF NOT EXISTS vector;
   route:
     annotations: {}
     enabled: true

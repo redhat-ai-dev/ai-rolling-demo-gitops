@@ -38,9 +38,9 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=VALIDATION_MODEL_NAME="$VALIDATION_MODEL_NAME" \
     --from-literal=NOTEBOOKS_QUERY_PROVIDER_ID="$NOTEBOOKS_QUERY_PROVIDER_ID" \
     --from-literal=NOTEBOOKS_QUERY_MODEL="$NOTEBOOKS_QUERY_MODEL" \
-    --from-literal=PGVECTOR_DB="postgres" \
-    --from-literal=PGVECTOR_USER="postgres" \
-    --from-literal=PGVECTOR_PASSWORD="$POSTGRESQL_POSTGRES_PASSWORD" \
+    --from-literal=PGVECTOR_DB="$LIGHTSPEED_POSTGRES_DB" \
+    --from-literal=PGVECTOR_USER="$LIGHTSPEED_POSTGRES_USER" \
+    --from-literal=PGVECTOR_PASSWORD="$LIGHTSPEED_POSTGRES_PASSWORD" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 

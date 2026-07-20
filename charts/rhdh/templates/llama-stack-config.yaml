@@ -76,7 +76,7 @@ data:
         - provider_id: notebooks
           provider_type: remote::pgvector
           config:
-            host: ${env.PGVECTOR_HOST:={{ .Release.Name }}-postgresql}
+            host: ${env.PGVECTOR_HOST:=lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local}
             port: ${env.PGVECTOR_PORT:=5432}
             db: ${env.PGVECTOR_DB}
             user: ${env.PGVECTOR_USER}

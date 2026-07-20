@@ -329,18 +329,18 @@ global:
   lightspeed:
     enabled: true
     plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.9.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:pr_2805__3.0.3
         disabled: false
         pluginConfig:
           dynamicPlugins:
             frontend:
-              red-hat-developer-hub.backstage-plugin-lightspeed:
+              red-hat-developer-hub.backstage-plugin-intelligent-assistant:
                 translationResources:
-                  - importName: lightspeedTranslations
+                  - importName: intelligentAssistantTranslations
                     module: Alpha
-                    ref: lightspeedTranslationRef
+                    ref: intelligentAssistantTranslationRef
                 dynamicRoutes:
-                  - path: /lightspeed
+                  - path: /intelligent-assistant
                     importName: LightspeedPage
                 mountPoints:
                   - mountPoint: application/listener
@@ -350,13 +350,13 @@ global:
                   - mountPoint: application/internal/drawer-state
                     importName: LightspeedDrawerStateExposer
                     config:
-                      id: lightspeed
+                      id: intelligent-assistant
                   - mountPoint: application/internal/drawer-content
                     importName: LightspeedChatContainer
                     config:
-                      id: lightspeed
+                      id: intelligent-assistant
                       priority: 100
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.9.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:pr_2805__3.0.3
         disabled: false
     secret:
       create: false
@@ -558,7 +558,7 @@ backstage:
                 signIn:
                   resolvers:
                     - resolver: emailMatchingUserEntityProfileEmail
-        lightspeed:
+        intelligent-assistant:
           notebooks:
             enabled: true
             queryDefaults:

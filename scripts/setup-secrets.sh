@@ -29,14 +29,17 @@ log "Creating $SECRET_NAME secret..."
 kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
     --from-literal=ENABLE_VLLM="true" \
+    --from-literal=ENABLE_OPENAI="true" \
     --from-literal=ENABLE_VALIDATION="true" \
     --from-literal=VLLM_URL="$VLLM_URL" \
     --from-literal=VLLM_API_KEY="$VLLM_API_KEY" \
-    --from-literal=OPENAI_API_KEY="${OPENAI_API_KEY:-passthrough}" \
     --from-literal=VALIDATION_PROVIDER="$VALIDATION_PROVIDER" \
     --from-literal=VALIDATION_MODEL_NAME="$VALIDATION_MODEL_NAME" \
     --from-literal=NOTEBOOKS_QUERY_PROVIDER_ID="$NOTEBOOKS_QUERY_PROVIDER_ID" \
     --from-literal=NOTEBOOKS_QUERY_MODEL="$NOTEBOOKS_QUERY_MODEL" \
+    --from-literal=PGVECTOR_DB="$LIGHTSPEED_POSTGRES_DB" \
+    --from-literal=PGVECTOR_USER="$LIGHTSPEED_POSTGRES_USER" \
+    --from-literal=PGVECTOR_PASSWORD="$LIGHTSPEED_POSTGRES_PASSWORD" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 

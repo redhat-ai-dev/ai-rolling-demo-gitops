@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: postgres:15
+        image: pgvector/pgvector:pg15
         ports:
         - containerPort: 5432
         env:
@@ -80,7 +80,7 @@ spec:
     spec:
       containers:
       - name: postgres-job
-        image: postgres:15
+        image: pgvector/pgvector:pg15
         env:
         - name: PGPASSWORD
           valueFrom:
@@ -107,9 +107,10 @@ spec:
           until pg_isready -h "$POSTGRES_HOST" -U "$POSTGRES_USER"; do
             sleep 2
           done
-          echo "Postgres is ready, creating table..."
+          echo "Postgres is ready, enabling pgvector and creating tables..."
 
           psql <<EOF
+          CREATE EXTENSION IF NOT EXISTS vector;
           CREATE TABLE IF NOT EXISTS feedback (
             id SERIAL PRIMARY KEY,
             user_id TEXT NOT NULL,

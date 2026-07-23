@@ -8,3 +8,7 @@
 # python files
 
 __pycache__/
+
+# BYOK - generated artifacts (rebuild with byok/build-vector-db.sh)
+byok/vector_db/
+byok/embeddings_model/

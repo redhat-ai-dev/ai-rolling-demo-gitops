@@ -2,34 +2,48 @@
 
 Sample BYOK (Bring Your Own Knowledge) vector database for the AI Rolling Demo.
 
-Contains internal RHDH team docs (Feature Exploration Process, Engineering Workflow, Onboarding), built into a FAISS vector DB using [rag-content](https://github.com/lightspeed-core/rag-content) tooling.
+Source docs live in `docs/` — the vector DB is generated at build time using [rag-content](https://github.com/lightspeed-core/rag-content) and is not checked into git.
 
-## Pre-built vector store
+## Prerequisites
 
-- **Vector store ID:** `vs_727b6321-1ff4-47bf-a76b-1cc12426c954`
+1. Clone [rag-content](https://github.com/lightspeed-core/rag-content)
+2. Set up a virtualenv: `cd rag-content && uv venv && uv pip install -e .`
+
+## Adding documents
+
+Place your source documents in `docs/`. Supported formats: `.md`, `.txt`, `.pdf`, `.html`.
+
+For Google Docs: **File > Download > Markdown (.md)**, then place the exported file in `docs/`.
+
+## Build the vector DB and container image
+
+```bash
+RAG_CONTENT_REPO=/path/to/rag-content \
+BYOK_IMAGE=quay.io/<org>/byok-sample:latest \
+./build-vector-db.sh
+```
+
+This will:
+1. Download the embedding model (if not already present)
+2. Process all docs in `docs/` into a FAISS vector DB
+3. Build and push the container image
+4. Print the `vector_store_id` to update in `lightspeed-stack.yaml`
+
+To generate the vector DB only (no container build), omit `BYOK_IMAGE`:
+
+```bash
+RAG_CONTENT_REPO=/path/to/rag-content ./build-vector-db.sh
+```
+
+To use a different docs directory:
+
+```bash
+RAG_CONTENT_REPO=/path/to/rag-content ./build-vector-db.sh /path/to/your/docs
+```
+
+## Configuration
+
+After building, update `lightspeed-stack.yaml` with the vector store ID printed by the script:
+
 - **Embedding model:** `sentence-transformers/all-mpnet-base-v2` (dimension 768)
 - **DB path in container:** `/byok/vector_db/custom_docs/faiss_store.db`
-
-## Build the container image
-
-```bash
-cd byok/
-podman build -t quay.io/rh-ee-rkichann/byok-sample:latest -f Containerfile .
-podman push quay.io/rh-ee-rkichann/byok-sample:latest
-```
-
-## Rebuild the vector DB
-
-Requires the [rag-content](https://github.com/lightspeed-core/rag-content) repo and an embeddings model.
-
-```bash
-cd /path/to/rag-content
-.venv/bin/python /path/to/byok/custom_processor.py \
-  --folder /path/to/byok/docs \
-  --output /path/to/byok/vector_db/custom_docs \
-  --index v1 \
-  --vector-store-type llamastack-faiss \
-  --model-dir /path/to/embeddings_model \
-  --model-name sentence-transformers/all-mpnet-base-v2 \
-  --chunk 512 --overlap 128
-```

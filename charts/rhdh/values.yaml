@@ -371,6 +371,14 @@ global:
       args:
         - --synthesized-config-output
         - /tmp/.generated/run.yaml
+      # Path to the VERTEX_AI_CREDENTIALS key mounted from llama-stack-secrets.
+      # volumeMount is applied by rolling-demo-sidecars-job (chart 6.1.1 has no sidecar.extraVolumeMounts).
+      # TODO: after upgrading to an rhdh-chart with lightspeed.core.extraVolumeMounts
+      # (https://github.com/redhat-developer/rhdh-chart/pull/438), mount via values and drop the
+      # PostSync patch — that workaround will be redundant.
+      env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /app-root/gcp-creds.json
     configMaps:
       - name: stack
         create: false
@@ -710,6 +718,15 @@ backstage:
           emptyDir: {}
         - name: extensions-catalog
           emptyDir: {}
+        # GCP SA JSON for Vertex AI. Pod volume is Helm-managed; lightspeed-core volumeMount is
+        # applied by rolling-demo-sidecars-job until rhdh-chart gains lightspeed.core.extraVolumeMounts
+        # (https://github.com/redhat-developer/rhdh-chart/pull/438) — that PostSync patch becomes redundant.
+        - name: gcp-creds
+          secret:
+            secretName: llama-stack-secrets
+            items:
+              - key: VERTEX_AI_CREDENTIALS
+                path: gcp-creds.json
       initContainers:
         - name: install-dynamic-plugins
           image: '{{ include "backstage.image" . }}'

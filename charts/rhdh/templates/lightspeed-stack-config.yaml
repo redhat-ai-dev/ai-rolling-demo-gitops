@@ -37,6 +37,16 @@ data:
               - gpt-5.1
               - gpt-4.1-mini
               - gpt-4.1-nano
+        - type: vertexai
+          id: vertexai
+          extra:
+            project: ${env.VERTEX_AI_PROJECT:=}
+            location: ${env.VERTEX_AI_LOCATION:=global}
+            allowed_models:
+              - publishers/google/models/gemini-2.5-pro
+              - publishers/google/models/gemini-2.5-flash-lite
+              - publishers/google/models/gemini-3.1-pro-preview
+              - publishers/google/models/gemini-3.5-flash-lite
         - type: sentence_transformers
     user_data_collection:
       feedback_enabled: true

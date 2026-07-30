@@ -190,14 +190,49 @@ spec:
               fi
               fi
 
-              # Feedback Harvester: Add/Replace
+              # Mount VERTEX_AI_CREDENTIALS into lightspeed-core at /app-root/gcp-creds.json.
+              # Volume is declared in values.yaml extraVolumes; chart 6.1.1 has no sidecar.extraVolumeMounts.
+              # Folded into the same post-deploy patch as the sidecars (one rollout).
+              # TODO: remove this op once we upgrade to an rhdh-chart that supports
+              # lightspeed.core.extraVolumeMounts (see https://github.com/redhat-developer/rhdh-chart/pull/438).
+              LS_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
+              ADD_GCP_MOUNT="false"
+              if [ "$LS_INDEX" != "null" ]; then
+                HAS_GCP_MOUNT=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq --argjson idx "$LS_INDEX" '.spec.template.spec.containers[$idx].volumeMounts // [] | any(.name == "gcp-creds")')
+                if [ "$HAS_GCP_MOUNT" = "false" ]; then
+                  ADD_GCP_MOUNT="true"
+                  cat > "${TEMP_DIR}/gcp-creds-mount.json" <<EOF
+              {
+                "name": "gcp-creds",
+                "mountPath": "/app-root/gcp-creds.json",
+                "subPath": "gcp-creds.json",
+                "readOnly": true
+              }
+              EOF
+                else
+                  echo "gcp-creds volumeMount already present on lightspeed-core, skipping..."
+                fi
+              else
+                echo "WARNING: lightspeed-core container not found; skipping gcp-creds volumeMount"
+              fi
+
+              # Feedback Harvester: Add/Replace (last sidecar op unless gcp-creds mount follows)
+              FH_IS_LAST="true"
+              if [ "$ADD_GCP_MOUNT" = "true" ]; then
+                FH_IS_LAST="false"
+              fi
               if echo "$CONTAINERS" | grep -q '"feedback-harvester"'; then
                 echo "Container 'feedback-harvester' already exists, will replace..."
                 FEEDBACK_HARVESTER_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "feedback-harvester") | index(true)')
-                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
+                add_patch_operation "replace" "/spec/template/spec/containers/$FEEDBACK_HARVESTER_INDEX" "${TEMP_DIR}/feedback-harvester-sidecar.json" "$FH_IS_LAST"
               else
                 echo "Container 'feedback-harvester' does not exist, will add..."
-                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "true"
+                add_patch_operation "add" "/spec/template/spec/containers/-" "${TEMP_DIR}/feedback-harvester-sidecar.json" "$FH_IS_LAST"
+              fi
+
+              if [ "$ADD_GCP_MOUNT" = "true" ]; then
+                echo "Adding gcp-creds volumeMount to lightspeed-core..."
+                add_patch_operation "add" "/spec/template/spec/containers/${LS_INDEX}/volumeMounts/-" "${TEMP_DIR}/gcp-creds-mount.json" "true"
               fi
 
               echo "]" >> "$PATCH_FILE"

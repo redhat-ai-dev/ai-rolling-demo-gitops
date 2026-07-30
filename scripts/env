@@ -49,6 +49,10 @@ export VALIDATION_PROVIDER=
 export VALIDATION_MODEL_NAME=
 export NOTEBOOKS_QUERY_PROVIDER_ID=
 export NOTEBOOKS_QUERY_MODEL=
+# Vertex AI (Gemini) — GCP service account JSON key contents + project/location
+export VERTEX_AI_PROJECT=
+export VERTEX_AI_LOCATION=
+export VERTEX_AI_CREDENTIALS=
 
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD=

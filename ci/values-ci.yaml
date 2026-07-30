@@ -1,6 +1,7 @@
 global:
-  # Disables OpenShift-specific resources (sidecars job, lightspeed-postgres)
-  # that depend on RHOAI or namespaces that don't exist on a vanilla Kind cluster.
+  # Disables OpenShift-specific resources (sidecars job, chart lightspeed-postgres).
+  # Kind still gets a slim pgvector Postgres via ci/lightspeed-postgres.yaml (ci-setup.sh)
+  # so LCORE remote::pgvector can start.
   ci: true
   clusterRouterBase: apps.testing
   lightspeed:

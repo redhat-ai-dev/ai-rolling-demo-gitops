@@ -104,6 +104,32 @@ source "$SCRIPTS_DIR/setup-sa-tokens.sh"
 # we have already prepared all necessary env vars
 source "$SCRIPTS_DIR/setup-secrets.sh"
 
+# LCORE notebooks provider is remote::pgvector and fails hard if this host is missing.
+# Kind skips the Helm lightspeed-postgres template (global.ci); deploy a slim emptyDir
+# instance so lightspeed-core can start. Hostname must match llama-stack-config default:
+# lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local
+# setup-secrets skips the postgres-ns secret when IS_SECONDARY_INSTANCE=true.
+log "Deploying Kind pgvector Postgres for LCORE..."
+kubectl create namespace "$LIGHTSPEED_POSTGRES_NAMESPACE" 2>/dev/null || true
+kubectl create secret generic lightspeed-postgres-info \
+  --namespace="$LIGHTSPEED_POSTGRES_NAMESPACE" \
+  --from-literal=namespace="$LIGHTSPEED_POSTGRES_NAMESPACE" \
+  --from-literal=user="$LIGHTSPEED_POSTGRES_USER" \
+  --from-literal=password="$LIGHTSPEED_POSTGRES_PASSWORD" \
+  --from-literal=db-name="$LIGHTSPEED_POSTGRES_DB" \
+  --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
+kubectl apply -f "$GITOPS_DIR/ci/lightspeed-postgres.yaml"
+kubectl rollout status deployment/postgres \
+  -n "$LIGHTSPEED_POSTGRES_NAMESPACE" --timeout=180s
+kubectl wait --namespace="$LIGHTSPEED_POSTGRES_NAMESPACE" \
+  --for=condition=ready pod \
+  --selector=app=postgres \
+  --timeout=180s
+log "Enabling pgvector extension..."
+kubectl exec -n "$LIGHTSPEED_POSTGRES_NAMESPACE" deploy/postgres -- \
+  psql -U "$LIGHTSPEED_POSTGRES_USER" -d "$LIGHTSPEED_POSTGRES_DB" \
+  -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
 # initial installation of rhdh-chart provided our ci values
 log "Installing RHDH chart via Helm..."
 helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \

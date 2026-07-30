@@ -1,0 +1,69 @@
+# Kind CI only: slim pgvector Postgres so LCORE remote::pgvector can start.
+# Production OpenShift uses charts/rhdh/templates/lightspeed-postgres.yaml (PVC + init Job).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lightspeed-postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: lightspeed-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-info
+                  key: password
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-info
+                  key: user
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-info
+                  key: db-name
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pg
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: postgres-storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lightspeed-postgres-svc
+  namespace: lightspeed-postgres
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres
+  type: ClusterIP

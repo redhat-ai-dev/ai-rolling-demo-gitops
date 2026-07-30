@@ -37,7 +37,7 @@ Required CLI tools: `oc`, `kubectl`, `yq`, `argocd`, `cosign`, `openssl`, `envsu
 
 ## Testing
 
-Tests are in `tests/` using Playwright + TypeScript (Node.js ≥20).
+Tests are in `tests/` using Playwright + TypeScript (Node.js ≥24).
 
 Required env vars: `RHDH_BASE_URL`, `RHDH_ENVIRONMENT`, `ROLLING_DEMO_TEST_USERNAME`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
 

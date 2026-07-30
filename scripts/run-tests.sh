@@ -51,7 +51,7 @@ GITOPS_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
 TESTS_DIR="$GITOPS_DIR/tests"
 
 if ! command -v node >/dev/null 2>&1; then
-  log_fail "Node.js is not installed. Install Node.js 20+ and retry."
+  log_fail "Node.js is not installed. Install Node.js 24+ and retry."
   exit 1
 fi
 

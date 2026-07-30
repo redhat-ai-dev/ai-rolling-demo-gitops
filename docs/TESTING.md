@@ -12,7 +12,7 @@ A user is also able to run our testing suite locally (`make ci-install && make c
 - `helm` v3+
 - `kubectl`
 - `openssl`
-- `node` version greater than or equal to `20` (CI uses Node 24).
+- `node` version greater than or equal to `24`.
 - `npm` (bundled with Node).
 - `sudo` access (the script writes to `/etc/hosts`)
 
@@ -83,13 +83,15 @@ make ci-install   # creates Kind cluster and deploys RHDH (~40 min)
 make ci-tests     # runs the Playwright E2E suite
 ```
 
-If you want to run only the Lightspeed suite manually:
+If you want to run only the Lightspeed suite manually (uses `scripts/private-env` automatically when present):
 
 ```bash
 cd tests
 npm ci
 npx playwright install chromium --with-deps
-npx playwright test
+npx playwright test          # headless
+npx playwright test --ui     # interactive UI mode
+npx playwright test --headed # headed browser, no UI runner
 ```
 
 To tear down the cluster afterwards:

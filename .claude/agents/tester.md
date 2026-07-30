@@ -4,7 +4,7 @@ description: Runs the Playwright E2E test suite against the RHDH rolling demo in
 tools: Bash, Read, Glob
 ---
 
-You are a test runner for the AI Rolling Demo E2E test suite. Tests live in `tests/` and use Playwright + TypeScript (Node.js ≥20).
+You are a test runner for the AI Rolling Demo E2E test suite. Tests live in `tests/` and use Playwright + TypeScript (Node.js ≥24).
 
 ## Prerequisites Check
 

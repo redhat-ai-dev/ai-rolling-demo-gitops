@@ -74,14 +74,27 @@ log "KEYCLOAK_CLIENT_SECRET=****"
 log "PLAYWRIGHT_HEADLESS=${PLAYWRIGHT_HEADLESS:-true}"
 
 log "Installing Node dependencies in $TESTS_DIR..."
-cd "$TESTS_DIR"
+cd "$TESTS_DIR" || { log "Failed to cd into $TESTS_DIR. Exiting."; log_fail; exit 1; }
 if [ -f package-lock.json ]; then
   npm ci
 else
   npm install
 fi
 
+# Browser binaries are not part of npm packages; install Chromium for local/ad-hoc runs.
+# CI workflows install with --with-deps separately. Skip with PLAYWRIGHT_SKIP_BROWSER_INSTALL=true.
+if [ "${PLAYWRIGHT_SKIP_BROWSER_INSTALL:-}" != "true" ]; then
+  log "Ensuring Playwright Chromium browser is installed..."
+  npx playwright install chromium
+fi
+
 log "Running Playwright tests..."
+playwright_extra_args=()
+if [ -n "${PLAYWRIGHT_EXTRA_ARGS:-}" ]; then
+  # Intentional word-splitting of user-provided CLI flags (e.g. --max-failures=1).
+  # shellcheck disable=SC2206
+  playwright_extra_args=(${PLAYWRIGHT_EXTRA_ARGS})
+fi
 env \
   RHDH_BASE_URL="$RHDH_BASE_URL" \
   RHDH_ENVIRONMENT="$RHDH_ENVIRONMENT" \
@@ -89,4 +102,4 @@ env \
   KEYCLOAK_CLIENT_ID="$KEYCLOAK_CLIENT_ID" \
   KEYCLOAK_CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET" \
   PLAYWRIGHT_HEADLESS="${PLAYWRIGHT_HEADLESS:-true}" \
-  npx playwright test ${PLAYWRIGHT_EXTRA_ARGS:-}
+  npx playwright test "${playwright_extra_args[@]}"

@@ -40,6 +40,9 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=PGVECTOR_DB="$LIGHTSPEED_POSTGRES_DB" \
     --from-literal=PGVECTOR_USER="$LIGHTSPEED_POSTGRES_USER" \
     --from-literal=PGVECTOR_PASSWORD="$LIGHTSPEED_POSTGRES_PASSWORD" \
+    --from-literal=VERTEX_AI_PROJECT="${VERTEX_AI_PROJECT:-}" \
+    --from-literal=VERTEX_AI_LOCATION="${VERTEX_AI_LOCATION:-}" \
+    --from-literal=VERTEX_AI_CREDENTIALS="${VERTEX_AI_CREDENTIALS:-}" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 

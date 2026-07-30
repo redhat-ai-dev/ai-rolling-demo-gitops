@@ -207,6 +207,35 @@ spec:
 
               echo "Patching ${DEPLOYMENT} .."
               kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' --patch="$(cat $PATCH_FILE)"
+
+              # Mount VERTEX_AI_CREDENTIALS into lightspeed-core at /app-root/gcp-creds.json.
+              # Volume is declared in values.yaml extraVolumes; chart 6.1.1 has no sidecar.extraVolumeMounts.
+              # TODO: remove this patch once we upgrade to an rhdh-chart that supports
+              # lightspeed.core.extraVolumeMounts (see https://github.com/redhat-developer/rhdh-chart/pull/438)
+              # — this PostSync mount will be redundant.
+              LS_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
+              if [ "$LS_INDEX" != "null" ]; then
+                HAS_GCP_MOUNT=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq --argjson idx "$LS_INDEX" '.spec.template.spec.containers[$idx].volumeMounts // [] | any(.name == "gcp-creds")')
+                if [ "$HAS_GCP_MOUNT" = "false" ]; then
+                  echo "Adding gcp-creds volumeMount to lightspeed-core..."
+                  kubectl patch deployment $DEPLOYMENT -n $NAMESPACE --type='json' --patch="[
+                    {
+                      \"op\": \"add\",
+                      \"path\": \"/spec/template/spec/containers/${LS_INDEX}/volumeMounts/-\",
+                      \"value\": {
+                        \"name\": \"gcp-creds\",
+                        \"mountPath\": \"/app-root/gcp-creds.json\",
+                        \"subPath\": \"gcp-creds.json\",
+                        \"readOnly\": true
+                      }
+                    }
+                  ]"
+                else
+                  echo "gcp-creds volumeMount already present on lightspeed-core, skipping..."
+                fi
+              else
+                echo "WARNING: lightspeed-core container not found; skipping gcp-creds volumeMount"
+              fi
       restartPolicy: OnFailure
   backoffLimit: 4
 {{- end }}

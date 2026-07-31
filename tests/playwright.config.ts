@@ -1,46 +1,16 @@
-import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
+import dotenv from "dotenv";
 
-/** Load `scripts/private-env` so local `npx playwright test` / `--ui` picks up auth vars. */
-function loadPrivateEnv(): void {
-  const envPath = path.resolve(
+dotenv.config({
+  path: path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "../scripts/private-env",
-  );
-  if (!existsSync(envPath)) {
-    return;
-  }
-
-  for (const line of readFileSync(envPath, "utf8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
-
-    const match = trimmed.match(/^export\s+([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-    if (!match) {
-      continue;
-    }
-
-    const [, key, raw] = match;
-    if (process.env[key] !== undefined) {
-      continue; // prefer already-exported / CI values
-    }
-
-    let value = raw.trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-    process.env[key] = value;
-  }
-}
-
-loadPrivateEnv();
+  ),
+  override: false,
+  quiet: true,
+});
 
 const isHeadless =
   (process.env.PLAYWRIGHT_HEADLESS ?? "true").toLowerCase() !== "false";
@@ -62,8 +32,6 @@ export default defineConfig({
     baseURL: process.env.RHDH_BASE_URL,
     headless: isHeadless,
     ignoreHTTPSErrors: true,
-    // Record traces during the run; keep them only when the test fails.
-    // (on-first-retry produces no traces unless retries > 0.)
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",

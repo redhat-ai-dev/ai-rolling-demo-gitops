@@ -367,7 +367,7 @@ global:
       create: false
       name: "llama-stack-secrets"
     sidecar:
-      image: quay.io/lightspeed-core/lightspeed-stack:dev-20260716-b6649cc
+      image: quay.io/lightspeed-core/lightspeed-stack:dev-20260729-2a9c8a7
       args:
         - --synthesized-config-output
         - /tmp/.generated/run.yaml

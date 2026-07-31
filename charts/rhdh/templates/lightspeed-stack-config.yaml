@@ -17,6 +17,14 @@ data:
       use_as_library_client: true
       config:
         profile: /app-root/config.yaml
+        native_override:
+          vector_stores:
+            annotation_prompt_params: # TODO: remove this once RAG is removed
+              enable_annotations: true
+              annotation_instruction_template: >
+                When appropriate, cite sources at the end of sentences using doc_url and doc_title format.
+                Citing sources is not always required because citations are handled externally.
+                Never include any citation that is in the form '<| file-id |>'.
     inference:
       providers:
         - type: vllm
@@ -48,6 +56,29 @@ data:
               - publishers/google/models/gemini-3.1-pro-preview
               - publishers/google/models/gemini-3.5-flash-lite
         - type: sentence_transformers
+    byok_rag:
+      - rag_id: rhdh-docs
+        rag_type: inline::faiss
+        embedding_model: sentence-transformers//rag-content/embeddings_model
+        embedding_dimension: 768
+        vector_db_id: vs_757285d9-b657-4bed-b18c-3359844e8c0d
+        db_path: /rag-content/vector_db/rhdh_product_docs/1.10/faiss_store.db
+    rag:
+      tool:
+        - rhdh-docs
+    vector_store:
+      default_provider: notebooks
+      providers:
+        - id: notebooks
+          type: pgvector
+          embedding_model: /rag-content/embeddings_model
+          embedding_dimension: 768
+          config:
+            host: ${env.PGVECTOR_HOST:=lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local}
+            port: "5432"  # TODO: fix lcore parsing and revert back to env
+            db: ${env.PGVECTOR_DB}
+            user: ${env.PGVECTOR_USER}
+            password: ${env.PGVECTOR_PASSWORD}
     user_data_collection:
       feedback_enabled: true
       feedback_storage: '/tmp/data/feedback'

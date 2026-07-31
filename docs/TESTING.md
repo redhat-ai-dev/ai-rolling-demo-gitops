@@ -83,7 +83,10 @@ make ci-install   # creates Kind cluster and deploys RHDH (~40 min)
 make ci-tests     # runs the Playwright E2E suite
 ```
 
-If you want to run only the Lightspeed suite manually (uses `scripts/private-env` automatically when present):
+If you want to run the Playwright suite against an existing RHDH instance (without Kind):
+
+1. Copy `tests/.env.example` to `tests/.env` and fill in the auth values.
+2. Run:
 
 ```bash
 cd tests

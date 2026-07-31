@@ -6,13 +6,19 @@ SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$SCRIPTS_DIR/logging.sh"
 
-# PRIVATE_ENV: the private-env file containing environment variables needed for the tests
-PRIVATE_ENV="$SCRIPTS_DIR/private-env"
+# GITOPS_DIR: the root directory of the gitops repository
+GITOPS_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
 
-# Source private-env if it exists; otherwise rely on env vars already being set (e.g. in CI).
-if [ -f "$PRIVATE_ENV" ]; then
+# TESTS_DIR: the tests/ subdirectory containing the test suite
+TESTS_DIR="$GITOPS_DIR/tests"
+
+# Load tests/.env when present; otherwise rely on env vars already set (e.g. in CI).
+TESTS_ENV="$TESTS_DIR/.env"
+if [ -f "$TESTS_ENV" ]; then
+  set -a
   # shellcheck source=/dev/null
-  source "$PRIVATE_ENV"
+  source "$TESTS_ENV"
+  set +a
 fi
 
 # Default RHDH_BASE_URL from CI_HOSTNAME if not already set (matches ci-setup.sh and the CI workflow)
@@ -43,12 +49,6 @@ if (( ${#missing[@]} )); then
 fi
 
 log "All required environment variables are set."
-
-# GITOPS_DIR: the root directory of the gitops repository
-GITOPS_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
-
-# TESTS_DIR: the tests/ subdirectory containing the test suite
-TESTS_DIR="$GITOPS_DIR/tests"
 
 if ! command -v node >/dev/null 2>&1; then
   log_fail "Node.js is not installed. Install Node.js 24+ and retry."

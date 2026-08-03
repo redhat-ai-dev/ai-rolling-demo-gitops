@@ -15,6 +15,17 @@ Place your source documents in `docs/`. Supported formats: `.md`, `.txt`, `.pdf`
 
 For Google Docs: **File > Download > Markdown (.md)**, then place the exported file in `docs/`.
 
+To enable source citations, add YAML frontmatter with a `url:` field at the top of each doc. rag-content's `MetadataProcessor` reads this automatically and uses it as the citation link. If no frontmatter URL is present, it falls back to the URL defined in `custom_processor.py`.
+
+```markdown
+---
+title: My Document
+url: https://docs.google.com/document/d/abc123/edit
+---
+
+# Document content starts here...
+```
+
 ## Build the vector DB and container image
 
 ```bash

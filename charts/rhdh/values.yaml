@@ -413,8 +413,11 @@ global:
           echo 'Standard RAG copy complete.' &&
           if [ -d /rag-content/byok-staging/vector_db ]; then
             echo 'Merging BYOK data...' &&
-            cp -r /rag-content/byok-staging/vector_db/* /rag-content/vector_db/ &&
-            echo 'BYOK merge complete.';
+            if cp -r /rag-content/byok-staging/vector_db/* /rag-content/vector_db/ 2>&1; then
+              echo 'BYOK merge complete.';
+            else
+              echo 'WARNING: BYOK merge failed. LCS will start without BYOK sources.' >&2;
+            fi;
           else
             echo 'No BYOK staging data, skipping.';
           fi
@@ -786,8 +789,11 @@ backstage:
             - >-
               echo 'Staging BYOK RAG data...' &&
               mkdir -p /rag-content/byok-staging &&
-              cp -r /byok/vector_db /rag-content/byok-staging/ &&
-              echo 'BYOK staging complete.'
+              if cp -r /byok/vector_db /rag-content/byok-staging/ 2>&1; then
+                echo 'BYOK staging complete.';
+              else
+                echo 'WARNING: BYOK staging failed. LCS will start without BYOK sources.' >&2;
+              fi
           volumeMounts:
             - name: lightspeed-rag
               mountPath: /rag-content

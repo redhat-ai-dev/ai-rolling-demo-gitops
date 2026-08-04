@@ -56,16 +56,6 @@ data:
               - publishers/google/models/gemini-3.1-pro-preview
               - publishers/google/models/gemini-3.5-flash-lite
         - type: sentence_transformers
-    byok_rag:
-      - rag_id: rhdh-docs
-        rag_type: inline::faiss
-        embedding_model: sentence-transformers//rag-content/embeddings_model
-        embedding_dimension: 768
-        vector_db_id: vs_757285d9-b657-4bed-b18c-3359844e8c0d
-        db_path: /rag-content/vector_db/rhdh_product_docs/1.10/faiss_store.db
-    rag:
-      tool:
-        - rhdh-docs
     vector_store:
       default_provider: notebooks
       providers:
@@ -97,6 +87,12 @@ data:
         authorization_headers:
           Authorization: 'client'
     byok_rag:
+      - rag_id: rhdh-docs
+        rag_type: inline::faiss
+        embedding_model: sentence-transformers//rag-content/embeddings_model
+        embedding_dimension: 768
+        vector_db_id: vs_757285d9-b657-4bed-b18c-3359844e8c0d
+        db_path: /rag-content/vector_db/rhdh_product_docs/1.10/faiss_store.db
       - rag_id: custom-org-docs
         rag_type: inline::faiss
         embedding_model: sentence-transformers//rag-content/embeddings_model

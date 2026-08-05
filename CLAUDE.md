@@ -37,14 +37,15 @@ Required CLI tools: `oc`, `kubectl`, `yq`, `argocd`, `cosign`, `openssl`, `envsu
 
 ## Testing
 
-Tests are in `tests/` using Playwright + pytest (Python ≥3.11, managed with `uv`).
+Tests are in `tests/` using Playwright + TypeScript (Node.js ≥24).
 
 Required env vars: `RHDH_BASE_URL`, `RHDH_ENVIRONMENT`, `ROLLING_DEMO_TEST_USERNAME`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
 
-Test markers:
+Primary spec files:
 
-- `smoke` — no authentication required
-- `auth_required` — needs a logged-in Keycloak session
+- `tests/specs/lightspeed.spec.ts`
+- `tests/specs/mcp.spec.ts`
+- `tests/specs/notebook.spec.ts`
 
 ## Key Files
 

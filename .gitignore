@@ -12,3 +12,9 @@ __pycache__/
 # BYOK - generated artifacts (rebuild with byok/build-vector-db.sh)
 byok/vector_db/
 byok/embeddings_model/
+tests/.venv/
+tests/.pytest_cache/
+tests/node_modules/
+tests/playwright-report/
+tests/test-results/
+tests/.env

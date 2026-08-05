@@ -329,7 +329,7 @@ global:
   lightspeed:
     enabled: true
     plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.52.0__3.0.3
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.52.0__3.2.0
         disabled: false
         pluginConfig:
           dynamicPlugins:

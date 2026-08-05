@@ -49,7 +49,7 @@ backstage:
             - mountPath: /extensions
               name: extensions-catalog
         - name: byok-rag-init
-          image: busybox:latest
+          image: busybox:1.38.0
           command:
             - sh
             - -c

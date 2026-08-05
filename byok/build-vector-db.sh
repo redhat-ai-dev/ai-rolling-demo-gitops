@@ -65,7 +65,7 @@ mkdir -p "$OUTPUT_DIR"
 (cd "$RAG_CONTENT_REPO" && uv run python "$SCRIPT_DIR/custom_processor.py" \
   --folder "$DOCS_DIR" \
   --output "$OUTPUT_DIR" \
-  --index v1 \
+  --index rhdh-ai-docs \
   --vector-store-type llamastack-faiss \
   --model-dir "$EMBEDDINGS_DIR" \
   --model-name "$MODEL_NAME" \

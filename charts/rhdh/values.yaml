@@ -402,6 +402,25 @@ global:
         subPath: rhdh-profile.py
         sourceFile: rhdh-profile.py
         optional: false
+    initContainer:
+      name: lightspeed-rag-init
+      args:
+        - >-
+          mkdir -p /tmp/data &&
+          echo 'Copying Lightspeed RAG data...' &&
+          cp -r /rag/vector_db /rag-content/ &&
+          cp -r /rag/embeddings_model /rag-content/ &&
+          echo 'Standard RAG copy complete.' &&
+          if [ -d /rag-content/byok-staging/vector_db ]; then
+            echo 'Merging BYOK data...' &&
+            if cp -r /rag-content/byok-staging/vector_db/* /rag-content/vector_db/ 2>&1; then
+              echo 'BYOK merge complete.';
+            else
+              echo 'WARNING: BYOK merge failed. LCS will start without BYOK sources.' >&2;
+            fi;
+          else
+            echo 'No BYOK staging data, skipping.';
+          fi
 
 backstage:
   # override the default name to stay in the context
@@ -754,6 +773,40 @@ backstage:
               subPath: .npmrc
             - mountPath: /extensions
               name: extensions-catalog
+        - name: byok-rag-init
+          image: quay.io/redhat-ai-dev/byok-sample:latest
+          imagePullPolicy: Always
+          command:
+            - sh
+            - -c
+          args:
+            - >-
+              echo 'Staging BYOK RAG data...' &&
+              mkdir -p /rag-content/byok-staging &&
+              if cp -r /byok/vector_db /rag-content/byok-staging/ 2>&1; then
+                echo 'BYOK staging complete.';
+              else
+                echo 'WARNING: BYOK staging failed. LCS will start without BYOK sources.' >&2;
+              fi
+          volumeMounts:
+            - name: lightspeed-rag
+              mountPath: /rag-content
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 50m
+              memory: 50Mi
+            limits:
+              cpu: 100m
+              memory: 150Mi
       installDir: /opt/app-root/src
       podAnnotations:
         checksum/dynamic-plugins: >-

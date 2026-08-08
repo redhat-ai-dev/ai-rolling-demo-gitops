@@ -96,6 +96,54 @@ kubectl create secret generic "$SECRET_NAME" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 
+SECRET_NAME="kserve-connector-secrets"
+log "Creating $SECRET_NAME secret..."
+KSERVE_CLUSTER_URL="${K8S_CLUSTER_URL:-}"
+KSERVE_SA_TOKEN="${K8S_SA_TOKEN:-}"
+KSERVE_CA_DATA="${K8S_CA_DATA:-}"
+KSERVE_MODEL_CATALOG_URL="${KUBEFLOW_MODEL_CATALOG_URL:-}"
+if [[ "${SKIP_RHOAI_SETUP}" != "true" || "${RHOAI_PREINSTALLED}" == "true" ]]; then
+  if [[ -z "$KSERVE_CLUSTER_URL" ]]; then
+    KSERVE_CLUSTER_URL="https://kubernetes.default.svc"
+    log "Using in-cluster API URL: $KSERVE_CLUSTER_URL"
+  fi
+  if [[ -z "$KSERVE_SA_TOKEN" ]]; then
+    BRIDGE_TOKEN_DATA=$(kubectl get secret rhdh-rhoai-bridge-token -n "$RHDH_NAMESPACE" -o json 2>/dev/null || true)
+    if [[ -n "$BRIDGE_TOKEN_DATA" ]]; then
+      KSERVE_SA_TOKEN=$(echo "$BRIDGE_TOKEN_DATA" | jq -r '.data.token // empty' | base64 -d 2>/dev/null || true)
+      if [[ -z "$KSERVE_CA_DATA" ]]; then
+        KSERVE_CA_DATA=$(echo "$BRIDGE_TOKEN_DATA" | jq -r '.data["ca.crt"] // empty' 2>/dev/null || true)
+      fi
+      if [[ -n "$KSERVE_SA_TOKEN" ]]; then
+        log "Auto-resolved K8S_SA_TOKEN from rhdh-rhoai-bridge-token secret."
+      fi
+    fi
+  fi
+  if [[ -z "$KSERVE_MODEL_CATALOG_URL" ]]; then
+    KSERVE_MODEL_CATALOG_URL=$(kubectl get route -n rhoai-model-registries -o jsonpath='{.items[0].spec.host}' 2>/dev/null || true)
+    if [[ -n "$KSERVE_MODEL_CATALOG_URL" ]]; then
+      KSERVE_MODEL_CATALOG_URL="https://${KSERVE_MODEL_CATALOG_URL}"
+      log "Auto-resolved KUBEFLOW_MODEL_CATALOG_URL from rhoai-model-registries route: $KSERVE_MODEL_CATALOG_URL"
+    else
+      KSERVE_MODEL_CATALOG_URL=$(kubectl get svc -n rhoai-model-registries -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+      if [[ -n "$KSERVE_MODEL_CATALOG_URL" ]]; then
+        KSERVE_MODEL_CATALOG_URL="http://${KSERVE_MODEL_CATALOG_URL}.rhoai-model-registries.svc:8080"
+        log "Auto-resolved KUBEFLOW_MODEL_CATALOG_URL from rhoai-model-registries service: $KSERVE_MODEL_CATALOG_URL"
+      else
+        log "Warning: Could not auto-resolve KUBEFLOW_MODEL_CATALOG_URL. Set it in private-env if model catalog features are needed."
+      fi
+    fi
+  fi
+fi
+kubectl create secret generic "$SECRET_NAME" \
+    --namespace="$RHDH_NAMESPACE" \
+    --from-literal=K8S_CLUSTER_URL="${KSERVE_CLUSTER_URL}" \
+    --from-literal=K8S_SA_TOKEN="${KSERVE_SA_TOKEN}" \
+    --from-literal=K8S_CA_DATA="${KSERVE_CA_DATA}" \
+    --from-literal=KUBEFLOW_MODEL_CATALOG_URL="${KSERVE_MODEL_CATALOG_URL}" \
+    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
+log "Secret $SECRET_NAME created successfully."
+
 SECRET_NAME="ai-rh-developer-hub-env"
 log "Creating $SECRET_NAME secret..."
 kubectl create secret generic "$SECRET_NAME" \

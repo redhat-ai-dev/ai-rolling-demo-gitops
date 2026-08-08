@@ -6,16 +6,19 @@ Here are the steps required to setup an instance of the rolling demo on your own
 
 #### Cluster requirements
 
-Two install paths are available depending on your cluster size:
+Three install paths are available depending on your cluster and RHOAI setup:
 
-| Install command         | Minimum node type      | GPU nodes | RHOAI required |
-| ----------------------- | ---------------------- | --------- | -------------- |
-| `make install`          | `g5.2xlarge` or bigger | Yes       | Yes            |
-| `make install-no-rhoai` | Any OCP node           | No        | No             |
+| Install command                                          | Minimum node type      | GPU nodes | RHOAI required           | Model Catalog |
+| -------------------------------------------------------- | ---------------------- | --------- | ------------------------ | ------------- |
+| `make install`                                           | `g5.2xlarge` or bigger | Yes       | Yes (installed by script) | Sidecar bridge |
+| `make install-no-rhoai`                                  | Any OCP node           | No        | No                       | None          |
+| `make install-kserve-catalog-bridge-rhoai-handled-separately` | Any OCP node           | No        | Yes (provisioned separately) | KServe connector plugin |
 
 For `make install` (full stack), you need an [OpenShift cluster (version 4.19+)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html-single/web_console/index) with GPU-capable nodes (`g5.2xlarge` or bigger), and you must also clone the [odh-kubeflow-model-registry-setup](https://github.com/redhat-ai-dev/odh-kubeflow-model-registry-setup) repo locally.
 
 For `make install-no-rhoai` (lightweight), any OCP 4.19+ cluster works — no GPU nodes, no RHOAI, and no `odh-kubeflow-model-registry-setup` repo is needed. Set `ODH_SETUP_DIR` to any non-empty placeholder value (e.g., `"n/a"`) in your `private-env` since the script validates it is set but will not use it when `SKIP_RHOAI_SETUP=true`.
+
+For `make install-kserve-catalog-bridge-rhoai-handled-separately`, RHOAI (including KServe and the Kubeflow Model Registry) must already be provisioned on the cluster before running the install. This target connects RHDH to the existing RHOAI instance using the `kserve-kubeflow-connector` plugin instead of the legacy sidecar bridge. See the dedicated section below for details.
 
 #### Dependencies
 
@@ -134,6 +137,9 @@ make install
 
 # Lightweight install — no GPU, no RHOAI, no Model Catalog Bridge
 make install-no-rhoai
+
+# RHOAI already provisioned — connect via kserve-kubeflow-connector plugin
+make install-kserve-catalog-bridge-rhoai-handled-separately
 ```
 
 #### `make install-no-rhoai` — lightweight install for smaller clusters
@@ -145,7 +151,7 @@ make install-no-rhoai
 - Node Feature Discovery (NFD) operator and instance
 - NVIDIA GPU operator and ClusterPolicy
 - ODH Kubeflow Model Registry setup (`setup-rhoai.sh`)
-- Model Catalog sidecars (`location`, `storage-rest`, `rhoai-normalizer`) and their RBAC in the deployed Helm chart
+- Model Catalog RBAC (ServiceAccount, ClusterRole, ClusterRoleBinding, etc.) in the deployed Helm chart
 
 **What is still installed:**
 
@@ -164,6 +170,45 @@ make install-no-rhoai
 export ODH_SETUP_DIR="n/a"
 ```
 
+#### `make install-kserve-catalog-bridge-rhoai-handled-separately` — RHOAI provisioned separately
+
+Use this target when RHOAI (OpenShift AI) with KServe and the Kubeflow Model Registry has already been provisioned on the cluster — for example by a cluster admin, a separate automation pipeline, or a prior manual setup. This target skips all RHOAI operator installation and instead connects RHDH to the existing RHOAI instance using the `kserve-kubeflow-connector` backend plugin.
+
+**Pre-requisites:**
+
+- RHOAI is installed and running on the cluster with KServe InferenceServices and the Kubeflow Model Registry available
+- You know the cluster API URL and Kubeflow Model Registry REST API URL
+
+**What is skipped:**
+
+- Node Feature Discovery (NFD) operator and instance
+- NVIDIA GPU operator and ClusterPolicy
+- ODH Kubeflow Model Registry setup (`setup-rhoai.sh`)
+
+**What is still installed:**
+
+- OpenShift GitOps operator (ArgoCD)
+- OpenShift Pipelines operator and Pipelines-as-Code
+- RHDH (via ArgoCD + the `rhdh-chart`)
+- Developer Lightspeed and its PostgreSQL instance
+- AI Software Templates
+- Model Catalog RBAC (ServiceAccount, ClusterRole, ClusterRoleBinding, RoleBindings, Secrets) — needed by the kserve-kubeflow-connector plugin to access KServe resources
+- `kserve-kubeflow-connector` backend plugin — replaces the legacy sidecar bridge (location, storage-rest, rhoai-normalizer) with an in-process Backstage plugin
+
+**`private-env` additions for this target:**
+
+```bash
+# Required: cluster API URL where RHOAI/KServe is running
+export K8S_CLUSTER_URL="https://api.mycluster.openshift.com:6443"
+# Required: Kubeflow Model Registry REST API URL
+export KUBEFLOW_MODEL_CATALOG_URL="https://model-registry.rhoai-model-registries.svc:8443"
+# Optional: auto-resolved from the rhdh-rhoai-bridge-token secret if left empty
+export K8S_SA_TOKEN=""
+export K8S_CA_DATA=""
+```
+
+`ODH_SETUP_DIR` is not required for this target.
+
 The `setup.sh` script automates the entire setup process by calling focused subscripts in order:
 
 1. [`install-operators.sh`](../scripts/install-operators.sh) — installs the required operators (OpenShift GitOps, OpenShift Pipelines, Node Feature Discovery, NVIDIA GPU) and creates the NFD instance and NVIDIA ClusterPolicy. Skipped for NFD and GPU when `SKIP_RHOAI_SETUP=true`.
@@ -180,7 +225,8 @@ The `setup.sh` script automates the entire setup process by calling focused subs
 You can skip earlier steps if they have already been completed on your cluster:
 
 - `SKIP_INSTALL_DEPS=true` — skips all operator and instance installation.
-- `SKIP_RHOAI_SETUP=true` — skips NFD + GPU operator installation, RHOAI setup, and disables Model Catalog sidecars (`location`, `storage-rest`, `rhoai-normalizer`) and RBAC in the deployed chart. This is what `make install-no-rhoai` sets.
+- `SKIP_RHOAI_SETUP=true` — skips NFD + GPU operator installation and RHOAI setup. When used alone (as in `make install-no-rhoai`), also disables Model Catalog RBAC in the deployed chart.
+- `RHOAI_PREINSTALLED=true` — used together with `SKIP_RHOAI_SETUP=true`. Skips RHOAI setup but keeps Model Catalog RBAC enabled and connects to an existing RHOAI instance via the `kserve-kubeflow-connector` plugin. This is what `make install-kserve-catalog-bridge-rhoai-handled-separately` sets.
 
 For example, to jump straight to the rolling demo preparation:
 
@@ -227,6 +273,8 @@ The following variables have built-in defaults and do not need to be set in `pri
 | `NFD_STARTING_CSV`              | auto-detected                             | Starting CSV for the Node Feature Discovery operator. Auto-detected from the cluster catalog for the active `NFD_OPERATOR_CHANNEL`. Set explicitly to pin to a specific version. |
 | `GPU_OPERATOR_CHANNEL`          | `v25.10`                                  | Subscription channel for the NVIDIA GPU operator.                                                                                                                                |
 | `GPU_STARTING_CSV`              | `gpu-operator-certified.v25.10.1`         | Starting CSV for the NVIDIA GPU operator.                                                                                                                                        |
+| `K8S_SA_TOKEN`                  | auto-resolved                             | Service account token for KServe access. Auto-resolved from the `rhdh-rhoai-bridge-token` secret if left empty. Used by `make install` and `make install-kserve-catalog-bridge-rhoai-handled-separately`. |
+| `K8S_CA_DATA`                   | auto-resolved                             | Base64-encoded CA certificate for the cluster API. Auto-resolved from the `rhdh-rhoai-bridge-token` secret if left empty. Used by `make install` and `make install-kserve-catalog-bridge-rhoai-handled-separately`. |
 
 These can be set in `private-env` or passed directly on the command line:
 

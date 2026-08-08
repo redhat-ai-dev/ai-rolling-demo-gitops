@@ -34,5 +34,9 @@ if [[ "${IS_SECONDARY_INSTANCE}" != "true" ]]; then
   configure_cosign_signing_secret "$PAC_NAMESPACE"
 fi
 
-(cd "$SCRIPTS_DIR" && bash ./configure-pipelines.sh)
+if ! (cd "$SCRIPTS_DIR" && bash ./configure-pipelines.sh); then
+  log "Tekton Pipelines configuration failed."
+  log_fail
+  exit 1
+fi
 log "Tekton Pipelines configured successfully"

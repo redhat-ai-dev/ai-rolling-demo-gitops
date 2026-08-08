@@ -42,7 +42,6 @@ required_vars=(
   GITOPS_REPO_URL
   GITOPS_TARGET_REVISION
   RHDH_CLUSTER_ROUTER_BASE
-  ODH_SETUP_DIR
   GITOPS_GIT_ORG
   GITHUB_APP_APP_ID
   GITHUB_APP_CLIENT_ID
@@ -67,6 +66,9 @@ required_vars=(
   VALIDATION_PROVIDER
   VALIDATION_MODEL_NAME
 )
+if [[ "${SKIP_RHOAI_SETUP}" != "true" ]]; then
+  required_vars+=(ODH_SETUP_DIR)
+fi
 for var in "${required_vars[@]}"; do
   if [ -z "${!var}" ]; then
     log "Error: $var is not set. Exiting..."

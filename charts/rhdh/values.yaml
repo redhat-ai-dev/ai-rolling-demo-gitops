@@ -66,9 +66,11 @@ global:
         disabled: false
 
       # Model Catalog Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.52.0__0.10.0
+      - package: oci://quay.io/gabemontero/backstage-plugin-catalog-backend-module-model-catalog:v0.1.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.52.0__0.6.0
+      - package: oci://quay.io/gabemontero/backstage-plugin-catalog-techdoc-url-reader-backend:v0.1.0
+        disabled: false
+      - package: oci://quay.io/gabemontero/backstage-plugin-kserve-kubeflow-connector-backend:v0.1.0
         disabled: false
 
       # Tekton Pipelines Plugins
@@ -418,6 +420,9 @@ backstage:
         pullSecrets:
           - quay-pull-secret
       command: []
+      extraAppConfig:
+        - filename: kserve-connector-app-config.yaml
+          configMapRef: kserve-connector-app-config
       appConfig:
         app:
           title: AI Rolling Demo Developer Hub
@@ -505,17 +510,10 @@ backstage:
               - host: '*.mozilla.org'
               - host: '*.openshift.com'
               - host: '*.openshiftapps.com'
-              - host: '10.*:9090'
-              - host: '127.0.0.1:9090'
-              - host: '127.0.0.1:8888'
-              - host: '127.0.0.1:7070'
-              - host: 'localhost:9090'
-              - host: 'localhost:8888'
-              - host: 'localhost:7070'
         signInPage: oidc
         catalog:
           rules:
-            - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API]
+            - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API, AiResource]
           locations:
             - target: https://github.com/benwilcock/rhdh-techdocs/blob/main/rhdh-catalog-info.yaml
               rules:
@@ -534,9 +532,7 @@ backstage:
               rules:
                 - allow: [Component, System]
           providers:
-            modelCatalog:
-              development:
-                baseUrl: http://localhost:9090
+            modelCatalog: {}
             github:
               providerId:
                 organization: "${GITOPS_GIT_ORG}"
@@ -682,6 +678,7 @@ backstage:
         - argocd-secrets
         - lightspeed-secrets
         - llama-stack-secrets
+        - kserve-connector-secrets
       args:
         - "--config"
         - dynamic-plugins-root/app-config.dynamic-plugins.yaml

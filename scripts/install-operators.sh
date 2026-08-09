@@ -104,6 +104,50 @@ install_cluster_scoped_operator() {
   log "Subscription for '$package' created."
 }
 
+# approve_pending_install_plan: finds and approves a pending install plan containing the target CSV.
+# In shared namespaces like openshift-operators, OLM may bundle multiple operators into one install
+# plan and use the most restrictive approval policy. If another subscription in the namespace uses
+# Manual approval, our Automatic subscription's install plan inherits Manual.
+approve_pending_install_plan() {
+  local namespace="$1"
+  local csv="$2"
+  local timeout="${3:-$TIMEOUT}"
+  local elapsed=0
+
+  log "Looking for pending install plan containing '$csv' in namespace '$namespace'..."
+  while (( elapsed < timeout )); do
+    local plan
+    plan=$(oc get installplan -n "$namespace" -o json 2>/dev/null \
+      | jq -r --arg csv "$csv" '.items[] | select(.spec.approved == false) | select(.spec.clusterServiceVersionNames[] == $csv) | .metadata.name' 2>/dev/null \
+      | head -1)
+    if [[ -n "$plan" ]]; then
+      log "Found pending install plan '$plan'. Approving..."
+      if oc patch installplan "$plan" -n "$namespace" --type merge -p '{"spec":{"approved":true}}' >/dev/null 2>&1; then
+        log "Install plan '$plan' approved."
+        return 0
+      else
+        log "Failed to approve install plan '$plan'."
+        log_fail
+        return 1
+      fi
+    fi
+
+    local approved_plan
+    approved_plan=$(oc get installplan -n "$namespace" -o json 2>/dev/null \
+      | jq -r --arg csv "$csv" '.items[] | select(.spec.approved == true) | select(.spec.clusterServiceVersionNames[] == $csv) | .metadata.name' 2>/dev/null \
+      | head -1)
+    if [[ -n "$approved_plan" ]]; then
+      log "Install plan '$approved_plan' for '$csv' is already approved."
+      return 0
+    fi
+
+    sleep "$POLL_INTERVAL"
+    elapsed=$((elapsed + POLL_INTERVAL))
+  done
+  log "No install plan found for '$csv' within timeout. Continuing anyway."
+  return 0
+}
+
 # install_namespaced_operator: creates namespace, applies OperatorGroup and Subscription from deps/
 install_namespaced_operator() {
   local namespace="$1"
@@ -229,6 +273,7 @@ install_deps() {
   else
     log "OpenShift Pipelines Operator not found. Installing..."
     install_cluster_scoped_operator "$PIPELINES_OPERATOR_NAMESPACE" "openshift-pipelines-operator-subscription.yaml" "$PIPELINES_OPERATOR_PACKAGE"
+    approve_pending_install_plan "$PIPELINES_OPERATOR_NAMESPACE" "$PIPELINES_STARTING_CSV"
     wait_for_csv "$PIPELINES_OPERATOR_NAMESPACE" "$PIPELINES_OPERATOR_PACKAGE"
   fi
 

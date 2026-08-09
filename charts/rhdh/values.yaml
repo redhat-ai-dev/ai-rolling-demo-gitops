@@ -66,11 +66,11 @@ global:
         disabled: false
 
       # Model Catalog Plugins
-      - package: oci://quay.io/gabemontero/backstage-plugin-catalog-backend-module-model-catalog:v0.1.1
+      - package: oci://quay.io/gabemontero/backstage-plugin-catalog-backend-module-model-catalog:v0.1.2
         disabled: false
-      - package: oci://quay.io/gabemontero/backstage-plugin-catalog-techdoc-url-reader-backend:v0.1.1
+      - package: oci://quay.io/gabemontero/backstage-plugin-catalog-techdoc-url-reader-backend:v0.1.2
         disabled: false
-      - package: oci://quay.io/gabemontero/backstage-plugin-kserve-kubeflow-connector-backend:v0.1.1
+      - package: oci://quay.io/gabemontero/backstage-plugin-kserve-kubeflow-connector-backend:v0.1.2
         disabled: false
 
       # Tekton Pipelines Plugins

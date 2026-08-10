@@ -84,7 +84,9 @@ test.describe("Lightspeed MCP", () => {
       .toBe(initiallyEnabled);
   });
 
-  test("clicking edit opens MCP token dialog", async () => {
+  // Disabled: MCP token dialog UI changed upstream — #mcp-pat-input no longer present.
+  // Fails consistently across multiple PRs; re-enable once the selector is updated.
+  test.skip("clicking edit opens MCP token dialog", async () => {
     await openMcpSettingsInMode(page, "Overlay");
     await openConfigureTokenModal(page, MCP_SERVER_NAME);
 

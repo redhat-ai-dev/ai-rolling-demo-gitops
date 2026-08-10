@@ -102,7 +102,7 @@ KSERVE_CLUSTER_URL="${K8S_CLUSTER_URL:-}"
 KSERVE_SA_TOKEN="${K8S_SA_TOKEN:-}"
 KSERVE_CA_DATA="${K8S_CA_DATA:-}"
 KSERVE_MODEL_CATALOG_URL="${KUBEFLOW_MODEL_CATALOG_URL:-}"
-if [[ "${SKIP_RHOAI_SETUP}" != "true" || "${RHOAI_PREINSTALLED}" == "true" ]]; then
+if [[ "${SKIP_RHOAI_SETUP:-}" != "true" || "${RHOAI_PREINSTALLED:-}" == "true" ]]; then
   if [[ -z "$KSERVE_CLUSTER_URL" ]]; then
     KSERVE_CLUSTER_URL="https://kubernetes.default.svc"
     log "Using in-cluster API URL: $KSERVE_CLUSTER_URL"

@@ -66,7 +66,7 @@ required_vars=(
   VALIDATION_PROVIDER
   VALIDATION_MODEL_NAME
 )
-if [[ "${SKIP_RHOAI_SETUP}" != "true" ]]; then
+if [[ "${SKIP_RHOAI_SETUP:-}" != "true" ]]; then
   required_vars+=(ODH_SETUP_DIR)
 fi
 for var in "${required_vars[@]}"; do
@@ -83,7 +83,7 @@ if [[ "${SKIP_INSTALL_DEPS}" == "true" ]]; then
 else
   bash "$SCRIPTS_DIR/install-operators.sh"
 fi
-if [[ "${SKIP_RHOAI_SETUP}" == "true" ]]; then
+if [[ "${SKIP_RHOAI_SETUP:-}" == "true" ]]; then
   log "SKIP_RHOAI_SETUP=true — skipping ODH Kubeflow Model Registry setup."
 else
   bash "$SCRIPTS_DIR/setup-rhoai.sh"
@@ -105,7 +105,7 @@ bash "$SCRIPTS_DIR/apply-argocd-application.sh"
 # The kserve-connector-secrets created by setup-secrets.sh may have empty K8S_SA_TOKEN
 # because the rhdh-rhoai-bridge-token secret is Helm-managed and only exists after
 # ArgoCD syncs. Re-resolve now that the application has been deployed.
-if [[ "${SKIP_RHOAI_SETUP}" != "true" || "${RHOAI_PREINSTALLED}" == "true" ]]; then
+if [[ "${SKIP_RHOAI_SETUP:-}" != "true" || "${RHOAI_PREINSTALLED:-}" == "true" ]]; then
   bash "$SCRIPTS_DIR/reconcile-kserve-secrets.sh"
 fi
 

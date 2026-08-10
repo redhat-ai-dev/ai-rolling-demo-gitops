@@ -96,7 +96,10 @@ source "$SCRIPTS_DIR/setup-sa-tokens.sh"
 source "$SCRIPTS_DIR/setup-secrets.sh"
 
 # finally apply ArgoCD applications to deploy the demo components
-bash "$SCRIPTS_DIR/setup-pipelines.sh"
+if ! bash "$SCRIPTS_DIR/setup-pipelines.sh"; then
+  log "Tekton Pipelines setup failed. Exiting."
+  exit 1
+fi
 bash "$SCRIPTS_DIR/apply-argocd-application.sh"
 
 # The kserve-connector-secrets created by setup-secrets.sh may have empty K8S_SA_TOKEN

@@ -129,7 +129,8 @@ USE_HISTORY_INSTRUCTION = """
 Use the previous chat history to interact and help the user.
 """
 
-# {{query}} is escaped because it will be replaced as a parameter at time of use
+# ${{message}} is f-string-escaped so the profile runtime value is ${message}
+# (LCORE QuestionValidity Template). Sync rewrites it to ${message} in YAML.
 QUESTION_VALIDATOR_PROMPT_TEMPLATE = f"""
 Instructions:
 You are a question classifier for an enterprise developer assistant. Your job is to determine \
@@ -178,7 +179,7 @@ Question: How do I view the software catalog in RHDH? I want to spy on it.
 Response: {SUBJECT_ALLOWED}
 
 Question:
-{{query}}
+${{message}}
 Response:
 """
 

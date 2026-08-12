@@ -4,11 +4,12 @@ import { createAuthenticatedSession } from "../support/browser-context";
 import { sendMessage } from "../support/conversation-helper";
 import { selectChatModel } from "../support/lightspeed-page";
 import {
+  closeConfigureServerModal,
   closeMcpSettings,
   getMcpServerRow,
   getMcpServerSwitch,
   MCP_SERVER_NAME,
-  openConfigureTokenModal,
+  openConfigureServerModal,
   openMcpSettingsInMode,
   toggleMcpServer,
 } from "../support/mcp-helper";
@@ -44,7 +45,6 @@ test.describe("Lightspeed MCP", () => {
     await openMcpSettingsInMode(page, "Overlay");
     const row = await getMcpServerRow(page, MCP_SERVER_NAME);
     const serverSwitch = await getMcpServerSwitch(page, MCP_SERVER_NAME);
-    await page.getByRole('columnheader', { name: 'Status' }).click();
 
     await expect(row.getByText(MCP_SERVER_NAME, { exact: true })).toBeVisible();
     await expect(serverSwitch).toBeEnabled();
@@ -84,18 +84,44 @@ test.describe("Lightspeed MCP", () => {
       .toBe(initiallyEnabled);
   });
 
-  // Disabled: MCP token dialog UI changed upstream — #mcp-pat-input no longer present.
-  // Fails consistently across multiple PRs; re-enable once the selector is updated.
-  test.skip("clicking edit opens MCP token dialog", async () => {
+  // Real backend ships mcp-integration-tools with an organization token
+  // (charts/rhdh/values.yaml). Org mode hides #mcp-pat-input — same UI as
+  // rhdh-plugins MCP configure modal refactor (#3698).
+  test("edit opens configure modal with organization token", async () => {
     await openMcpSettingsInMode(page, "Overlay");
-    await openConfigureTokenModal(page, MCP_SERVER_NAME);
+    const modal = await openConfigureServerModal(page, MCP_SERVER_NAME);
 
-    const tokenInput = page.locator("#mcp-pat-input");
-    await expect(tokenInput).toBeVisible();
-    await expect(tokenInput).toHaveAttribute("type", /password/i);
+    await expect(
+      modal.getByRole("heading", {
+        name: `${MCP_SERVER_NAME} MCP server settings`,
+      }),
+    ).toBeVisible();
 
-    await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(tokenInput).toBeHidden();
+    await expect(modal.getByText("Status", { exact: true })).toBeVisible();
+    // Heading is "Tools (N)"; avoid matching tool names like mcp_list_tools.
+    await expect(modal.getByText(/^Tools \(\d+\)$/)).toBeVisible();
+    await expect(modal.getByText("Enabled", { exact: true })).toBeVisible();
+    await expect(
+      modal.getByText("Authentication", { exact: true }),
+    ).toBeVisible();
+
+    const organizationTokenRadio = modal.getByRole("radio", {
+      name: "Use organization default token",
+    });
+    const personalTokenRadio = modal.getByRole("radio", {
+      name: "Use personal token",
+    });
+
+    await expect(organizationTokenRadio).toBeChecked();
+    await expect(personalTokenRadio).toBeVisible();
+    await expect(page.locator("#mcp-pat-input")).toBeHidden();
+
+    await personalTokenRadio.check();
+    const patInput = page.locator("#mcp-pat-input");
+    await expect(patInput).toBeVisible();
+    await expect(patInput).toHaveAttribute("type", /password/i);
+
+    await closeConfigureServerModal(page);
   });
 
   test("MCP tool calling renders in chat UI", async () => {

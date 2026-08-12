@@ -43,6 +43,7 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=VERTEX_AI_PROJECT="${VERTEX_AI_PROJECT:-passthrough}" \
     --from-literal=VERTEX_AI_LOCATION="${VERTEX_AI_LOCATION:-global}" \
     --from-literal=VERTEX_AI_CREDENTIALS="${VERTEX_AI_CREDENTIALS:-}" \
+    --from-literal=OTEL_SDK_DISABLED="${OTEL_SDK_DISABLED:-true}" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 

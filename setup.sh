@@ -42,7 +42,6 @@ required_vars=(
   GITOPS_REPO_URL
   GITOPS_TARGET_REVISION
   RHDH_CLUSTER_ROUTER_BASE
-  ODH_SETUP_DIR
   GITOPS_GIT_ORG
   GITHUB_APP_APP_ID
   GITHUB_APP_CLIENT_ID
@@ -67,6 +66,9 @@ required_vars=(
   VALIDATION_PROVIDER
   VALIDATION_MODEL_NAME
 )
+if [[ "${SKIP_RHOAI_SETUP:-}" != "true" ]]; then
+  required_vars+=(ODH_SETUP_DIR)
+fi
 for var in "${required_vars[@]}"; do
   if [ -z "${!var}" ]; then
     log "Error: $var is not set. Exiting..."
@@ -81,7 +83,7 @@ if [[ "${SKIP_INSTALL_DEPS}" == "true" ]]; then
 else
   bash "$SCRIPTS_DIR/install-operators.sh"
 fi
-if [[ "${SKIP_RHOAI_SETUP}" == "true" ]]; then
+if [[ "${SKIP_RHOAI_SETUP:-}" == "true" ]]; then
   log "SKIP_RHOAI_SETUP=true — skipping ODH Kubeflow Model Registry setup."
 else
   bash "$SCRIPTS_DIR/setup-rhoai.sh"
@@ -94,7 +96,17 @@ source "$SCRIPTS_DIR/setup-sa-tokens.sh"
 source "$SCRIPTS_DIR/setup-secrets.sh"
 
 # finally apply ArgoCD applications to deploy the demo components
-bash "$SCRIPTS_DIR/setup-pipelines.sh"
+if ! bash "$SCRIPTS_DIR/setup-pipelines.sh"; then
+  log "Tekton Pipelines setup failed. Exiting."
+  exit 1
+fi
 bash "$SCRIPTS_DIR/apply-argocd-application.sh"
+
+# The kserve-connector-secrets created by setup-secrets.sh may have empty K8S_SA_TOKEN
+# because the rhdh-rhoai-bridge-token secret is Helm-managed and only exists after
+# ArgoCD syncs. Re-resolve now that the application has been deployed.
+if [[ "${SKIP_RHOAI_SETUP:-}" != "true" || "${RHOAI_PREINSTALLED:-}" == "true" ]]; then
+  bash "$SCRIPTS_DIR/reconcile-kserve-secrets.sh"
+fi
 
 log "Rolling Demo Setup Completed Successfully!"

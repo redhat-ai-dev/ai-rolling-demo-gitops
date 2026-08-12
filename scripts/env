@@ -54,6 +54,21 @@ export VERTEX_AI_PROJECT=
 export VERTEX_AI_LOCATION=
 export VERTEX_AI_CREDENTIALS=
 
+# KServe Connector secrets (for make install and make install-kserve-catalog-bridge-rhoai-handled-separately)
+# All values below are auto-resolved at install time if left empty.
+# K8S_CLUSTER_URL: the API URL of the cluster where RHOAI/KServe is running.
+# Defaults to https://kubernetes.default.svc (in-cluster API).
+export K8S_CLUSTER_URL=
+# K8S_SA_TOKEN: service account token with access to KServe InferenceServices.
+# Auto-resolved from the rhdh-rhoai-bridge-token secret.
+export K8S_SA_TOKEN=
+# K8S_CA_DATA: base64-encoded CA certificate for the cluster API.
+# Auto-resolved from the rhdh-rhoai-bridge-token secret.
+export K8S_CA_DATA=
+# KUBEFLOW_MODEL_CATALOG_URL: the URL of the Kubeflow Model Registry REST API.
+# Auto-resolved from the rhoai-model-registries namespace route or service.
+export KUBEFLOW_MODEL_CATALOG_URL=
+
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD=
 export LIGHTSPEED_POSTGRES_USER=

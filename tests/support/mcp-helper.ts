@@ -124,11 +124,35 @@ export async function toggleMcpServer(
   await toggle.click();
 }
 
-export async function openConfigureTokenModal(
+/** Configure-server modal (token and org-credential flows). */
+export function mcpConfigureModal(page: Page): Locator {
+  return page
+    .locator("[role='dialog'], .pf-v6-c-modal-box")
+    .filter({ has: page.locator("#mcp-configure-modal-body") });
+}
+
+export async function openConfigureServerModal(
   page: Page,
   serverName: string,
-): Promise<void> {
+): Promise<Locator> {
   const row = await getMcpServerRow(page, serverName);
-  await row.getByRole("button").last().click();
-  await expect(page.locator("#mcp-pat-input")).toBeVisible();
+  const editButton = row.getByRole("button", {
+    name: `Edit ${serverName}`,
+    exact: true,
+  });
+  if (await editButton.isVisible({ timeout: 2_000 })) {
+    await editButton.click();
+  } else {
+    await row.getByRole("button").last().click();
+  }
+
+  const modal = mcpConfigureModal(page);
+  await expect(modal).toBeVisible();
+  return modal;
+}
+
+export async function closeConfigureServerModal(page: Page): Promise<void> {
+  const modal = mcpConfigureModal(page);
+  await modal.getByRole("button", { name: "Cancel" }).click();
+  await expect(modal).toBeHidden();
 }

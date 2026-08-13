@@ -121,15 +121,12 @@ export function lastBotMessage(page: Page) {
 }
 
 /**
- * Textual reply body only — excludes model name, timestamp, and action buttons.
- * Tool-call UI reuses .pf-chatbot__message-response for collapsed panels that stay
- * hidden in the DOM; only match a visible node.
+ * Textual reply body only — excludes model name, timestamp, action buttons,
+ * and tool-call chrome (collapsed "Tool response: …" controls share the
+ * message-response container and pollute innerText / clipboard checks).
  */
 export function lastBotResponseBody(page: Page) {
-  return lastBotMessage(page)
-    .locator(".pf-chatbot__message-response")
-    .filter({ visible: true })
-    .last();
+  return lastBotMessage(page).getByRole("paragraph").last();
 }
 
 export async function getLastBotResponseText(page: Page): Promise<string> {

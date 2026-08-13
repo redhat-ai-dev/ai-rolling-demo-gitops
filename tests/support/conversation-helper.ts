@@ -110,7 +110,7 @@ export async function submitFeedback(
 }
 
 export function lastBotMessage(page: Page) {
-  return page.locator(".pf-chatbot__message--bot").last();
+  return page.locator(".pf-chatbot__message--bot").first();
 }
 
 /** Response body only — excludes model name, timestamp, and action buttons. */

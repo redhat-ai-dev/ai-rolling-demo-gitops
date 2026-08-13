@@ -88,7 +88,7 @@ const fixturesDir = path.join(import.meta.dirname, "../fixtures/uploads");
 const e2eRoot = path.join(import.meta.dirname, "..");
 
 const DEFAULT_BOT_QUERY =
-  "Reply with exactly one short sentence confirming you received this message.";
+  "Do not use tools. Reply with exactly one short sentence confirming you received this message.";
 
 test.describe("Lightspeed UI", () => {
   test.describe.configure({ mode: "serial", timeout: 5 * 60 * 1000 });

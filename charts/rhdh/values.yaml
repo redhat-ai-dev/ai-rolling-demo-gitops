@@ -282,7 +282,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.10-164"
+        tag: "2.0-61"
         pullSecrets:
           - quay-pull-secret
       command: []

@@ -29,7 +29,7 @@ log "Creating $SECRET_NAME secret..."
 kubectl create secret generic "$SECRET_NAME" \
     --namespace="$RHDH_NAMESPACE" \
     --from-literal=ENABLE_VLLM="true" \
-    --from-literal=ENABLE_VALIDATION="true" \
+    --from-literal=ENABLE_VALIDATION="${ENABLE_VALIDATION:-question_validity}" \
     --from-literal=VLLM_URL="$VLLM_URL" \
     --from-literal=VLLM_API_KEY="$VLLM_API_KEY" \
     --from-literal=OPENAI_API_KEY="${OPENAI_API_KEY:-passthrough}" \
@@ -43,6 +43,7 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=VERTEX_AI_PROJECT="${VERTEX_AI_PROJECT:-passthrough}" \
     --from-literal=VERTEX_AI_LOCATION="${VERTEX_AI_LOCATION:-global}" \
     --from-literal=VERTEX_AI_CREDENTIALS="${VERTEX_AI_CREDENTIALS:-}" \
+    --from-literal=OTEL_SDK_DISABLED="${OTEL_SDK_DISABLED:-true}" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 

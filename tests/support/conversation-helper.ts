@@ -109,13 +109,24 @@ export async function submitFeedback(
   await feedbackConfirmationPanel.waitFor({ state: "hidden" });
 }
 
+/**
+ * Latest completed bot bubble (has feedback/copy actions).
+ * Skips hidden a11y echoes and in-progress tool-only messages.
+ */
 export function lastBotMessage(page: Page) {
-  return page.locator(".pf-chatbot__message--bot").last();
+  return page
+    .locator(".pf-chatbot__message--bot")
+    .filter({ has: page.locator(".pf-chatbot__response-actions") })
+    .last();
 }
 
-/** Response body only — excludes model name, timestamp, and action buttons. */
+/**
+ * Textual reply body only — excludes model name, timestamp, action buttons,
+ * and tool-call chrome (collapsed "Tool response: …" controls share the
+ * message-response container and pollute innerText / clipboard checks).
+ */
 export function lastBotResponseBody(page: Page) {
-  return lastBotMessage(page).locator(".pf-chatbot__message-response");
+  return lastBotMessage(page).getByRole("paragraph").last();
 }
 
 export async function getLastBotResponseText(page: Page): Promise<string> {

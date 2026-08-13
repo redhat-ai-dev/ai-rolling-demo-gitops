@@ -73,6 +73,18 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.52.0__0.1.1
         disabled: false
 
+      # AI Resource Kind Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-model-server:bs_1.52.0__0.2.0
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.52.0__0.2.1
+        disabled: true
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:pr_3227__0.4.0
+        disabled: false
+
+      # Boost Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.52.0__0.4.0
+        disabled: false
+
       # Tekton Pipelines Plugins
       # Tekton CI Plugins
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.52.0__3.41.0
@@ -369,7 +381,7 @@ backstage:
         signInPage: oidc
         catalog:
           rules:
-            - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API, AiResource]
+            - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API, AiResource, AiModelServerAPI]
           locations:
             - target: https://github.com/benwilcock/rhdh-techdocs/blob/main/rhdh-catalog-info.yaml
               rules:

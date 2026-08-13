@@ -54,6 +54,7 @@ fi
 # New LCORE images require OTEL_ANONYMIZATION_SECRET when OTEL is enabled (RAG path).
 # Disable the SDK in CI instead of provisioning that secret.
 export OTEL_SDK_DISABLED=true
+export ENABLE_VALIDATION=__disabled__
 export ENABLE_VLLM="true"
 export VLLM_URL="${VLLM_URL:?VLLM_URL must be set}"
 export VLLM_API_KEY="${VLLM_API_KEY:?VLLM_API_KEY must be set}"

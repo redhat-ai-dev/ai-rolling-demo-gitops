@@ -122,10 +122,14 @@ export function lastBotMessage(page: Page) {
 
 /**
  * Textual reply body only — excludes model name, timestamp, and action buttons.
- * Tool-call UI can also use .pf-chatbot__message-response; take the last one.
+ * Tool-call UI reuses .pf-chatbot__message-response for collapsed panels that stay
+ * hidden in the DOM; only match a visible node.
  */
 export function lastBotResponseBody(page: Page) {
-  return lastBotMessage(page).locator(".pf-chatbot__message-response").last();
+  return lastBotMessage(page)
+    .locator(".pf-chatbot__message-response")
+    .filter({ visible: true })
+    .last();
 }
 
 export async function getLastBotResponseText(page: Page): Promise<string> {

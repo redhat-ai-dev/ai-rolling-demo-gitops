@@ -4,52 +4,24 @@ global:
     includes:
       - "dynamic-plugins.default.yaml"
     plugins:
-      ##### Custom sign in page plugin #####
-      - package: oci://quay.io/redhat-ai-dev/rolling-demo-customized-sign-in-page:v0.1.1
+      ##### NFS Frontend Plugins #####
+      # App Auth (NFS sign-in page, replaces custom sign-in page)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-auth:bs_1.52.0__0.1.0
         disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-rolling-demo-customized-sign-in-page:
-                signInPage:
-                  importName: RollingDemoCustomizedSignInPage
+      # App Integrations (NFS provider integrations)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-integrations:bs_1.52.0__0.1.0
+        disabled: false
+      # App Defaults (NFS default extensions)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-defaults:bs_1.52.0__0.0.2
+        disabled: false
+      # Theme
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-theme:bs_1.52.0__1.0.2
+        disabled: false
 
-      ##### Red Hat Plugins without wrappers #####
-      # Plugin for backstage auth
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.52.0__0.1.9
-        disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              backstage.plugin-auth:
-                dynamicRoutes:
-                  - path: /oauth2/*
-                    importName: Router
-      # Plugins for ArgoCD integration
+      ##### Red Hat Plugins #####
+      # ArgoCD (frontend disabled — no NFS version yet; backends kept)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.49.4__2.8.0
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              backstage-community.plugin-redhat-argocd:
-                mountPoints:
-                  - mountPoint: entity.page.overview/cards
-                    importName: ArgocdDeploymentSummary
-                    config:
-                      layout:
-                        gridColumnEnd:
-                          lg: "span 8"
-                          xs: "span 12"
-                      if:
-                        allOf:
-                          - isArgocdConfigured
-                  - mountPoint: entity.page.cd/cards
-                    importName: ArgocdDeploymentLifecycle
-                    config:
-                      layout:
-                        gridColumn: '1 / -1'
-                      if:
-                        allOf:
-                          - isArgocdConfigured
+        disabled: true
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-argo-cd-backend:bs_1.49.4__4.8.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-argocd:bs_1.49.4__1.8.1
@@ -85,69 +57,32 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.52.0__0.4.0
         disabled: false
 
-      # Tekton Pipelines Plugins
-      # Tekton CI Plugins
+      # Tekton CI (NFS — no pluginConfig needed)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.52.0__3.41.0
         disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              backstage-community.plugin-tekton:
-                mountPoints:
-                  - config:
-                      if:
-                        allOf:
-                          - isTektonCIAvailable
-                      layout:
-                        gridColumn: 1 / -1
-                        gridRowStart: 1
-                    importName: TektonCI
-                    mountPoint: entity.page.ci/cards
 
-      ##### Default Backstage Dynamic Plugins #####
-      # Plugin for global header customization
-      # We follow the default plugins setup with a slight diff
-      # on the application-launcher dropdown items
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
+      ##### Default Backstage Dynamic Plugins (OCI images for NFS) #####
+      # Global Header
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-global-header:bs_1.52.0__2.0.0
         disabled: false
-        pluginConfig:
-          app:
-            sidebar:
-              search: false
-              settings: false
-              logo: false
-          dynamicPlugins:
-            frontend:
-              default.main-menu-items:
-                menuItems:
-                  default.create:
-                    title: ''
-                  default.admin:
-                    title: Administration
-                    textKey: menuItem.administration
-                    icon: admin
-                  default.help:
-                    title: RHDH Guide
-                    icon: techdocs
-                    priority: 5
-                    to: /catalog/default/system/rhdh-getting-started/docs
-                    enabled: true
-      # Plugins for Kubernetes integration
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
+
+      # Kubernetes
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes-backend:bs_1.52.0__0.21.5
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes:bs_1.52.0__0.12.20
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
+      # Topology
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-topology:bs_1.52.0__2.16.0
         disabled: false
 
       # Catalog plugins
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-catalog-backend-module-keycloak:pr_2510__3.21.0
         disabled: false
 
-      # TechDocs plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
-        disabled: false        
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
+      # TechDocs
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs-backend:bs_1.52.0__2.2.1
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs:bs_1.52.0__1.17.7
         disabled: false
 
       # Gitlab Plugins
@@ -180,36 +115,6 @@ global:
     plugins:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.52.0__3.2.0
         disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-intelligent-assistant:
-                translationResources:
-                  - importName: lightspeedTranslations
-                    module: Alpha
-                    ref: intelligentAssistantTranslationRef
-                dynamicRoutes:
-                  - path: /intelligent-assistant
-                    importName: LightspeedPage
-                    module: Legacy
-                mountPoints:
-                  - mountPoint: application/listener
-                    importName: LightspeedFAB
-                    module: Legacy
-                  - mountPoint: application/provider
-                    importName: LightspeedDrawerProvider
-                    module: Legacy
-                  - mountPoint: application/internal/drawer-state
-                    importName: LightspeedDrawerStateExposer
-                    module: Legacy
-                    config:
-                      id: intelligent-assistant
-                  - mountPoint: application/internal/drawer-content
-                    importName: LightspeedChatContainer
-                    module: Legacy
-                    config:
-                      id: intelligent-assistant
-                      priority: 100
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.52.0__3.2.0
         disabled: false
     secret:
@@ -287,8 +192,6 @@ backstage:
           - quay-pull-secret
       command: []
       extraAppConfig:
-        - filename: global-header-app-config.yaml
-          configMapRef: global-header-app-config
         - filename: kserve-connector-app-config.yaml
           configMapRef: kserve-connector-app-config
       appConfig:

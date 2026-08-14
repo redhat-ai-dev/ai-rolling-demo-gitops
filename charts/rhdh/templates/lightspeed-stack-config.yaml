@@ -27,6 +27,7 @@ data:
                 Never include any citation that is in the form '<| file-id |>'.
     inference:
       providers:
+        - type: sentence_transformers
         - type: vllm
           id: vllm
           api_key_env: VLLM_API_KEY
@@ -55,7 +56,6 @@ data:
               - publishers/google/models/gemini-2.5-flash-lite
               - publishers/google/models/gemini-3.1-pro-preview
               - publishers/google/models/gemini-3.5-flash-lite
-        - type: sentence_transformers
     byok_rag:
       - rag_id: rhdh-docs
         rag_type: inline::faiss
@@ -98,10 +98,6 @@ data:
         db_path: '/tmp/cache.db'
     customization:
       profile_path: '/app-root/rhdh-profile.py'
-    # LCORE-owned safety shields (not Llama Stack / OGX Safety API resources).
-    # Listed via GET /v1/shields; selected per request with optional shield_ids.
-    # Opt-in: set ENABLE_VALIDATION=question_validity (OGX skips the entry when
-    # provider_id resolves to __disabled__). See docs/CONTRIBUTING.md.
     shields:
       - name: lightspeed_question_validity
         provider_id: ${env.ENABLE_VALIDATION:=__disabled__}

@@ -81,7 +81,7 @@ global:
 
       # Catalog plugins
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-catalog-backend-module-keycloak:pr_2510__3.21.0
-        disabled: false
+        disabled: true
 
       # TechDocs
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs-backend:bs_1.52.0__2.2.1
@@ -100,7 +100,7 @@ global:
       - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
         disabled: true
       - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
-        disabled: true
+        disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
         disabled: true
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic

@@ -18,6 +18,10 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-theme:bs_1.52.0__1.0.2
         disabled: false
 
+      # OAuth2 callback handler (may provide /oauth2/* route for OIDC flow)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.52.0__0.1.9
+        disabled: false
+
       ##### Red Hat Plugins #####
       # ArgoCD (frontend disabled — no NFS version yet; backends kept)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.49.4__2.8.0

@@ -66,6 +66,22 @@ global:
         disabled: false
 
       ##### Default Backstage Dynamic Plugins (OCI images for NFS) #####
+      # Catalog frontend (NFS page + sidebar nav — PR build, no released version yet)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog:pr_2563__2.0.1
+        disabled: false
+      # Catalog Import
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-import:bs_1.52.0__0.13.14
+        disabled: false
+      # Scaffolder frontend (NFS /create page — PR build)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder:pr_2563__1.36.1
+        disabled: false
+      # Search frontend (NFS /search page — PR build)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-search:pr_2563__1.7.0
+        disabled: false
+      # Home page (NFS / route)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-home:bs_1.52.0__0.9.7
+        disabled: false
+
       # Global Header
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-global-header:bs_1.52.0__2.0.0
         disabled: false
@@ -104,6 +120,11 @@ global:
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
         disabled: true
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
+        disabled: true
+      # Disable Scalprum-only frontend plugins that lack NFS support (no mf-manifest.json)
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-dynamic-home-page
+        disabled: true
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-quickstart
         disabled: true
 
       # Gitlab Plugins

@@ -246,7 +246,7 @@ backstage:
           title: AI Rolling Demo Developer Hub
           baseUrl: "${RHDH_BASE_URL}"
           extensions:
-            - page:home/home:
+            - page:home:
                 config:
                   path: /
           analytics:

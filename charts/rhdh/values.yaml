@@ -246,9 +246,11 @@ backstage:
           title: AI Rolling Demo Developer Hub
           baseUrl: "${RHDH_BASE_URL}"
           extensions:
-            - page:home:
+            - app/routes:
                 config:
-                  path: /
+                  redirects:
+                    - from: /
+                      to: /home
           analytics:
             adoptionInsights:
               maxBufferSize: 20

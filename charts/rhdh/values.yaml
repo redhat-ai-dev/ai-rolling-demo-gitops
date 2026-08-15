@@ -323,6 +323,10 @@ backstage:
               - host: '*.mozilla.org'
               - host: '*.openshift.com'
               - host: '*.openshiftapps.com'
+        techdocs:
+          builder: local
+          generator:
+            runIn: local
         signInPage: oidc
         catalog:
           rules:
@@ -345,7 +349,13 @@ backstage:
               rules:
                 - allow: [Component, System]
           providers:
-            modelCatalog: {}
+            modelCatalog:
+              kserve-kubeflow-connector:
+                cluster-1:
+                  name: my-k8s-cluster
+                  kubeflow-model-catalog-url: '${KUBEFLOW_MODEL_CATALOG_URL:-}'
+                  default-owner: '${OWNER:-default-owner}'
+                  default-lifecycle: '${LIFECYCLE:-production}'
             github:
               providerId:
                 organization: "${GITOPS_GIT_ORG}"

@@ -462,6 +462,7 @@ backstage:
             "/developer-hub":
               target: https://raw.githubusercontent.com
               pathRewrite:
+                "^/api/proxy/developer-hub$": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/homepage/plugins/homepage/dev/quickaccess-default.json"
                 "^/api/proxy/developer-hub/learning-paths": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/ai-integrations/plugins/ai-experience/src/learning-paths/data.json"
               changeOrigin: true
               secure: false

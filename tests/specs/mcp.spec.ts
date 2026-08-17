@@ -124,7 +124,8 @@ test.describe("Lightspeed MCP", () => {
     await closeConfigureServerModal(page);
   });
 
-  test("MCP tool calling renders in chat UI", async () => {
+  // Can be unskipped once https://redhat.atlassian.net/browse/RHDHBUGS-3655 is fixed.
+  test.skip("MCP tool calling renders in chat UI", async () => {
     await openMcpSettingsInMode(page, "Fullscreen");
     await ensureMcpServerEnabled(MCP_SERVER_NAME);
     await closeMcpSettings(page);

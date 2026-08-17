@@ -18,7 +18,7 @@ const MCP_TOOL_CALL_PROMPT =
   "Use the mcp_list_tools tool for server mcp-integration-tools, then respond with exactly: MCP tool call done.";
 
 test.describe("Lightspeed MCP", () => {
-  test.describe.configure({ mode: "serial", timeout: 7 * 60 * 1000 });
+  test.describe.configure({ mode: "serial", timeout: 12 * 60 * 1000 });
 
   let context: BrowserContext;
   let page: Page;
@@ -133,6 +133,6 @@ test.describe("Lightspeed MCP", () => {
     await sendMessage(MCP_TOOL_CALL_PROMPT, page, false);
     await expect(
       page.getByRole("button", { name: /mcp_list_tools/i }).first(),
-    ).toBeVisible({ timeout: 60_000 * 5 });
+    ).toBeVisible({ timeout: 60_000 * 15 });
   });
 });

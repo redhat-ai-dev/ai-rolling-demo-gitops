@@ -69,6 +69,10 @@ export K8S_CA_DATA=
 # Auto-resolved from the rhoai-model-registries namespace route or service.
 export KUBEFLOW_MODEL_CATALOG_URL=
 
+# Boost / OGX secrets (for AI Catalog agent chat)
+export BOOST_OGX_URL=
+export BOOST_MODEL=
+
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD=
 export LIGHTSPEED_POSTGRES_USER=

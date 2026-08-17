@@ -121,6 +121,12 @@ export NOTEBOOKS_QUERY_PROVIDER_ID="vllm"
 # from the kserve deployment name or vLLM model path. It takes values similar to VALIDATION_MODEL_NAME.
 export NOTEBOOKS_QUERY_MODEL="llama-31-8b-version1"
 
+# Boost / OGX (AI Catalog agent chat)
+# BOOST_OGX_URL: the URL of the OGX service backing the Boost agent chat.
+export BOOST_OGX_URL="http://ogx-service:8321"
+# BOOST_MODEL: the LLM model name used by Boost agents. Leave empty to use the OGX default.
+export BOOST_MODEL=""
+
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD="your-preffered-lightspeed-psql-password"
 export LIGHTSPEED_POSTGRES_USER="your-preffered-lightspeed-psql-username"

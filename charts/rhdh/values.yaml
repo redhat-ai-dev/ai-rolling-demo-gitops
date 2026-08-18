@@ -42,23 +42,25 @@ global:
         disabled: false
 
       # Model Catalog Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.52.0__1.0.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.52.0__1.0.1
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.52.0__0.6.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.52.0__0.6.1
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.52.0__0.1.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.52.0__0.1.2
         disabled: false
 
       # AI Resource Kind Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-model-server:bs_1.52.0__0.2.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-model-server:bs_1.52.0__0.3.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.52.0__0.2.1
-        disabled: true
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.52.0__0.4.0
+        disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:pr_3227__0.4.0
         disabled: false
 
       # Boost Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.52.0__0.4.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.52.0__0.5.1
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.52.0__0.3.0
         disabled: false
 
       # Tekton CI (NFS — no pluginConfig needed)
@@ -738,54 +740,6 @@ backstage:
               subPath: .npmrc
             - mountPath: /extensions
               name: extensions-catalog
-        # Patch ai-model-server to also register default + AiResource entity models.
-        # Without this, the ModelProcessor only knows AiModelServerAPI and rejects
-        # all standard entity kinds (User, Group, Component, …), breaking SSO.
-        # TODO: remove once ai-model-server plugin is fixed upstream to use addProcessor.
-        - name: patch-catalog-models
-          image: '{{ include "backstage.image" . }}'
-          command: ['sh', '-c']
-          args:
-            - |
-              PLUGIN_DIR=$(find /dynamic-plugins-root -maxdepth 1 -name '*ai-model-server*' -type d | head -1)
-              if [ -z "$PLUGIN_DIR" ]; then
-                echo 'ai-model-server plugin not found, skipping patch'
-                exit 0
-              fi
-              echo "Patching $PLUGIN_DIR/dist/module.cjs.js to add default entity models..."
-              cat > "$PLUGIN_DIR/dist/module.cjs.js" << 'PATCH_EOF'
-              'use strict';
-              var backendPluginApi = require('@backstage/backend-plugin-api');
-              var alpha = require('@backstage/plugin-catalog-node/alpha');
-              var backstagePluginCatalogModelAiModelServer = require('@red-hat-developer-hub/backstage-plugin-catalog-model-ai-model-server');
-              var catalogModelAlpha = require('@backstage/catalog-model/alpha');
-              const catalogModuleAiModelServer = backendPluginApi.createBackendModule({
-                pluginId: "catalog",
-                moduleId: "ai-model-server",
-                register(reg) {
-                  reg.registerInit({
-                    deps: { model: alpha.catalogModelExtensionPoint },
-                    async init({ model }) {
-                      model.addModelSource({
-                        async *read() {
-                          yield { data: [
-                            { layer: catalogModelAlpha.defaultCatalogEntityModel },
-                            { layer: catalogModelAlpha.aiResourceEntityModel },
-                            { layer: backstagePluginCatalogModelAiModelServer.aiModelServerApiEntityModel }
-                          ] };
-                        }
-                      });
-                    }
-                  });
-                }
-              });
-              exports.catalogModuleAiModelServer = catalogModuleAiModelServer;
-              PATCH_EOF
-              echo 'Patch applied successfully.'
-          imagePullPolicy: Always
-          volumeMounts:
-            - mountPath: /dynamic-plugins-root
-              name: dynamic-plugins-root
         - name: byok-rag-init
           image: quay.io/redhat-ai-dev/byok-sample:latest
           imagePullPolicy: Always

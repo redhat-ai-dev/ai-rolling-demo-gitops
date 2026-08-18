@@ -24,6 +24,8 @@ global:
 
       ##### Red Hat Plugins #####
       # ArgoCD (frontend disabled — no NFS version yet; backends kept)
+      # TODO: re-enable when https://github.com/backstage/community-plugins/pull/10112 merges
+      # and updated dynamic plugin images are available for argocd and argocd-backend
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.49.4__2.8.0
         disabled: true
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-argo-cd-backend:bs_1.49.4__4.8.0

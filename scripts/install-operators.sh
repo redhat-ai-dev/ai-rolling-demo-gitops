@@ -277,8 +277,8 @@ install_deps() {
     wait_for_csv "$PIPELINES_OPERATOR_NAMESPACE" "$PIPELINES_OPERATOR_PACKAGE"
   fi
 
-  if [[ "${SKIP_RHOAI_SETUP:-}" == "true" ]]; then
-    log "SKIP_RHOAI_SETUP=true — skipping NFD and GPU operator installation."
+  if [[ "${SKIP_GPU_SETUP:-}" == "true" || "${SKIP_RHOAI_SETUP:-}" == "true" ]]; then
+    log "Skipping NFD and GPU operator installation (SKIP_GPU_SETUP=${SKIP_GPU_SETUP:-false}, SKIP_RHOAI_SETUP=${SKIP_RHOAI_SETUP:-false})."
   else
     # install Node Feature Discovery Operator if it doesn't exist
     if check_operator_exists "$NFD_OPERATOR_NAMESPACE" "$NFD_OPERATOR_PACKAGE"; then

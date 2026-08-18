@@ -73,6 +73,11 @@ export KUBEFLOW_MODEL_CATALOG_URL=
 export BOOST_OGX_URL=
 export BOOST_MODEL=
 
+# GPU Setup (NFD + NVIDIA GPU Operator)
+# Set to "true" to skip Node Feature Discovery and NVIDIA GPU operator installation
+# while still allowing RHOAI setup. RHOAI can run without GPU for non-inference workloads.
+export SKIP_GPU_SETUP=
+
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD=
 export LIGHTSPEED_POSTGRES_USER=

@@ -294,8 +294,10 @@ test.describe("Lightspeed UI", () => {
 
     test("scroll controls in conversation", async () => {
       const scrollPrompt =
-        "Write a long numbered list of at least 20 Kubernetes deployment best practices. Use one line per item.";
-      await sendMessageInNewChat(page, scrollPrompt);
+        "Do not use tools. Write a numbered list of 20 Kubernetes deployment best practices. One short line per item.";
+      // Do not wait for the spinner to clear: long replies keep
+      // .pf-chatbot__message-loading visible while content already overflows.
+      await sendMessageInNewChat(page, scrollPrompt, false);
 
       const jumpTopButton = page.getByRole("button", {
         name: "Back to top",
@@ -304,7 +306,7 @@ test.describe("Lightspeed UI", () => {
         name: "Back to bottom",
       });
 
-      await expect(jumpTopButton).toBeVisible({ timeout: 30_000 });
+      await expect(jumpTopButton).toBeVisible({ timeout: 180_000 });
       await jumpTopButton.click();
       await expect(
         page

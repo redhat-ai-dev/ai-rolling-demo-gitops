@@ -132,12 +132,14 @@ kubectl exec -n "$LIGHTSPEED_POSTGRES_NAMESPACE" deploy/postgres -- \
 
 # initial installation of rhdh-chart provided our ci values
 log "Installing RHDH chart via Helm..."
+# Disable plugins that aren't needed for CI/kind environments.
+# NOTE: If the dynamic plugins list in values.yaml changes, these indices may need adjustment.
+# Current: plugins[12] = scaffolder-mcp-extras
 helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
   --namespace "$RHDH_NAMESPACE" \
   -f "$GITOPS_DIR/charts/rhdh/values.yaml" \
   -f "$GITOPS_DIR/ci/values-ci.yaml" \
-  --set 'global.dynamic.plugins[8].disabled=true' \
-  --set 'global.dynamic.plugins[9].disabled=true' \
+  --set 'global.dynamic.plugins[12].disabled=true' \
   --timeout 40m \
   --wait
 

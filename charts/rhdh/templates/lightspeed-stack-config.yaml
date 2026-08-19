@@ -162,6 +162,6 @@ data:
         - custom-org-docs
         - okp
     okp:
-      rhokp_url: '${env.OKP_SERVICE_URL:=http://{{ .Release.Name }}-lightspeed-okp-{{ .Release.Namespace }}.{{ .Values.global.clusterRouterBase }}}'
+      rhokp_url: '${env.OKP_SERVICE_URL:=http://localhost:8080}'
       offline: true
       chunk_filter_query: 'product:*developer_hub*'

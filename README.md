@@ -14,6 +14,7 @@ The rolling demo combines the following components so far:
 - The [Model Catalog Bridge](https://github.com/redhat-ai-dev/model-catalog-bridge) and the [catalog-backend-module-rhdh-ai](https://github.com/redhat-ai-dev/rhdh-plugins/tree/main/workspaces/rhdh-ai/plugins/catalog-backend-module-rhdh-ai) plugin. This mechanism provides a way to facilitate the seamless export of AI model records from Red Hat OpenShift AI and imports them into Red Hat Developer Hub (Backstage) as catalog entities.
 - The [MCP Plugins](https://github.com/redhat-developer/rhdh-plugins/tree/main/workspaces/mcp-integrations), which provides a way for LLMs and AI applications to interact with Developer Hub.
 - `Red Hat Developer Lightspeed` (Developer Lightspeed) is a virtual assistant powered by generative AI that offers in-depth insights into `Red Hat Developer Hub` (RHDH), including its wide range of capabilities.
+- The [Red Hat Offline Knowledge Portal](https://access.redhat.com/products/red-hat-offline-knowledge-portal/) (OKP), deployed as a vendored Helm subchart, provides offline Red Hat product documentation search for the Intelligent Assistant.
 
 ## Capabilities & Limitations
 
@@ -53,8 +54,8 @@ Two install paths are available:
 
 | Command                 | Cluster requirements                     | What's included                                                                |
 | ----------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `make install`          | GPU-capable nodes (`g5.2xlarge`+), RHOAI | Full stack: RHDH, Lightspeed, Model Catalog Bridge, AI Software Templates      |
-| `make install-no-rhoai` | Any OCP cluster (no GPU required)        | RHDH, Lightspeed, AI Software Templates — **no** Model Catalog Bridge or RHOAI |
+| `make install`          | GPU-capable nodes (`g5.2xlarge`+), RHOAI | Full stack: RHDH, Lightspeed, OKP, Model Catalog Bridge, AI Software Templates      |
+| `make install-no-rhoai` | Any OCP cluster (no GPU required)        | RHDH, Lightspeed, OKP, AI Software Templates — **no** Model Catalog Bridge or RHOAI |
 
 Use `make install-no-rhoai` when you want to run the demo on a smaller cluster that does not have GPU nodes or Red Hat OpenShift AI.
 

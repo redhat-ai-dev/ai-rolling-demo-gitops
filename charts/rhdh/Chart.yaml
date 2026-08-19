@@ -9,6 +9,7 @@ dependencies:
     repository: https://redhat-developer.github.io/rhdh-chart/
     version: "7.0.1"
   # OKP (Offline Knowledge Portal) vendored subchart — see charts/rhdh/charts/okp.
-  # Always deployed; rolling demo requires OKP and runs OpenShift-only.
+  # Enabled by default; disabled in CI (Kind lacks OpenShift Route CRD + 9GB image).
   - name: okp
     version: "0.1.0"
+    condition: okp.enabled

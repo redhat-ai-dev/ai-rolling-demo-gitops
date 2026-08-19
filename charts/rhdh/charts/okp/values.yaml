@@ -1,6 +1,7 @@
 # OKP (Offline Knowledge Portal) vendored subchart.
 # YAMLs mirror the golden reference in rhdh-chart PR #500
 # (charts/backstage/templates/lightspeed/okp-*.yaml).
+enabled: true
 image:
   # -- OKP container image repository.
   repository: registry.redhat.io/offline-knowledge-portal/rhokp-rhel9

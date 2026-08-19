@@ -134,6 +134,16 @@ kubectl exec -n "$LIGHTSPEED_POSTGRES_NAMESPACE" deploy/postgres -- \
   psql -U "$LIGHTSPEED_POSTGRES_USER" -d "$LIGHTSPEED_POSTGRES_DB" \
   -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
+# Strip OKP config from lightspeed-stack so LCORE starts without OKP on Kind.
+# The file is a Helm ConfigMap template ({{ .Release.Namespace }}), so yq can't
+# parse it — use sed instead. Removes "- okp" from rag.tool and the okp: block.
+log "Stripping OKP config from lightspeed-stack-config for CI..."
+sed -i.bak '/^        - okp$/d' \
+  "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml"
+sed -i.bak '/^    okp:$/,/^    [^ ]/{ /^    [^ ]/!d; /^    okp:$/d; }' \
+  "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml"
+rm -f "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml.bak"
+
 # initial installation of rhdh-chart provided our ci values
 log "Installing RHDH chart via Helm..."
 helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \

@@ -277,10 +277,12 @@ backstage:
                   redirects:
                     - from: /
                       to: /home
-            # Disable homepage widgets that require the visits API (page tracking analytics)
+            # Disable homepage widgets and visit tracking infrastructure
             # to avoid "Something Went Wrong" error boxes on the home page
             - home-page-widget:home/recently-visited: false
             - home-page-widget:home/top-visited: false
+            - api:home/visits: false
+            - app-root-element:home/visit-listener: false
           analytics:
             adoptionInsights:
               maxBufferSize: 20

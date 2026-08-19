@@ -15,12 +15,6 @@ spec:
       labels:
         {{- include "okp.selectorLabels" . | nindent 8 }}
     spec:
-      {{- if .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- range .Values.imagePullSecrets }}
-        - name: {{ . | quote }}
-        {{- end }}
-      {{- end }}
       containers:
       - name: okp
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

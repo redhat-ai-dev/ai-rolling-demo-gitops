@@ -33,12 +33,6 @@ resources:
 service:
   # -- OKP Service type.
   type: ClusterIP
-# -- Image pull secrets for the OKP container image.
-# Required on vanilla Kubernetes to authenticate with registry.redhat.io.
-# Not needed on OpenShift where the cluster-wide pull secret covers Red Hat registries.
-imagePullSecrets: []
-# imagePullSecrets:
-#   - "my-rh-registry-secret"
 route:
   # -- Enable OpenShift Route for OKP.
   enabled: true

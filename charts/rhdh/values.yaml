@@ -216,6 +216,11 @@ global:
       env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app-root/gcp-creds.json
+        # Redirect the HuggingFace/sentence-transformers cache into the writable
+        # /tmp emptyDir. Required because the sidecar runs readOnlyRootFilesystem:true;
+        # without this, embedding model loading fails writing to ~/.cache. Mirrors rhdh-chart.
+        - name: HF_HOME
+          value: /tmp/hf_cache
     configMaps:
       - name: stack
         create: false
@@ -690,4 +695,8 @@ backstage:
       destinationCACertificate: ""
       insecureEdgeTerminationPolicy: "Redirect"
 rhoai:
+  enabled: true
+# OKP (Offline Knowledge Portal) vendored subchart — see charts/rhdh/charts/okp.
+# Defaults (pinned image, route/ingress, resources) live in the subchart values.yaml.
+okp:
   enabled: true

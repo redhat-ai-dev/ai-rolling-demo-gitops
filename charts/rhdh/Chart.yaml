@@ -8,3 +8,6 @@ dependencies:
   - name: backstage
     repository: https://redhat-developer.github.io/rhdh-chart/
     version: "7.0.1"
+  - name: okp
+    version: "0.1.0"
+    condition: okp.enabled

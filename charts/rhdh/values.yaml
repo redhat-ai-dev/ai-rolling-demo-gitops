@@ -4,6 +4,16 @@ global:
     includes:
       - "dynamic-plugins.default.yaml"
     plugins:
+      ##### Custom sign in page plugin (now NFS compatible) #####
+      - package: oci://quay.io/redhat-ai-dev/rolling-demo-customized-sign-in-page:0.2.0!red-hat-developer-hub-backstage-plugin-rolling-demo-customized-sign-in-page
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              red-hat-developer-hub.backstage-plugin-rolling-demo-customized-sign-in-page:
+                signInPage:
+                  importName: RollingDemoCustomizedSignInPage
+
       ##### NFS Frontend Plugins #####
       # App Auth (NFS sign-in page, replaces custom sign-in page)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-auth:bs_1.52.0__0.1.0

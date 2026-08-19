@@ -93,5 +93,10 @@ backstage:
         persistence:
           mountPath: /fedora/postgresql
 
+# OKP Route is an OpenShift CRD — disable on Kind.
+okp:
+  route:
+    enabled: false
+
 rhoai:
   enabled: false

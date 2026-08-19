@@ -8,6 +8,7 @@ dependencies:
   - name: backstage
     repository: https://redhat-developer.github.io/rhdh-chart/
     version: "7.0.1"
+  # OKP (Offline Knowledge Portal) vendored subchart — see charts/rhdh/charts/okp.
+  # Always deployed; rolling demo requires OKP and runs OpenShift-only.
   - name: okp
     version: "0.1.0"
-    condition: okp.enabled

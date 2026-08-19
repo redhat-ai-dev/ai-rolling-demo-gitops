@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "okp.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "okp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "okp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "okp.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ . | quote }}
+        {{- end }}
+      {{- end }}
+      containers:
+      - name: okp
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            /opt/solr/bin/solr start --user-managed --force -m {{ .Values.solr.memory }}
+            rm -f /etc/httpd/conf.d/ssl.conf
+            exec httpd -D FOREGROUND
+        env:
+        - name: SOLR_HOST_BIND
+          value: {{ .Values.solr.hostBind | quote }}
+        - name: MIMIR_HTTPD_SERVER_NAME
+          value: {{ .Values.httpd.serverName | quote }}
+        - name: COMPRESSED
+          value: {{ .Values.httpd.compressed | quote }}
+        - name: ENCRYPT
+          value: {{ .Values.httpd.encrypt | quote }}
+        ports:
+        - containerPort: 8080
+          name: httpd
+          protocol: TCP
+        - containerPort: 8983
+          name: solr
+          protocol: TCP
+        {{- if .Values.resources }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        {{- end }}

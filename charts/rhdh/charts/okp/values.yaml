@@ -1,0 +1,49 @@
+# OKP (Offline Knowledge Portal) vendored subchart.
+# YAMLs mirror the golden reference in rhdh-chart PR #500
+# (charts/backstage/templates/lightspeed/okp-*.yaml).
+image:
+  # -- OKP container image repository.
+  repository: registry.redhat.io/offline-knowledge-portal/rhokp-rhel9
+  # -- OKP container image pull policy.
+  pullPolicy: IfNotPresent
+  # -- OKP container image tag.
+  tag: "1.2.10-1786628394"
+# -- Number of OKP replicas.
+replicaCount: 1
+solr:
+  # -- Solr JVM memory allocation.
+  memory: "1g"
+  # -- Solr host bind address.
+  hostBind: "0.0.0.0"
+httpd:
+  # -- HTTPD server name.
+  serverName: "localhost"
+  # -- Enable gzip compression in HTTPD.
+  compressed: "true"
+  # -- Enable HTTPS encryption in HTTPD.
+  encrypt: "false"
+# -- Resource requests/limits for the OKP container.
+resources:
+  requests:
+    cpu: "200m"
+    memory: "2Gi"
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+service:
+  # -- OKP Service type.
+  type: ClusterIP
+# -- Image pull secrets for the OKP container image.
+# Required on vanilla Kubernetes to authenticate with registry.redhat.io.
+# Not needed on OpenShift where the cluster-wide pull secret covers Red Hat registries.
+imagePullSecrets: []
+# imagePullSecrets:
+#   - "my-rh-registry-secret"
+route:
+  # -- Enable OpenShift Route for OKP.
+  enabled: true
+  tls:
+    # -- TLS termination type for the OKP route.
+    termination: edge
+    # -- Insecure edge termination policy.
+    insecureEdgeTerminationPolicy: Allow

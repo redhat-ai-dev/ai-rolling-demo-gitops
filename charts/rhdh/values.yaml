@@ -96,11 +96,8 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-home:bs_1.52.0__0.9.7
         disabled: false
       # RHDH Homepage (customized home page with widgets + root redirect)
-      # Known limitation: homepage frontend expects a visits API (page tracking analytics)
-      # that the homepage-backend plugin doesn't provide. This causes 2 "Something Went Wrong"
-      # error boxes at the bottom of the home page. We accept this cosmetic issue to keep
-      # the RHDH-branded Quick Access widgets and learning paths. The visits API would need
-      # either database schema setup or a different backend plugin version that we don't have.
+      # The "recently-visited" and "top-visited" widgets are disabled via app.extensions
+      # because they require a visits API that the homepage-backend doesn't fully implement.
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.52.0__1.17.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage-backend:bs_1.52.0__0.4.0
@@ -280,6 +277,10 @@ backstage:
                   redirects:
                     - from: /
                       to: /home
+            # Disable homepage widgets that require the visits API (page tracking analytics)
+            # to avoid "Something Went Wrong" error boxes on the home page
+            - home-page-widget:home/recently-visited: false
+            - home-page-widget:home/top-visited: false
           analytics:
             adoptionInsights:
               maxBufferSize: 20

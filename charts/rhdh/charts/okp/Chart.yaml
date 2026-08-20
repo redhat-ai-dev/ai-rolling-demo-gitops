@@ -1,0 +1,14 @@
+apiVersion: v2
+name: okp
+description: Red Hat Offline Knowledge Portal (OKP) Helm chart for OpenShift
+type: application
+version: 0.1.0
+appVersion: "1.0"
+keywords:
+  - okp
+  - offline-knowledge-portal
+  - solr
+  - red-hat
+  - openshift
+sources:
+  - https://github.com/redhat-developer/rhdh-chart

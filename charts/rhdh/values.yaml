@@ -206,6 +206,18 @@ global:
       env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app-root/gcp-creds.json
+        # Redirect the HuggingFace/sentence-transformers cache into the writable
+        # /tmp emptyDir. Required because the sidecar runs readOnlyRootFilesystem:true;
+        # without this, embedding model loading fails writing to ~/.cache. Mirrors rhdh-chart.
+        - name: HF_HOME
+          value: /tmp/hf_cache
+        # Points LCORE at the OKP service. The lightspeed-stack-config.yaml is synced
+        # from lightspeed-configs (source of truth) with a localhost default, so the
+        # cluster-specific OKP URL is injected here instead. Rendered via
+        # common.tplvalues.render (tpl), so the Helm expression resolves; the sync
+        # generator only seds the sidecar image line, leaving this env intact.
+        - name: OKP_SERVICE_URL
+          value: "http://{{ .Release.Name }}-lightspeed-okp-{{ .Release.Namespace }}.{{ .Values.global.clusterRouterBase }}"
     configMaps:
       - name: stack
         create: false

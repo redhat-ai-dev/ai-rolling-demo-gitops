@@ -93,5 +93,9 @@ backstage:
         persistence:
           mountPath: /fedora/postgresql
 
+# OKP is OpenShift-only (Route CRD) and its 9GB image is impractical on Kind.
+okp:
+  enabled: false
+
 rhoai:
   enabled: false

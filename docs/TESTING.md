@@ -43,6 +43,10 @@ export VALIDATION_MODEL_NAME="<model>"
 export NOTEBOOKS_QUERY_PROVIDER_ID="<provider-id>"
 export NOTEBOOKS_QUERY_MODEL="<model>"
 
+# Boost / OGX (AI Catalog agent chat)
+export BOOST_OGX_URL="<ogx-url>"
+export BOOST_MODEL="<model-name>"
+
 # Lightspeed PostgreSQL
 export LIGHTSPEED_POSTGRES_USER="<user>"
 export LIGHTSPEED_POSTGRES_PASSWORD="<password>"

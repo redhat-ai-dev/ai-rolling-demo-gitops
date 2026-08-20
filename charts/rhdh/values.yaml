@@ -4,8 +4,8 @@ global:
     includes:
       - "dynamic-plugins.default.yaml"
     plugins:
-      ##### Custom sign in page plugin #####
-      - package: oci://quay.io/redhat-ai-dev/rolling-demo-customized-sign-in-page:v0.1.1
+      ##### Custom sign in page plugin (now NFS compatible) #####
+      - package: oci://quay.io/redhat-ai-dev/rolling-demo-customized-sign-in-page:0.2.0!red-hat-developer-hub-backstage-plugin-rolling-demo-customized-sign-in-page
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -14,42 +14,30 @@ global:
                 signInPage:
                   importName: RollingDemoCustomizedSignInPage
 
-      ##### Red Hat Plugins without wrappers #####
-      # Plugin for backstage auth
+      ##### NFS Frontend Plugins #####
+      # App Auth (NFS sign-in page, replaces custom sign-in page)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-auth:bs_1.52.0__0.1.0
+        disabled: false
+      # App Integrations (NFS provider integrations)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-integrations:bs_1.52.0__0.1.0
+        disabled: false
+      # App Defaults (NFS default extensions)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-defaults:bs_1.52.0__0.0.2
+        disabled: false
+      # Theme
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-theme:bs_1.52.0__1.0.2
+        disabled: false
+
+      # OAuth2 callback handler (may provide /oauth2/* route for OIDC flow)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.52.0__0.1.9
         disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              backstage.plugin-auth:
-                dynamicRoutes:
-                  - path: /oauth2/*
-                    importName: Router
-      # Plugins for ArgoCD integration
+
+      ##### Red Hat Plugins #####
+      # ArgoCD (frontend disabled — no NFS version yet; backends kept)
+      # TODO: re-enable when https://github.com/backstage/community-plugins/pull/10112 merges
+      # and updated dynamic plugin images are available for argocd and argocd-backend
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.49.4__2.8.0
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              backstage-community.plugin-redhat-argocd:
-                mountPoints:
-                  - mountPoint: entity.page.overview/cards
-                    importName: ArgocdDeploymentSummary
-                    config:
-                      layout:
-                        gridColumnEnd:
-                          lg: "span 8"
-                          xs: "span 12"
-                      if:
-                        allOf:
-                          - isArgocdConfigured
-                  - mountPoint: entity.page.cd/cards
-                    importName: ArgocdDeploymentLifecycle
-                    config:
-                      layout:
-                        gridColumn: '1 / -1'
-                      if:
-                        allOf:
-                          - isArgocdConfigured
+        disabled: true
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-argo-cd-backend:bs_1.49.4__4.8.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-argocd:bs_1.49.4__1.8.1
@@ -66,77 +54,109 @@ global:
         disabled: false
 
       # Model Catalog Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.52.0__0.10.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.52.0__1.0.1
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.52.0__0.6.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.52.0__0.6.1
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.52.0__0.1.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.52.0__0.1.2
         disabled: false
 
-      # Tekton Pipelines Plugins
-      # Tekton CI Plugins
+      # AI Resource Kind Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-model-server:bs_1.52.0__0.3.0
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.52.0__0.4.0
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:bs_1.52.0__0.5.0
+        disabled: false
+
+      # Boost Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.52.0__0.5.1
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.52.0__0.3.0
+        disabled: false
+
+      # Tekton CI (NFS — no pluginConfig needed)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.52.0__3.41.0
         disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              backstage-community.plugin-tekton:
-                mountPoints:
-                  - config:
-                      if:
-                        allOf:
-                          - isTektonCIAvailable
-                      layout:
-                        gridColumn: 1 / -1
-                        gridRowStart: 1
-                    importName: TektonCI
-                    mountPoint: entity.page.ci/cards
 
-      ##### Default Backstage Dynamic Plugins #####
-      # Plugin for global header customization
-      # We follow the default plugins setup with a slight diff
-      # on the application-launcher dropdown items
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
+      ##### Default Backstage Dynamic Plugins (OCI images for NFS) #####
+      # Catalog frontend (NFS page + sidebar nav — PR build, no released version yet)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog:pr_2563__2.0.1
         disabled: false
-        pluginConfig:
-          app:
-            sidebar:
-              search: false
-              settings: false
-              logo: false
-          dynamicPlugins:
-            frontend:
-              default.main-menu-items:
-                menuItems:
-                  default.create:
-                    title: ''
-                  default.admin:
-                    title: Administration
-                    textKey: menuItem.administration
-                    icon: admin
-                  default.help:
-                    title: RHDH Guide
-                    icon: techdocs
-                    priority: 5
-                    to: /catalog/default/system/rhdh-getting-started/docs
-                    enabled: true
-      # Plugins for Kubernetes integration
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
+      # Catalog Import
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-import:bs_1.52.0__0.13.14
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
+      # Scaffolder frontend (NFS /create page — PR build)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder:pr_2563__1.36.1
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
+      # Search frontend (NFS /search page — PR build)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-search:pr_2563__1.7.0
+        disabled: false
+      # Home page (NFS / route)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-home:bs_1.52.0__0.9.7
+        disabled: false
+      # RHDH Homepage (customized home page with widgets + root redirect)
+      # The "recently-visited" and "top-visited" widgets are disabled via app.extensions
+      # because they require a visits API that the homepage-backend doesn't fully implement.
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.52.0__1.17.0
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage-backend:bs_1.52.0__0.4.0
+        disabled: false
+
+      # Global Header
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-global-header:bs_1.52.0__2.0.0
+        disabled: false
+
+      # Kubernetes
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes-backend:bs_1.52.0__0.21.5
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes:bs_1.52.0__0.12.20
+        disabled: false
+      # Topology
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-topology:bs_1.52.0__2.16.0
         disabled: false
 
       # Catalog plugins
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-catalog-backend-module-keycloak:pr_2510__3.21.0
+        disabled: true
+
+      # TechDocs
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs-backend:bs_1.52.0__2.2.1
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs:bs_1.52.0__1.17.7
         disabled: false
 
-      # TechDocs plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
-        disabled: false        
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
+      # Disable dist wrappers replaced by OCI images above
+      # (these are enabled by dynamic-plugins.default.yaml and must be explicitly disabled)
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
+        disabled: true
+      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
+        disabled: true
+      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
+        disabled: true
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
+        disabled: true
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
         disabled: false
+      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
+        disabled: true
+      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
+        disabled: true
+      # Disable Scalprum-only frontend plugins that lack NFS support (no mf-manifest.json)
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-dynamic-home-page
+        disabled: true
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-quickstart
+        disabled: true
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-analytics-provider-segment
+        disabled: true
+      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-module-addons-contrib
+        disabled: true
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-adoption-insights
+        disabled: true
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights-dynamic
+        disabled: true
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-extensions
+        disabled: true
 
       # Gitlab Plugins
       - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-dynamic
@@ -147,7 +167,7 @@ global:
         disabled: true
       - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-org-dynamic
         disabled: true
-        
+
       # Github Plugins
       - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-org-dynamic
         disabled: false
@@ -168,36 +188,6 @@ global:
     plugins:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.52.0__3.2.0
         disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-intelligent-assistant:
-                translationResources:
-                  - importName: lightspeedTranslations
-                    module: Alpha
-                    ref: intelligentAssistantTranslationRef
-                dynamicRoutes:
-                  - path: /intelligent-assistant
-                    importName: LightspeedPage
-                    module: Legacy
-                mountPoints:
-                  - mountPoint: application/listener
-                    importName: LightspeedFAB
-                    module: Legacy
-                  - mountPoint: application/provider
-                    importName: LightspeedDrawerProvider
-                    module: Legacy
-                  - mountPoint: application/internal/drawer-state
-                    importName: LightspeedDrawerStateExposer
-                    module: Legacy
-                    config:
-                      id: intelligent-assistant
-                  - mountPoint: application/internal/drawer-content
-                    importName: LightspeedChatContainer
-                    module: Legacy
-                    config:
-                      id: intelligent-assistant
-                      priority: 100
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.52.0__3.2.0
         disabled: false
     secret:
@@ -270,19 +260,29 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "1.10-164"
+        tag: "2.0-61"
         pullSecrets:
           - quay-pull-secret
       command: []
       extraAppConfig:
-        - filename: global-header-app-config.yaml
-          configMapRef: global-header-app-config
         - filename: kserve-connector-app-config.yaml
           configMapRef: kserve-connector-app-config
       appConfig:
         app:
           title: AI Rolling Demo Developer Hub
           baseUrl: "${RHDH_BASE_URL}"
+          extensions:
+            - app/routes:
+                config:
+                  redirects:
+                    - from: /
+                      to: /home
+            # Disable homepage widgets and visit tracking infrastructure
+            # to avoid "Something Went Wrong" error boxes on the home page
+            - home-page-widget:home/recently-visited: false
+            - home-page-widget:home/top-visited: false
+            - api:home/visits: false
+            - app-root-element:home/visit-listener: false
           analytics:
             adoptionInsights:
               maxBufferSize: 20
@@ -366,10 +366,14 @@ backstage:
               - host: '*.mozilla.org'
               - host: '*.openshift.com'
               - host: '*.openshiftapps.com'
+        techdocs:
+          builder: local
+          generator:
+            runIn: local
         signInPage: oidc
         catalog:
           rules:
-            - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API, AiResource]
+            - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API, AiResource, AiModelServerAPI]
           locations:
             - target: https://github.com/benwilcock/rhdh-techdocs/blob/main/rhdh-catalog-info.yaml
               rules:
@@ -388,7 +392,13 @@ backstage:
               rules:
                 - allow: [Component, System]
           providers:
-            modelCatalog: {}
+            modelCatalog:
+              kserve-kubeflow-connector:
+                cluster-1:
+                  name: my-k8s-cluster
+                  kubeflow-model-catalog-url: '${KUBEFLOW_MODEL_CATALOG_URL:-}'
+                  default-owner: '${OWNER:-default-owner}'
+                  default-lifecycle: '${LIFECYCLE:-production}'
             github:
               providerId:
                 organization: "${GITOPS_GIT_ORG}"
@@ -490,6 +500,7 @@ backstage:
             "/developer-hub":
               target: https://raw.githubusercontent.com
               pathRewrite:
+                "^/api/proxy/developer-hub$": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/homepage/plugins/homepage/dev/quickaccess-default.json"
                 "^/api/proxy/developer-hub/learning-paths": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/ai-integrations/plugins/ai-experience/src/learning-paths/data.json"
               changeOrigin: true
               secure: false
@@ -497,6 +508,153 @@ backstage:
               target: "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml"
               changeOrigin: true
               followRedirects: true
+        boost:
+          security:
+            mode: 'development-only-no-auth'
+            adminUsers:
+              - 'user:default/admin'
+              - 'user:default/guest'
+          entityProviders:
+            ogx:
+              baseUrl: ${BOOST_OGX_URL:-http://localhost:8321}
+              defaultAgent: router
+              maxAgentTurns: 10
+              agents:
+                - id: router
+                  name: FantaCo Router
+                  description: Customer service router that classifies and transfers to specialists
+                  instructions: |
+                    You are a customer service router for FantaCo. Classify the user's
+                    question and transfer to the appropriate specialist agent.
+
+                    Transfer rules:
+                    - Legal questions (software licenses, embargoes, privacy/PII,
+                      contracts, policies, compliance) -> transfer to Legal
+                    - Technical support (OpenShift/Kubernetes, deployment, permissions,
+                      performance, FantaCo products like CloudSync or TechGear Pro,
+                      troubleshooting) -> transfer to Software Support
+                    - HR questions (benefits, health care, vacation/PTO, retirement,
+                      workspaces, office facilities, bonuses, compensation, perks,
+                      participation requirements) -> transfer to Human Resources.
+                      If the question mentions "workspaces at FantaCo", ALWAYS transfer
+                      to Human Resources.
+                    - Sales questions (territories, leads, discounting, quotas, CRM,
+                      brand guidelines, expenses, escalations, performance metrics)
+                      -> transfer to Sales
+                    - Procurement questions (competitive bidding, vendor evaluation,
+                      ethics, transparency, spending limits, approval processes)
+                      -> transfer to Procurement
+
+                    Always transfer to the most appropriate specialist. Do not answer
+                    the question yourself.
+                  handoffs:
+                    - legal
+                    - support
+                    - hr
+                    - sales
+                    - procurement
+                  model: ${BOOST_MODEL:-}
+                  lifecycleStage: published
+                - id: legal
+                  name: Legal
+                  description: Handles questions about software licenses, embargoes, privacy/PII, contracts, policies, procedures, or compliance
+                  handoffDescription: Handles questions about software licenses, embargoes, privacy/PII, contracts, policies, procedures, or compliance
+                  instructions: |
+                    You are FantaCo's Legal department specialist. Based on the relevant
+                    documents in the knowledge base, help with the user's legal query.
+                    Provide a helpful response based on the documents found. If no
+                    relevant documents are found, provide general guidance.
+                  enableRAG: true
+                  model: ${BOOST_MODEL:-}
+                  lifecycleStage: published
+                - id: support
+                  name: Software Support
+                  description: Handles technical support questions about OpenShift/Kubernetes, deployment, permissions, performance, and FantaCo products
+                  handoffDescription: Handles technical support questions about OpenShift/Kubernetes, application deployment, permissions, resource utilization, performance, and FantaCo products (CloudSync, TechGear Pro)
+                  instructions: |
+                    You are FantaCo's Software Support specialist. Based on the relevant
+                    documents in the knowledge base, help with the user's technical
+                    support query. Provide a helpful response based on the documents
+                    found. If no relevant documents are found, provide general guidance.
+                  enableRAG: true
+                  model: ${BOOST_MODEL:-}
+                  lifecycleStage: published
+                - id: hr
+                  name: Human Resources
+                  description: Handles questions about employee benefits, health care, vacation/PTO, retirement, workspaces, and compensation
+                  handoffDescription: Handles questions about employee benefits, health care, vacation/PTO, retirement plans, workspaces, office facilities, work environment, bonuses, compensation, and perks
+                  instructions: |
+                    You are FantaCo's Human Resources specialist. Based on the relevant
+                    documents in the knowledge base, help with the user's HR query.
+
+                    FantaCo's benefits are organized into categories:
+                    - bare necessities: workspace, health care, vacation/PTO, retirement
+                    - beyond the basics: music, parties, activities, food services,
+                      driving services, bonuses
+                    - caveats: participation requirements
+
+                    Try to narrow the response to details from the relevant sub-section
+                    of the benefits document when possible.
+
+                    Provide a helpful response based on the documents found. If no
+                    relevant documents are found, provide general guidance.
+                  enableRAG: true
+                  model: ${BOOST_MODEL:-}
+                  lifecycleStage: published
+                - id: sales
+                  name: Sales
+                  description: Handles questions about sales territories, leads, discounting, quotas, CRM, and performance metrics
+                  handoffDescription: Handles questions about sales territories, lead assignments, discounting, deal approval, quotas, sales compensation, CRM systems, brand guidelines, expenses, escalations, and performance metrics
+                  instructions: |
+                    You are FantaCo's Sales specialist. Based on the relevant documents
+                    in the knowledge base, help with the user's sales query.
+
+                    FantaCo's sales operation manual covers:
+                    - geographic territories
+                    - lead assignments
+                    - discounting and deal approval
+                    - quotas and compensation
+                    - CRM systems
+                    - brands and communications
+                    - expenses and escalations
+                    - performance and compliance
+
+                    Try to narrow the response to details from the relevant sub-section
+                    of the sales document when possible.
+
+                    Provide a helpful response based on the documents found. If no
+                    relevant documents are found, provide general guidance.
+                  enableRAG: true
+                  model: ${BOOST_MODEL:-}
+                  lifecycleStage: published
+                - id: procurement
+                  name: Procurement
+                  description: Handles questions about competitive bidding, vendor evaluation, procurement ethics, and approval processes
+                  handoffDescription: Handles questions about competitive bidding, vendor evaluation, procurement ethics, transparency, spending limits, and approval processes
+                  instructions: |
+                    You are FantaCo's Procurement specialist. Based on the relevant
+                    documents in the knowledge base, help with the user's procurement
+                    query.
+
+                    FantaCo's procurement policies cover:
+                    - competitive bidding
+                    - vendor evaluation and categorization
+                    - ethics and transparency
+                    - review processes
+                    - spending limits
+
+                    Try to narrow the response to details from the relevant sub-section
+                    of the procurement document when possible.
+
+                    Provide a helpful response based on the documents found. If no
+                    relevant documents are found, provide general guidance.
+                  enableRAG: true
+                  model: ${BOOST_MODEL:-}
+                  lifecycleStage: published
+          providers:
+            ogx:
+              baseUrl: ${BOOST_OGX_URL:-http://localhost:8321}
+              defaultModel: ${BOOST_MODEL:-default}
       readinessProbe:
         failureThreshold: 3
         httpGet:
@@ -526,6 +684,11 @@ backstage:
         # Only for demo purposes: Remove in production
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: "0"
+        # Enable NFS app-next frontend shell (required for pure-NFS plugins like boost)
+        - name: APP_CONFIG_app_packageName
+          value: "app-next"
+        - name: ENABLE_STANDARD_MODULE_FEDERATION
+          value: "true"
       extraEnvVarsSecrets:
         - github-secrets
         - kubernetes-secrets
@@ -555,7 +718,7 @@ backstage:
                   - ReadWriteOnce
                 resources:
                   requests:
-                    storage: 2Gi
+                    storage: 4Gi
         - name: dynamic-plugins
           configMap:
             defaultMode: 420

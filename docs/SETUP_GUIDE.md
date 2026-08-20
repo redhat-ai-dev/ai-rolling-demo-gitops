@@ -121,6 +121,12 @@ export NOTEBOOKS_QUERY_PROVIDER_ID="vllm"
 # from the kserve deployment name or vLLM model path. It takes values similar to VALIDATION_MODEL_NAME.
 export NOTEBOOKS_QUERY_MODEL="llama-31-8b-version1"
 
+# Boost / OGX (AI Catalog agent chat)
+# BOOST_OGX_URL: the URL of the OGX service backing the Boost agent chat.
+export BOOST_OGX_URL="http://ogx-service:8321"
+# BOOST_MODEL: the LLM model name used by Boost agents. Leave empty to use the OGX default.
+export BOOST_MODEL=""
+
 # Postgres secrets
 export LIGHTSPEED_POSTGRES_PASSWORD="your-preffered-lightspeed-psql-password"
 export LIGHTSPEED_POSTGRES_USER="your-preffered-lightspeed-psql-username"
@@ -211,7 +217,7 @@ export K8S_CA_DATA=""
 
 The `setup.sh` script automates the entire setup process by calling focused subscripts in order:
 
-1. [`install-operators.sh`](../scripts/install-operators.sh) — installs the required operators (OpenShift GitOps, OpenShift Pipelines, Node Feature Discovery, NVIDIA GPU) and creates the NFD instance and NVIDIA ClusterPolicy. Skipped for NFD and GPU when `SKIP_RHOAI_SETUP=true`.
+1. [`install-operators.sh`](../scripts/install-operators.sh) — installs the required operators (OpenShift GitOps, OpenShift Pipelines, Node Feature Discovery, NVIDIA GPU) and creates the NFD instance and NVIDIA ClusterPolicy. Skipped for NFD and GPU when `SKIP_GPU_SETUP=true` or `SKIP_RHOAI_SETUP=true`.
 2. [`setup-rhoai.sh`](../scripts/setup-rhoai.sh) — applies the ODH Kubeflow Model Registry kustomize and waits for the setup job to complete.
 3. [`setup-argocd.sh`](../scripts/setup-argocd.sh) — retrieves ArgoCD admin credentials and generates an API token.
 4. [`setup-namespaces.sh`](../scripts/setup-namespaces.sh) — creates the RHDH and LightSpeed Postgres namespaces.
@@ -225,6 +231,7 @@ The `setup.sh` script automates the entire setup process by calling focused subs
 You can skip earlier steps if they have already been completed on your cluster:
 
 - `SKIP_INSTALL_DEPS=true` — skips all operator and instance installation.
+- `SKIP_GPU_SETUP=true` — skips NFD and GPU operator installation. RHOAI setup still runs unless `SKIP_RHOAI_SETUP` is also set.
 - `SKIP_RHOAI_SETUP=true` — skips NFD + GPU operator installation and RHOAI setup. When used alone (as in `make install-no-rhoai`), also disables Model Catalog RBAC in the deployed chart.
 - `RHOAI_PREINSTALLED=true` — used together with `SKIP_RHOAI_SETUP=true`. Skips RHOAI setup but keeps Model Catalog RBAC enabled and connects to an existing RHOAI instance via the `kserve-kubeflow-connector` plugin. This is what `make install-kserve-catalog-bridge-rhoai-handled-separately` sets.
 
@@ -275,6 +282,7 @@ The following variables have built-in defaults and do not need to be set in `pri
 | `GPU_STARTING_CSV`              | `gpu-operator-certified.v25.10.1`         | Starting CSV for the NVIDIA GPU operator.                                                                                                                                        |
 | `K8S_SA_TOKEN`                  | auto-resolved                             | Service account token for KServe access. Auto-resolved from the `rhdh-rhoai-bridge-token` secret if left empty. Used by `make install` and `make install-kserve-catalog-bridge-rhoai-handled-separately`. |
 | `K8S_CA_DATA`                   | auto-resolved                             | Base64-encoded CA certificate for the cluster API. Auto-resolved from the `rhdh-rhoai-bridge-token` secret if left empty. Used by `make install` and `make install-kserve-catalog-bridge-rhoai-handled-separately`. |
+| `SKIP_GPU_SETUP`                | `false`                                   | Skip NFD and NVIDIA GPU operator installation. RHOAI setup still runs unless `SKIP_RHOAI_SETUP` is also set. Useful for clusters without GPU nodes that still need RHOAI for non-inference workloads. |
 
 These can be set in `private-env` or passed directly on the command line:
 

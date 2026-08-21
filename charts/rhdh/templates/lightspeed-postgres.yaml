@@ -75,6 +75,8 @@ kind: Job
 metadata:
   name: configure-postgres-db
   namespace: lightspeed-postgres
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   template:
     spec:

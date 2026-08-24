@@ -78,14 +78,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: Replace=true
 spec:
-  manualSelector: true
-  selector:
-    matchLabels:
-      app: postgres
   template:
-    metadata:
-      labels:
-        app: postgres
     spec:
       containers:
       - name: postgres-job

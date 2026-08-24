@@ -5,13 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   rbac-policy.csv: |
-    p, role:default/mcp-admin, catalog.entity.read, read, allow
-    p, role:default/mcp-admin, catalog.entity.create, create, allow
-    p, role:default/mcp-admin, intelligent-assistant.chat.read, read, allow
-    p, role:default/mcp-admin, intelligent-assistant.chat.create, create, allow
-    p, role:default/mcp-admin, intelligent-assistant.chat.update, update, allow
-    p, role:default/mcp-admin, intelligent-assistant.chat.delete, delete, allow
-    p, role:default/mcp-admin, intelligent-assistant.mcp.read, read, allow
     p, role:default/mcp-admin, intelligent-assistant.mcp.manage, update, allow
-    p, role:default/mcp-admin, intelligent-assistant.notebooks.use, update, allow
-    g, user:default/mfaisal, role:default/mcp-admin
+    g, user:default/jcollier, role:default/mcp-admin
+    g, user:default/mvaldron, role:default/mcp-admin
+    g, user:default/lucasyoon, role:default/mcp-admin

@@ -464,9 +464,26 @@ backstage:
           enabled: true
           rbac:
             policies-csv-file: /opt/app-root/src/rbac-policy.csv
+            defaultPermissions:
+              defaultRole: role:default/user
+              basicPermissions:
+                - permission: catalog.entity.read
+                  action: read
+                - permission: intelligent-assistant.chat.read
+                  action: read
+                - permission: intelligent-assistant.chat.create
+                  action: create
+                - permission: intelligent-assistant.chat.update
+                  action: update
+                - permission: intelligent-assistant.chat.delete
+                  action: delete
+                - permission: intelligent-assistant.mcp.read
+                  action: read
             admin:
               users:
-                - name: user:default/mfaisal
+                - name: user:default/jcollier
+                - name: user:default/mvaldron
+                - name: user:default/lucasyoon
         integrations:
           github:
             - apps:

@@ -269,7 +269,10 @@ install_deps() {
 
   # install OpenShift Pipelines Operator if it doesn't exist
   if check_operator_exists "$PIPELINES_OPERATOR_NAMESPACE" "$PIPELINES_OPERATOR_PACKAGE"; then
-    log "OpenShift Pipelines Operator already installed. Skipping."
+    log "OpenShift Pipelines Operator already installed."
+    # Even when the subscription exists, approve any pending upgrade install plans that
+    # may have inherited Manual approval from other operators in the shared namespace
+    approve_pending_install_plan "$PIPELINES_OPERATOR_NAMESPACE" "$PIPELINES_STARTING_CSV"
   else
     log "OpenShift Pipelines Operator not found. Installing..."
     install_cluster_scoped_operator "$PIPELINES_OPERATOR_NAMESPACE" "openshift-pipelines-operator-subscription.yaml" "$PIPELINES_OPERATOR_PACKAGE"

@@ -306,6 +306,10 @@ backstage:
           # Enable experimental features for OIDC auth
           experimentalClientIdMetadataDocuments:
             enabled: true
+          experimentalDynamicClientRegistration:
+            enabled: true
+            allowedRedirectUriPatterns:
+              - '*'
           experimentalRefreshToken:
             enabled: true
           session:
@@ -453,9 +457,16 @@ backstage:
               provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
           mcpServers:
             - name: mcp-integration-tools
-              token: ${MCP_TOKEN}
+              auth: dcr
         mcpActions:
           namespacedToolNames: false
+        permission:
+          enabled: true
+          rbac:
+            policies-csv-file: /opt/app-root/src/rbac-policy.csv
+            admin:
+              users:
+                - name: user:default/mfaisal
         integrations:
           github:
             - apps:
@@ -721,6 +732,9 @@ backstage:
           mountPath: /tmp
         - name: extensions-catalog
           mountPath: /extensions
+        - name: rbac-policy
+          mountPath: /opt/app-root/src/rbac-policy.csv
+          subPath: rbac-policy.csv
       extraVolumes:
         - name: dynamic-plugins-root
           ephemeral:
@@ -746,6 +760,9 @@ backstage:
           emptyDir: {}
         - name: extensions-catalog
           emptyDir: {}
+        - name: rbac-policy
+          configMap:
+            name: "{{ .Release.Name }}-rbac-policy"
         # GCP SA JSON for Vertex AI. Pod volume is Helm-managed; lightspeed-core volumeMount is
         # applied by rolling-demo-sidecars-job until rhdh-chart gains lightspeed.core.extraVolumeMounts
         # (https://github.com/redhat-developer/rhdh-chart/pull/438) — that PostSync patch becomes redundant.

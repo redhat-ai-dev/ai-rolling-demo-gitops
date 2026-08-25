@@ -44,6 +44,9 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=VERTEX_AI_LOCATION="${VERTEX_AI_LOCATION:-global}" \
     --from-literal=VERTEX_AI_CREDENTIALS="${VERTEX_AI_CREDENTIALS:-}" \
     --from-literal=OTEL_SDK_DISABLED="${OTEL_SDK_DISABLED:-true}" \
+    --from-literal=KV_STORE_PATH="${KV_STORE_PATH:-/tmp/kvstore.db}" \
+    --from-literal=SQL_STORE_PATH="${SQL_STORE_PATH:-/tmp/sql_store.db}" \
+    --from-literal=SQLITE_STORE_DIR="${SQLITE_STORE_DIR:-/tmp/llama-stack-files}" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 

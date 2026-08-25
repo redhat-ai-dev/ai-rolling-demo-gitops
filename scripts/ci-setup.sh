@@ -54,6 +54,9 @@ fi
 # New LCORE images require OTEL_ANONYMIZATION_SECRET when OTEL is enabled (RAG path).
 # Disable the SDK in CI instead of provisioning that secret.
 export OTEL_SDK_DISABLED=true
+export KV_STORE_PATH="/tmp/kvstore.db"
+export SQL_STORE_PATH="/tmp/sql_store.db"
+export SQLITE_STORE_DIR="/tmp/llama-stack-files"
 export ENABLE_VALIDATION=__disabled__
 export ENABLE_VLLM="true"
 export VLLM_URL="${VLLM_URL:?VLLM_URL must be set}"
@@ -136,11 +139,12 @@ kubectl exec -n "$LIGHTSPEED_POSTGRES_NAMESPACE" deploy/postgres -- \
 
 # Strip OKP config from lightspeed-stack so LCORE starts without OKP on Kind.
 # The file is a Helm ConfigMap template ({{ .Release.Namespace }}), so yq can't
-# parse it — use sed instead. Removes "- okp" from rag.tool and the okp: block.
+# parse it — use sed instead. Removes "- okp" from rag.retrieval.tool.sources
+# and the nested rag.okp block.
 log "Stripping OKP config from lightspeed-stack-config for CI..."
-sed -i.bak '/^        - okp$/d' \
+sed -i.bak '/^[[:space:]]*- okp$/d' \
   "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml"
-sed -i.bak '/^    okp:$/,/^    [^ ]/{ /^    [^ ]/!d; /^    okp:$/d; }' \
+sed -i.bak '/^      okp:$/,/^      [^ ]/{ /^      [^ ]/!d; /^      okp:$/d; }' \
   "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml"
 rm -f "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml.bak"
 

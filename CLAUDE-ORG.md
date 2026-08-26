@@ -41,7 +41,7 @@ The [`redhat-ai-dev/lightspeed-configs`](https://github.com/redhat-ai-dev/lights
 
 - **Trigger**: Push to `main` in `lightspeed-configs` (on relevant config files) or manual `workflow_dispatch`
 - **What it syncs**: Generates ConfigMap manifests and extracts image versions for `llama-stack`, `lightspeed-core`, and `rag-content`
-- **Artifacts synced**: `lightspeed-stack-config.yaml`, `llama-stack-config.yaml`, `rolling-demo-sidecars-job.yaml`, `rhdh-profile.py`
+- **Artifacts synced**: `lightspeed-stack-config.yaml`, `rolling-demo-sidecars-job.yaml`, `rhdh-profile.py`
 - **How**: Opens a PR against the **`development`** branch of this repo with the updated manifests and image versions
 
 When reviewing PRs that touch Lightspeed or Llama Stack config files, check whether they originated from this automation before editing them manually.

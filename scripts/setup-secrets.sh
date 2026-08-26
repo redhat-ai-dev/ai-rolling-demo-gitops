@@ -191,6 +191,9 @@ if [[ "${IS_SECONDARY_INSTANCE}" != "true" ]]; then
       --from-literal=user="$LIGHTSPEED_POSTGRES_USER" \
       --from-literal=password="$LIGHTSPEED_POSTGRES_PASSWORD" \
       --from-literal=db-name="$LIGHTSPEED_POSTGRES_DB" \
+      --from-literal=dev-db-name="${LIGHTSPEED_POSTGRES_DEV_DB:-}" \
+      --from-literal=dev-user="${LIGHTSPEED_POSTGRES_DEV_USER:-}" \
+      --from-literal=dev-password="${LIGHTSPEED_POSTGRES_DEV_PASSWORD:-}" \
       --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
   log "Secret $SECRET_NAME created successfully."
 fi

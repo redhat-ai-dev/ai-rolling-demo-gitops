@@ -44,6 +44,9 @@ data:
         kv_default:
           type: kv_sqlite
           db_path: /tmp/kvstore.db
+        kv_rag:
+          type: kv_sqlite
+          db_path: /tmp/rag/kv_store.db
         sql_default:
           type: sql_sqlite
           db_path: /tmp/sql_store.db

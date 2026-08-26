@@ -211,6 +211,13 @@ global:
         # without this, embedding model loading fails writing to ~/.cache. Mirrors rhdh-chart.
         - name: HF_HOME
           value: /tmp/hf_cache
+        # Llama Stack KV/SQL stores default to ~/.llama under installDir when unified
+        # synthesis falls back to the byo-llm baseline (read-only root). Redirect into
+        # the writable lightspeed-data emptyDir at /tmp. Mirrors HF_HOME above.
+        - name: KV_STORE_PATH
+          value: /tmp/rag/kv_store.db
+        - name: SQL_STORE_PATH
+          value: /tmp/sql_store.db
         # Points LCORE at the OKP service. The lightspeed-stack-config.yaml is synced
         # from lightspeed-configs (source of truth) with a localhost default, so the
         # cluster-specific OKP URL is injected here instead. Rendered via

@@ -40,7 +40,7 @@ This file provides context about how `ai-rolling-demo-gitops` fits within the br
 The [`redhat-ai-dev/lightspeed-configs`](https://github.com/redhat-ai-dev/lightspeed-configs) repository owns the Lightspeed Stack and Llama Stack configuration files. Its [`sync-gitops.yml`](https://github.com/redhat-ai-dev/lightspeed-configs/blob/main/.github/workflows/sync-gitops.yml) workflow creates a **one-way sync** into this repo:
 
 - **Trigger**: Push to `main` in `lightspeed-configs` (on relevant config files) or manual `workflow_dispatch`
-- **What it syncs**: Generates ConfigMap manifests and extracts image versions for `llama-stack`, `lightspeed-core`, and `rag-content`
+- **What it syncs**: Generates ConfigMap manifests and updates the `lightspeed-core` / `lightspeed-stack` sidecar image in `charts/rhdh/values.yaml`
 - **Artifacts synced**: `lightspeed-stack-config.yaml`, `rolling-demo-sidecars-job.yaml`, `rhdh-profile.py`
 - **How**: Opens a PR against the **`development`** branch of this repo with the updated manifests and image versions
 

@@ -113,7 +113,8 @@ source "$SCRIPTS_DIR/setup-secrets.sh"
 
 # LCORE notebooks provider is remote::pgvector and fails hard if this host is missing.
 # Kind skips the Helm lightspeed-postgres template (global.ci); deploy a slim emptyDir
-# instance so lightspeed-core can start. Hostname must match llama-stack-config default:
+# instance so lightspeed-core can start. Hostname must match the PGVECTOR_HOST default
+# in lightspeed-stack-config.yaml:
 # lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local
 # setup-secrets skips the postgres-ns secret when IS_SECONDARY_INSTANCE=true.
 log "Deploying Kind pgvector Postgres for LCORE..."

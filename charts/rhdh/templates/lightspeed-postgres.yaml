@@ -99,6 +99,24 @@ spec:
             secretKeyRef:
               name: lightspeed-postgres-info
               key: db-name
+        - name: DEV_PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: dev-db-name
+              optional: true
+        - name: DEV_PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: dev-user
+              optional: true
+        - name: DEV_PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: dev-password
+              optional: true
         - name: PGHOST
           value: lightspeed-postgres-svc
         command:
@@ -110,6 +128,35 @@ spec:
             sleep 2
           done
           echo "Postgres is ready, enabling pgvector and creating tables..."
+
+          if [ -n "$DEV_PGDATABASE" ] && [ -n "$DEV_PGUSER" ] && [ -n "$DEV_PGPASSWORD" ]; then
+            if [ "$DEV_PGDATABASE" = "$PGDATABASE" ] || [ "$DEV_PGUSER" = "$PGUSER" ]; then
+              echo "Development database/user must be distinct from the primary Postgres credentials."
+              exit 1
+            fi
+            echo "Ensuring development database and role exist..."
+            # Idempotent: this Job is replaced on every ArgoCD sync (Force=true,Replace=true).
+            # Use psql variables so identifiers/passwords are quoted; CREATE DATABASE cannot
+            # run in a DO block, so existence is checked via SELECT ... \gexec.
+            if ! psql -v ON_ERROR_STOP=1 \
+              --set=dev_db="$DEV_PGDATABASE" \
+              --set=dev_user="$DEV_PGUSER" \
+              --set=dev_password="$DEV_PGPASSWORD" <<'SQL'
+          SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'dev_user', :'dev_password')
+          WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'dev_user')
+          \gexec
+          ALTER ROLE :"dev_user" WITH PASSWORD :'dev_password';
+          SELECT format('CREATE DATABASE %I OWNER %I', :'dev_db', :'dev_user')
+          WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'dev_db')
+          \gexec
+          ALTER DATABASE :"dev_db" OWNER TO :"dev_user";
+          SQL
+            then
+              echo "Failed to configure development database."
+              exit 1
+            fi
+            echo "Development database configured successfully."
+          fi
 
           psql <<EOF
           CREATE EXTENSION IF NOT EXISTS vector;

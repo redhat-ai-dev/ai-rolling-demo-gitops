@@ -226,14 +226,6 @@ global:
         subPath: lightspeed-stack.yaml
         sourceFile: lightspeed-stack.yaml
         optional: false
-      # override llama-stack-config to keep the gpt allowed models customization
-      - name: config
-        create: false
-        nameOverride: "llama-stack-config"
-        mountPath: /app-root/config.yaml
-        subPath: config.yaml
-        sourceFile: config.yaml
-        optional: false
       - name: rhdh-profile
         create: false
         nameOverride: "rhdh-profile"

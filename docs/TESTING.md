@@ -145,6 +145,60 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 | `ROLLING_DEMO_TEST_USERNAME`   | Keycloak username used by E2E tests           |
 | `RHDH_ENVIRONMENT`             | Environment label passed to tests (e.g. `ci`) |
 
+## KServe / KubeFlow connector QE
+
+Playwright coverage for the standalone `kserve-kubeflow-connector` plugin lives in `tests/specs/kserve-connector.spec.ts`. It maps to the QE plan for both the RHOAI (devcluster) path and upstream KServe / KubeFlow Model Catalog on kind.
+
+Install-level checks always run (plugin HTTP API, no leftover sidecar location at `localhost:9090`, Extensions packages). Ingestion checks skip unless the catalog contains `AiModelServerAPI` entities. Set `KSERVE_E2E=true` to fail instead of skip when nothing was ingested.
+
+| Ticket scenario | How it is covered |
+| --- | --- |
+| InferenceService discovery + Model Catalog on RHOAI 3.x+ | Apply RHOAI fixtures, then ingestion tests against `AiModelServerAPI` |
+| Upstream KServe on kind (no RHOAI APIs) | Apply kind fixtures; same ingestion tests |
+| KubeFlow Model Catalog / ModelCard + TechDocs | `rhdh.io/catalog-source` and `rhdh.io/catalog-model` on the IS; entity `backstage.io/techdocs-ref` |
+| No sidecar (`location`, `storage-rest`, `rhoai-normalizer`) | Plugin `/api/kserve-kubeflow-connector/list` plus catalog locations must not mention `localhost:9090` |
+| Spec overrides (`system`, `serverType`, models, default) | `inferenceservice-overrides.yaml` + entity spec/UI assertions |
+| Credentials only via cluster config (no sidecar env vars) | Plugin cluster fields in `kserve-connector-app-config` / `kubernetes.clusterLocatorMethods` in `charts/rhdh/values.yaml` |
+
+### Fixtures
+
+Manifests and helpers are under `tests/fixtures/kserve/`.
+
+```bash
+# RHOAI / OpenShift (MLServer ServingRuntime from registry.redhat.io)
+tests/fixtures/kserve/apply.sh rhoai ggmtest
+
+# Upstream KServe on kind (RawDeployment, no RHOAI runtime image)
+tests/fixtures/kserve/apply.sh kind ggmtest
+
+# Optional: confirm the predictor serves the sklearn-iris V2 API
+tests/fixtures/kserve/test-inference.sh ggmtest
+```
+
+The connector only emits an `AiModelServerAPI` entity after the InferenceService has `status.url` (or `status.address.url`). Wait for Ready, then give the entity provider a short reconcile window before running tests.
+
+Replace `rhdh.io/catalog-source` / `rhdh.io/catalog-model` with IDs that exist in the target KubeFlow Model Catalog when validating live ModelCard → TechDocs import. The checked-in values (`kserve-qe` / `sklearn-iris`) still prove the annotation → `backstage.io/techdocs-ref` mapping.
+
+### Kind cluster (upstream KServe / KubeFlow)
+
+1. Create a kind cluster and install [KServe](https://kserve.github.io/website/latest/get_started/) (RawDeployment is enough for these fixtures).
+2. Optionally install [KubeFlow Model Catalog](https://www.kubeflow.org/docs/components/model-registry/) if you need ModelCard/TechDocs, not just InferenceService discovery.
+3. Point RHDH at that cluster with the same credential mechanism used in production: `kubernetes.clusterLocatorMethods` or the connector's cluster `url` / `serviceAccountToken` / `caData` fields (see `charts/rhdh/templates/kserve-connector-config.yaml`). Do not add sidecar env vars.
+4. Apply the kind fixtures and run:
+
+```bash
+cd tests
+KSERVE_E2E=true npx playwright test specs/kserve-connector.spec.ts
+```
+
+### RHOAI devcluster
+
+1. Use the team RHOAI 3.x+ cluster that already backs the rolling demo / development instance.
+2. Apply the RHOAI fixtures (`apply.sh rhoai`) in a namespace the connector's ServiceAccount can list (`inferenceservices`, `routes`, `serviceaccounts`).
+3. Run the same Playwright file with `KSERVE_E2E=true` against that RHDH `RHDH_BASE_URL`.
+
+Helm Chart vs Operator install without sidecars is validated by the GitOps config on `development` (sidecars job no longer injects `location` / `storage-rest` / `rhoai-normalizer`) plus the in-process plugin API test above.
+
 ## Troubleshooting
 
 - **Test suite fails on first authenticated Lightspeed spec**: If Kind cluster is created successfully but tests fail before the first `/lightspeed` assertions, the likely issue is missing or wrong auth variables used by the Keycloak impersonation flow (`RHDH_ENVIRONMENT`, `ROLLING_DEMO_TEST_USERNAME`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`).

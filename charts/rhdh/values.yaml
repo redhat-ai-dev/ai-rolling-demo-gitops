@@ -701,6 +701,23 @@ backstage:
           value: "app-next"
         - name: ENABLE_STANDARD_MODULE_FEDERATION
           value: "true"
+        # Prefer the Helm-managed SA token. extraEnvVars override envFrom, so an
+        # empty kserve-connector-secrets (or a missing one after this template
+        # ships) cannot keep Backstage from starting.
+        - name: K8S_CLUSTER_URL
+          value: "https://kubernetes.default.svc"
+        - name: K8S_SA_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: rhdh-rhoai-bridge-token
+              key: token
+              optional: true
+        - name: K8S_CA_DATA
+          valueFrom:
+            secretKeyRef:
+              name: rhdh-rhoai-bridge-token
+              key: ca.crt
+              optional: true
       extraEnvVarsSecrets:
         - github-secrets
         - kubernetes-secrets

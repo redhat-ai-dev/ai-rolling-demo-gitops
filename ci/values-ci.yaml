@@ -33,6 +33,13 @@ backstage:
     enabled: false
   upstream:
     backstage:
+      appConfig:
+        permission:
+          enabled: false
+        intelligent-assistant:
+          mcpServers:
+            - name: mcp-integration-tools
+              token: ${MCP_TOKEN}
       # Helm replaces initContainers lists, so install-dynamic-plugins must be
       # restated when adding CI's byok-rag-init override.
       initContainers:

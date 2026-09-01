@@ -108,7 +108,8 @@ jq -e '
     .value.name == "fetch-lightspeed-skills" and
     .value.image == "quay.io/redhat-ai-dev/utils:latest" and
     (.value.args[0] | contains("https://github.com/redhat-developer/rhdh-skills.git")) and
-    (.value.volumeMounts | any(.name == "lightspeed-skills" and .mountPath == "/skills"))
+    (.value.volumeMounts | any(.name == "lightspeed-skills" and .mountPath == "/skills")) and
+    (.value.securityContext | has("runAsNonRoot") | not)
   )
 ' "$TEMP_DIR/patch.json" >/dev/null
 
@@ -181,5 +182,33 @@ jq -e '
     (.value | has("readOnly") | not)
   )
 ' "$TEMP_DIR/patch.json" >/dev/null
+
+cat > "$TEMP_DIR/deployment-without-lightspeed.json" <<'EOF'
+{
+  "spec": {
+    "template": {
+      "spec": {
+        "volumes": [
+          {"name": "lightspeed-data", "emptyDir": {}}
+        ],
+        "initContainers": [],
+        "containers": [
+          {"name": "backstage-backend", "volumeMounts": []}
+        ]
+      }
+    }
+  }
+}
+EOF
+
+PATH="$TEMP_DIR/bin:$PATH" \
+FAKE_DEPLOYMENT="$TEMP_DIR/deployment-without-lightspeed.json" \
+CAPTURE_PATCH="$TEMP_DIR/patch-without-lightspeed.json" \
+bash "$TEMP_DIR/patch-deployment.sh" >/dev/null
+
+jq -e '
+  length == 1 and
+  .[0].value.name == "feedback-harvester"
+' "$TEMP_DIR/patch-without-lightspeed.json" >/dev/null
 
 echo "Skills volume patch test passed."

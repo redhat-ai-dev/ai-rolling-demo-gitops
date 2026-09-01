@@ -46,6 +46,45 @@ spec:
               }
               EOF
 
+              cat > "${TEMP_DIR}/lightspeed-skills-volume.json" <<EOF
+              {
+                "name": "lightspeed-skills",
+                "emptyDir": {}
+              }
+              EOF
+
+              cat > "${TEMP_DIR}/fetch-lightspeed-skills-init.json" <<EOF
+              {
+                "name": "fetch-lightspeed-skills",
+                "image": "quay.io/redhat-ai-dev/utils:latest",
+                "imagePullPolicy": "Always",
+                "command": ["/bin/bash", "-c"],
+                "args": [
+                  "set -euo pipefail; rm -rf /skills/.source; git clone --depth 1 --branch main https://github.com/redhat-developer/rhdh-skills.git /skills/.source; test -d /skills/.source/skills; find /skills -mindepth 1 -maxdepth 1 ! -name .source -exec rm -rf {} +; cp -R /skills/.source/skills/. /skills/; rm -rf /skills/.source"
+                ],
+                "volumeMounts": [
+                  { "name": "lightspeed-skills", "mountPath": "/skills" }
+                ],
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": { "drop": ["ALL"] },
+                  "readOnlyRootFilesystem": true,
+                  "seccompProfile": { "type": "RuntimeDefault" }
+                },
+                "resources": {
+                  "requests": { "cpu": "25m", "memory": "64Mi" },
+                  "limits": { "cpu": "100m", "memory": "128Mi" }
+                }
+              }
+              EOF
+
+              cat > "${TEMP_DIR}/lightspeed-skills-mount.json" <<EOF
+              {
+                "name": "lightspeed-skills",
+                "mountPath": "/app-root/skills"
+              }
+              EOF
+
               # build the file used for patching
               echo "[" > "$PATCH_FILE"
 
@@ -73,14 +112,37 @@ spec:
                 fi
               }
 
-              # Mount VERTEX_AI_CREDENTIALS into lightspeed-core at /app-root/gcp-creds.json.
-              # Volume is declared in values.yaml extraVolumes; chart 6.1.1 has no sidecar.extraVolumeMounts.
-              # Folded into the same post-deploy patch as the sidecars (one rollout).
-              # TODO: remove this op once we upgrade to an rhdh-chart that supports
-              # lightspeed.core.extraVolumeMounts (see https://github.com/redhat-developer/rhdh-chart/pull/438).
               LS_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.containers | map(.name == "lightspeed-core") | index(true)')
               ADD_GCP_MOUNT="false"
-              if [ "$LS_INDEX" != "null" ]; then
+              if [ "$LS_INDEX" = "null" ]; then
+                echo "WARNING: lightspeed-core container not found; skipping skills and gcp-creds mounts"
+              else
+                # Fetch the current RHDH skills into an emptyDir before LCORE starts.
+                SKILLS_VOLUME_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.volumes // [] | map(.name == "lightspeed-skills") | index(true)')
+                if [ "$SKILLS_VOLUME_INDEX" = "null" ]; then
+                  add_patch_operation "add" "/spec/template/spec/volumes/-" "${TEMP_DIR}/lightspeed-skills-volume.json" "false"
+                else
+                  add_patch_operation "replace" "/spec/template/spec/volumes/${SKILLS_VOLUME_INDEX}" "${TEMP_DIR}/lightspeed-skills-volume.json" "false"
+                fi
+
+                SKILLS_INIT_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq '.spec.template.spec.initContainers // [] | map(.name == "fetch-lightspeed-skills") | index(true)')
+                if [ "$SKILLS_INIT_INDEX" = "null" ]; then
+                  add_patch_operation "add" "/spec/template/spec/initContainers/-" "${TEMP_DIR}/fetch-lightspeed-skills-init.json" "false"
+                else
+                  add_patch_operation "replace" "/spec/template/spec/initContainers/${SKILLS_INIT_INDEX}" "${TEMP_DIR}/fetch-lightspeed-skills-init.json" "false"
+                fi
+
+                # Mount the skills and VERTEX_AI_CREDENTIALS volumes into lightspeed-core.
+                # Folded into the same post-deploy patch as the sidecars (one rollout).
+                # TODO: remove these volumeMount ops once we upgrade to an rhdh-chart that supports
+                # lightspeed.core.extraVolumeMounts (see https://github.com/redhat-developer/rhdh-chart/pull/438).
+                SKILLS_MOUNT_INDEX=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq --argjson idx "$LS_INDEX" '.spec.template.spec.containers[$idx].volumeMounts // [] | map(.name == "lightspeed-skills") | index(true)')
+                if [ "$SKILLS_MOUNT_INDEX" = "null" ]; then
+                  add_patch_operation "add" "/spec/template/spec/containers/${LS_INDEX}/volumeMounts/-" "${TEMP_DIR}/lightspeed-skills-mount.json" "false"
+                else
+                  add_patch_operation "replace" "/spec/template/spec/containers/${LS_INDEX}/volumeMounts/${SKILLS_MOUNT_INDEX}" "${TEMP_DIR}/lightspeed-skills-mount.json" "false"
+                fi
+
                 HAS_GCP_MOUNT=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o json | jq --argjson idx "$LS_INDEX" '.spec.template.spec.containers[$idx].volumeMounts // [] | any(.name == "gcp-creds")')
                 if [ "$HAS_GCP_MOUNT" = "false" ]; then
                   ADD_GCP_MOUNT="true"
@@ -95,8 +157,6 @@ spec:
                 else
                   echo "gcp-creds volumeMount already present on lightspeed-core, skipping..."
                 fi
-              else
-                echo "WARNING: lightspeed-core container not found; skipping gcp-creds volumeMount"
               fi
 
               # Feedback Harvester: Add/Replace (last sidecar op unless gcp-creds mount follows)

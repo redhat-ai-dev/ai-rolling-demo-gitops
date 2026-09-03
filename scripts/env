@@ -72,7 +72,7 @@ export KUBEFLOW_MODEL_CATALOG_URL=
 # Boost / OGX secrets (for AI Catalog agent chat)
 # Dev cluster default: https://llamastack-llamastack.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
 export BOOST_OGX_URL=https://llamastack-llamastack.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
-export BOOST_MODEL=
+export BOOST_MODEL=openai/vllm-inference/gpt-4.1
 
 # GPU Setup (NFD + NVIDIA GPU Operator)
 # Set to "true" to skip Node Feature Discovery and NVIDIA GPU operator installation

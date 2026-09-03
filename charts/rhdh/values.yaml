@@ -391,7 +391,7 @@ backstage:
               type: url
               rules:
                 - allow: [Component, Location, Template]
-            - target: https://github.com/redhat-ai-dev/llama-stack-agentic-sample/blob/ai-rolling-demo-1_10/all.yaml
+            - target: https://github.com/redhat-developer/rhdh-llama-stack-agentic-sample/blob/ai-rolling-demo-1_10/all.yaml
               type: url
               rules:
                 - allow: [Component, Location, Template]

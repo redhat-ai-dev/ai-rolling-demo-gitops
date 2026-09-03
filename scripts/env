@@ -70,7 +70,8 @@ export K8S_CA_DATA=
 export KUBEFLOW_MODEL_CATALOG_URL=
 
 # Boost / OGX secrets (for AI Catalog agent chat)
-export BOOST_OGX_URL=
+# Dev cluster default: https://llamastack-llamastack.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
+export BOOST_OGX_URL=https://llamastack-llamastack.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
 export BOOST_MODEL=
 
 # GPU Setup (NFD + NVIDIA GPU Operator)

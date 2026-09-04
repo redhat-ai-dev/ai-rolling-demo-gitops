@@ -2,8 +2,8 @@ import { expect, type Page } from "@playwright/test";
 
 export type DisplayMode = "Overlay" | "Dock to window" | "Fullscreen";
 
-/** Default chat model for e2e tests (matches CI Kind / rolling-demo available models). */
-export const DEFAULT_CHAT_MODEL = "redhataillama-31-8b-instruct";
+/** Default chat model for e2e tests (CI uses OpenAI gpt-4o-mini). */
+export const DEFAULT_CHAT_MODEL = "gpt-4o-mini";
 
 export function chatModelSelector(page: Page) {
   return page.getByRole("button", { name: "Chatbot selector" });

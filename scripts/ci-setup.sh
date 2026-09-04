@@ -45,10 +45,9 @@ export ARGOCD_HOSTNAME="${ARGOCD_HOSTNAME:-dummy-argocd-hostname}"
 export ARGOCD_API_TOKEN="${ARGOCD_API_TOKEN:-dummy-argocd-token}"
 
 # setup lightspeed required secret values
-if [ -z "${VLLM_URL:-}" ] || [ -z "${VLLM_API_KEY:-}" ] || [ -z "${VALIDATION_PROVIDER:-}" ] || \
-   [ -z "${VALIDATION_MODEL_NAME:-}" ] || [ -z "${LIGHTSPEED_POSTGRES_USER:-}" ] || \
-   [ -z "${LIGHTSPEED_POSTGRES_PASSWORD:-}" ] || [ -z "${LIGHTSPEED_POSTGRES_DB:-}" ] || \
-   [ -z "${NOTEBOOKS_QUERY_PROVIDER_ID:-}" ] || [ -z "${NOTEBOOKS_QUERY_MODEL:-}" ]; then
+if [ -z "${OPENAI_API_KEY:-}" ] || [ -z "${VLLM_URL:-}" ] || [ -z "${VLLM_API_KEY:-}" ] || \
+   [ -z "${LIGHTSPEED_POSTGRES_USER:-}" ] || [ -z "${LIGHTSPEED_POSTGRES_PASSWORD:-}" ] || \
+   [ -z "${LIGHTSPEED_POSTGRES_DB:-}" ]; then
   echo "WARNING: Required secrets are not set. If you are working from a fork, push your branch to the upstream repo and re-open the PR from there. For local runs, see docs/TESTING.md." >&2
 fi
 # New LCORE images require OTEL_ANONYMIZATION_SECRET when OTEL is enabled (RAG path).
@@ -59,15 +58,18 @@ export SQL_STORE_PATH="/tmp/sql_store.db"
 export SQLITE_STORE_DIR="/tmp/llama-stack-files"
 export ENABLE_VALIDATION=__disabled__
 export ENABLE_VLLM="true"
+export ENABLE_OPENAI="true"
+export OPENAI_API_KEY="${OPENAI_API_KEY:?OPENAI_API_KEY must be set}"
 export VLLM_URL="${VLLM_URL:?VLLM_URL must be set}"
 export VLLM_API_KEY="${VLLM_API_KEY:?VLLM_API_KEY must be set}"
-export VALIDATION_PROVIDER="${VALIDATION_PROVIDER:?VALIDATION_PROVIDER must be set}"
-export VALIDATION_MODEL_NAME="${VALIDATION_MODEL_NAME:?VALIDATION_MODEL_NAME must be set}"
+# CI uses OpenAI while the shared vLLM test endpoint is unstable.
+export VALIDATION_PROVIDER="${VALIDATION_PROVIDER:-openai}"
+export VALIDATION_MODEL_NAME="${VALIDATION_MODEL_NAME:-gpt-4o-mini}"
 export LIGHTSPEED_POSTGRES_USER="${LIGHTSPEED_POSTGRES_USER:?LIGHTSPEED_POSTGRES_USER must be set}"
 export LIGHTSPEED_POSTGRES_PASSWORD="${LIGHTSPEED_POSTGRES_PASSWORD:?LIGHTSPEED_POSTGRES_PASSWORD must be set}"
 export LIGHTSPEED_POSTGRES_DB="${LIGHTSPEED_POSTGRES_DB:?LIGHTSPEED_POSTGRES_DB must be set}"
-export NOTEBOOKS_QUERY_PROVIDER_ID="${NOTEBOOKS_QUERY_PROVIDER_ID:?NOTEBOOKS_QUERY_PROVIDER_ID must be set}"
-export NOTEBOOKS_QUERY_MODEL="${NOTEBOOKS_QUERY_MODEL:?NOTEBOOKS_QUERY_MODEL must be set}"
+export NOTEBOOKS_QUERY_PROVIDER_ID="${NOTEBOOKS_QUERY_PROVIDER_ID:-openai}"
+export NOTEBOOKS_QUERY_MODEL="${NOTEBOOKS_QUERY_MODEL:-gpt-4o-mini}"
 
 # we consider this to be a secondary instance. This will skip pipelines-as-code-secret
 # and lightspeed-postgres-info secrets, since their namespaces do not exist on kind

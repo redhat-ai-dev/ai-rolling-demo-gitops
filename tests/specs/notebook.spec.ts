@@ -193,7 +193,7 @@ test.describe("Lightspeed notebooks", () => {
 
     const prompt = `Tell me about ${uploadedFile} in one short sentence.`;
     const notebookInput = page.getByRole("textbox", {
-      name: "Ask about your documents...",
+      name: "Ask about your resources...",
     });
     await expect(notebookInput).toBeEnabled({ timeout: 120_000 });
     await notebookInput.fill(prompt);

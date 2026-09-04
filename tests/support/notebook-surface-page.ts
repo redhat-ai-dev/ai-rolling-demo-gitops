@@ -63,18 +63,18 @@ export class NotebookSurfacePage {
   }
 
   uploadResourceHeading(): Locator {
-    return this.page.getByText("Upload a resource to get started", {
+    return this.page.getByText("Add a resource to get started", {
       exact: true,
     });
   }
 
   uploadResourceActionButton(): Locator {
-    return this.page.getByRole("button", { name: "Upload a resource" });
+    return this.page.getByRole("button", { name: "Add a resource" });
   }
 
   disabledComposerPlaceholder(): Locator {
     return this.chatbotRegion().getByRole("textbox", {
-      name: "Ask about your documents...",
+      name: "Ask about your resources...",
     });
   }
 

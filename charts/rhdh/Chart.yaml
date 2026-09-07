@@ -7,7 +7,7 @@ appVersion: "1.16.0"
 dependencies:
   - name: backstage
     repository: https://redhat-developer.github.io/rhdh-chart/
-    version: "7.0.1"
+    version: "7.0.99"
   # OKP (Offline Knowledge Portal) vendored subchart — see charts/rhdh/charts/okp.
   # Enabled by default; disabled in CI (Kind lacks OpenShift Route CRD + 9GB image).
   - name: okp

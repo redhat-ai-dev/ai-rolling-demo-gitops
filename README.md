@@ -10,7 +10,7 @@ The repository contains the gitops resources required to deploy an instance of t
 The rolling demo combines the following components so far:
 
 - The redhat developer hub chart ([rhdh-chart](https://github.com/redhat-developer/rhdh-chart)), in an attempt to keep the demo up-to-date with the latest changes of RHDH.
-- The [AI software templates](https://github.com/redhat-ai-dev/ai-lab-template), a collection of Software Templates based on AI applications.
+- The [AI software templates](https://github.com/redhat-developer/rhdh-ai-template), a collection of Software Templates based on AI applications.
 - The [Model Catalog Bridge](https://github.com/redhat-ai-dev/model-catalog-bridge) and the [catalog-backend-module-rhdh-ai](https://github.com/redhat-ai-dev/rhdh-plugins/tree/main/workspaces/rhdh-ai/plugins/catalog-backend-module-rhdh-ai) plugin. This mechanism provides a way to facilitate the seamless export of AI model records from Red Hat OpenShift AI and imports them into Red Hat Developer Hub (Backstage) as catalog entities.
 - The [MCP Plugins](https://github.com/redhat-developer/rhdh-plugins/tree/main/workspaces/mcp-integrations), which provides a way for LLMs and AI applications to interact with Developer Hub.
 - `Red Hat Developer Lightspeed` (Developer Lightspeed) is a virtual assistant powered by generative AI that offers in-depth insights into `Red Hat Developer Hub` (RHDH), including its wide range of capabilities.

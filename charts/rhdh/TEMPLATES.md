@@ -1,6 +1,6 @@
 # Templates
 
-Some files in this /templates directory are **auto-generated** from [lightspeed-configs](https://github.com/redhat-ai-dev/lightspeed-configs) and will be overwritten on the next sync. Do not edit them directly.
+Some files in this /templates directory are **auto-generated** from [rhdh-intelligent-assistant-configs](https://github.com/redhat-developer/rhdh-intelligent-assistant-configs) and will be overwritten on the next sync. Do not edit them directly.
 
 ## Auto-generated files
 
@@ -9,4 +9,4 @@ Some files in this /templates directory are **auto-generated** from [lightspeed-
 | `lightspeed-stack-config.yaml` | `lightspeed-core-configs/lightspeed-stack.yaml` | `scripts/generate-gitops-manifests.sh` |
 | `rhdh-profile-config.yaml` | `lightspeed-core-configs/rhdh-profile.py` | `scripts/generate-gitops-manifests.sh` |
 
-To make changes to these files, update the source in [lightspeed-configs](https://github.com/redhat-ai-dev/lightspeed-configs) and the sync workflow will open a PR with the regenerated manifests.
+To make changes to these files, update the source in [rhdh-intelligent-assistant-configs](https://github.com/redhat-developer/rhdh-intelligent-assistant-configs) and the sync workflow will open a PR with the regenerated manifests.

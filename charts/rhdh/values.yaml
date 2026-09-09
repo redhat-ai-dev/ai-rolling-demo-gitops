@@ -173,6 +173,8 @@ global:
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
         disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth-backend-module-oidc-provider:bs_1.52.0__0.4.17
+        disabled: false
 
   clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
   host: ""
@@ -316,7 +318,7 @@ backstage:
                 prompt: auto
                 signIn:
                   resolvers:
-                    - resolver: preferredUsernameMatchingUserEntityName
+                    - resolver: emailMatchingUserEntityProfileEmail
               development:
                 metadataUrl: "${KEYCLOAK_METADATA_URL}"
                 clientId: "${KEYCLOAK_CLIENT_ID}"
@@ -325,7 +327,7 @@ backstage:
                 prompt: auto
                 signIn:
                   resolvers:
-                    - resolver: preferredUsernameMatchingUserEntityName
+                    - resolver: emailMatchingUserEntityProfileEmail
         backend:
           actions:
             pluginSources:

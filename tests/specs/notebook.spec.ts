@@ -76,11 +76,12 @@ test.describe("Lightspeed notebooks", () => {
     await notebooks.clickOpenUploadDocumentModal();
     uploadModal = notebooks.uploadDocumentModal();
     await uploadModal.selectFilesViaBrowsePicker([absolutePath]);
+    await uploadModal.clickAddFilesForStagedCount(1);
 
     const overwriteModal = notebooks.notebookOverwriteConfirmModal();
     await overwriteModal.expectDialogVisible();
     await overwriteModal.expectListedOverwriteFile(fileName);
-    await overwriteModal.clickCancel();
+    await overwriteModal.clickBack();
     await expect(overwriteModal.dialog()).toBeHidden();
     await expect(uploadModal.dialog()).toBeVisible();
     await uploadModal.clickCancel();
@@ -120,9 +121,11 @@ test.describe("Lightspeed notebooks", () => {
     await uploadModal.selectFilesViaBrowsePicker(
       notebookElevenFileStagingPaths(),
     );
-    await expect(uploadModal.dialog().getByRole("alert")).toContainText(
-      `Upload error: Maximum of ${NOTEBOOK_SESSION_MAX_DOCUMENTS} files allowed.`,
-    );
+    await expect(
+      uploadModal.errorAlert(
+        `Upload error: Maximum of ${NOTEBOOK_SESSION_MAX_DOCUMENTS} files allowed.`,
+      ),
+    ).toBeVisible();
     await uploadModal.clickCancel();
   });
 
@@ -133,35 +136,35 @@ test.describe("Lightspeed notebooks", () => {
     await uploadModal.selectFilesViaBrowsePicker([
       notebookUnsupportedTypeFixturePath(),
     ]);
-    await expect(uploadModal.dialog().getByRole("alert")).toContainText(
-      "Upload error: Unsupported file type(s) found. Please upload only supported file types.",
-    );
+    await expect(
+      uploadModal.errorAlert(
+        "Upload error: Unsupported file type(s) found. Please upload only supported file types.",
+      ),
+    ).toBeVisible();
     await uploadModal.clickCancel();
   });
 
   test("grid: close editor, rename, delete", async () => {
     const untitledBefore = await notebooks.untitledNotebookCards().count();
 
+    await notebooks.uploadSingleDefaultDocumentForConversation();
     await notebooks.clickCloseNotebookEditor();
     await notebooks.expectUntitledNotebookCardCount(untitledBefore + 1);
     await expect(notebooks.newestUntitledNotebookCard()).toBeVisible();
 
     await notebooks.expectNotebookListShowsDocumentCountSummaryAndUpdatedToday(
-      0,
+      1,
     );
 
     await notebooks
       .notebookCardOverflowMenuButton(notebooks.newestUntitledNotebookCard())
       .click();
     await notebooks.renameNotebookOverflowMenuItem().click();
+    await notebooks.renameNotebookInline(RENAMED_NOTEBOOK_TITLE);
 
-    const renameModal = notebooks.renameNotebookDialog(
-      NOTEBOOK_UNTITLED_GRID_NAME,
-    );
-    await renameModal.expectDialogVisible();
-    await renameModal.enterNewDisplayedNameAndSubmit(RENAMED_NOTEBOOK_TITLE);
-
-    await expect(page.getByText(RENAMED_NOTEBOOK_TITLE)).toBeVisible();
+    await expect(
+      notebooks.notebookCardByDisplayedName(RENAMED_NOTEBOOK_TITLE),
+    ).toBeVisible();
 
     await notebooks
       .notebookCardOverflowMenuButton(
@@ -179,7 +182,6 @@ test.describe("Lightspeed notebooks", () => {
 
     await notebooks.expectNotebookCardAbsent(RENAMED_NOTEBOOK_TITLE);
     await notebooks.expectUntitledNotebookCardCount(untitledBefore);
-    await expect(page.getByText(RENAMED_NOTEBOOK_TITLE)).toBeHidden();
   });
 
   // Can be unskipped once https://redhat.atlassian.net/browse/RHDHBUGS-3524 is fixed.
@@ -193,7 +195,7 @@ test.describe("Lightspeed notebooks", () => {
 
     const prompt = `Tell me about ${uploadedFile} in one short sentence.`;
     const notebookInput = page.getByRole("textbox", {
-      name: "Ask about your documents...",
+      name: "Ask about your resources...",
     });
     await expect(notebookInput).toBeEnabled({ timeout: 120_000 });
     await notebookInput.fill(prompt);
@@ -216,7 +218,7 @@ test.describe("Lightspeed notebooks", () => {
 
     await verifyFeedbackButtons(page);
     // eslint-disable-next-line playwright/no-wait-for-timeout
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(500);
     await submitFeedback(page, "Good Response");
     await submitFeedback(page, "Bad Response");
     await assertLastBotResponseCopiedToClipboard(page);

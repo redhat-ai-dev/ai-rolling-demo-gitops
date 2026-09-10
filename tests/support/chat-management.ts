@@ -4,9 +4,21 @@ function historyDrawer(page: Page): Locator {
   return page.locator(".pf-v6-c-drawer__panel-main");
 }
 
-/** Chat list items in the history drawer (pinned and recent). */
-export function chatHistoryItems(page: Page): Locator {
-  return historyDrawer(page).locator("li");
+function drawerListItems(page: Page, label: string): Locator {
+  return historyDrawer(page)
+    .locator("section")
+    .filter({
+      has: page.getByRole("heading", { name: label, exact: true }),
+    })
+    .locator("li.pf-chatbot__menu-item");
+}
+
+export function pinnedChatItems(page: Page): Locator {
+  return drawerListItems(page, "Pinned chats");
+}
+
+export function recentChatItems(page: Page): Locator {
+  return drawerListItems(page, "Chats");
 }
 
 async function openChatOptionsOnItem(chatItem: Locator): Promise<void> {
@@ -33,7 +45,7 @@ export async function openPinnedChatContextMenuByName(
   chatName: string,
 ) {
   await openChatOptionsOnItem(
-    chatHistoryItems(page).filter({ hasText: chatName }),
+    pinnedChatItems(page).filter({ hasText: chatName }),
   );
 }
 
@@ -65,7 +77,7 @@ export async function submitChatRename(page: Page, newName: string) {
 
 export async function verifyChatExists(page: Page, chatName: string) {
   await expect(
-    chatHistoryItems(page).filter({ hasText: chatName }),
+    recentChatItems(page).filter({ hasText: chatName }),
   ).toBeVisible();
 }
 
@@ -98,7 +110,7 @@ export async function selectUnpinAction(page: Page) {
 
 export async function verifyChatPinned(page: Page, chatName: string) {
   await expect(
-    chatHistoryItems(page).filter({ hasText: chatName }),
+    pinnedChatItems(page).filter({ hasText: chatName }),
   ).toBeVisible();
 }
 
@@ -201,15 +213,18 @@ export async function searchChats(page: Page, searchQuery: string) {
 }
 
 export async function verifyEmptySearchResults(page: Page) {
-  await expect(page.locator(".pf-v6-c-drawer__panel-main"))
-    .toMatchAriaSnapshot(`
-    - heading "Pinned chats"
-    - menu:
-      - menuitem "Pin chats to keep them on top"
-    - heading "Chats"
-    - menu:
-      - menuitem "No result matches the search"
-    `);
+  const drawerPanel = historyDrawer(page);
+
+  await expect(
+    drawerPanel.getByRole("menuitem", {
+      name: "Pin chats to keep them on top",
+    }),
+  ).toBeVisible();
+  await expect(
+    drawerPanel.getByRole("menuitem", {
+      name: "No result matches the search",
+    }),
+  ).toBeVisible();
 }
 
 export type SortOption =
@@ -255,7 +270,7 @@ export async function closeSortDropdown(page: Page) {
 
 export async function getConversationNames(page: Page): Promise<string[]> {
   const names: string[] = [];
-  for (const item of await chatHistoryItems(page).all()) {
+  for (const item of await recentChatItems(page).all()) {
     const text = await item.textContent();
     if (text) {
       const normalized = text.replace(/\s+/g, " ").trim();

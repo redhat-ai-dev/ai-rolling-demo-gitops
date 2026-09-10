@@ -1,5 +1,10 @@
 global:
   ci: false
+  # RHDH 2.0 no longer bundles local dynamic-plugin wrappers. Use the matching
+  # catalog index, which provides the default plugins as OCI images.
+  catalogIndex:
+    image:
+      tag: "2.0"
   dynamic:
     includes:
       - "dynamic-plugins.default.yaml"
@@ -126,52 +131,52 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs:bs_1.52.0__1.17.7
         disabled: false
 
-      # Disable dist wrappers replaced by OCI images above
-      # (these are enabled by dynamic-plugins.default.yaml and must be explicitly disabled)
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
+      # Disable default catalog plugins replaced by OCI images above.
+      # These are enabled by dynamic-plugins.default.yaml and must be explicitly disabled.
+      - package: ref://red-hat-developer-hub-backstage-plugin-global-header
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
+      - package: ref://backstage-plugin-kubernetes
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
+      - package: ref://backstage-plugin-kubernetes-backend
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
+      - package: ref://backstage-community-plugin-topology
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+      - package: ref://backstage-community-plugin-catalog-backend-module-keycloak
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
+      - package: ref://backstage-plugin-techdocs
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
+      - package: ref://backstage-plugin-techdocs-backend
         disabled: true
       # Disable Scalprum-only frontend plugins that lack NFS support (no mf-manifest.json)
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-dynamic-home-page
+      - package: ref://red-hat-developer-hub-backstage-plugin-homepage
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-quickstart
+      - package: ref://red-hat-developer-hub-backstage-plugin-quickstart
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-analytics-provider-segment
+      - package: ref://backstage-community-plugin-analytics-provider-segment
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-module-addons-contrib
+      - package: ref://backstage-plugin-techdocs-module-addons-contrib
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-adoption-insights
+      - package: ref://red-hat-developer-hub-backstage-plugin-adoption-insights
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights-dynamic
+      - package: ref://red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-extensions
+      - package: ref://red-hat-developer-hub-backstage-plugin-extensions
         disabled: true
 
       # Gitlab Plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-github
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-gitlab-dynamic
+      - package: ref://backstage-plugin-scaffolder-backend-module-gitlab
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-gitlab
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-org-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-gitlab-org
         disabled: true
 
       # Github Plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-org-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-github-org
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
+      - package: ref://backstage-plugin-scaffolder-backend-module-github
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth-backend-module-oidc-provider:bs_1.52.0__0.4.17
         disabled: false

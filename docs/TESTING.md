@@ -44,7 +44,10 @@ export NOTEBOOKS_QUERY_PROVIDER_ID="<provider-id>"
 export NOTEBOOKS_QUERY_MODEL="<model>"
 
 # Boost / OGX (AI Catalog agent chat)
+# URL to OGX (LlamaStack) instance for Boost plugin agent chat
+# Dev cluster default: https://llamastack-llamastack.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
 export BOOST_OGX_URL="<ogx-url>"
+# Optional: model name override for Boost agents (defaults handled by OGX)
 export BOOST_MODEL="<model-name>"
 
 # Lightspeed PostgreSQL
@@ -131,6 +134,8 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 | `LIGHTSPEED_POSTGRES_DB`       | Lightspeed DB name                            |
 | `NOTEBOOKS_QUERY_PROVIDER_ID`  | Notebooks query provider ID                   |
 | `NOTEBOOKS_QUERY_MODEL`        | Notebooks query model                         |
+| `BOOST_OGX_URL`                | OGX (LlamaStack) endpoint URL for Boost agent chat |
+| `BOOST_MODEL`                  | Model name for Boost agents (optional)        |
 | `GH_APP_APP_ID`                | GitHub App ID (maps to `GITHUB_APP_APP_ID`)   |
 | `GH_APP_CLIENT_ID`             | GitHub App client ID                          |
 | `GH_APP_CLIENT_SECRET`         | GitHub App client secret                      |

@@ -463,7 +463,7 @@ backstage:
         mcpActions:
           namespacedToolNames: false
         permission:
-          enabled: true
+          enabled: false
           rbac:
             policies-csv-file: /opt/app-root/src/rbac-policy.csv
             defaultPermissions:

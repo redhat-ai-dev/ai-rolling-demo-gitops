@@ -70,7 +70,7 @@ global:
         disabled: false
 
       # Boost Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.52.0__0.5.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.54.6__0.5.4
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.52.0__0.3.0
         disabled: false

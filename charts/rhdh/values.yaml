@@ -101,7 +101,7 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-search:pr_2563__1.7.0
         disabled: false
       # Home page (NFS / route)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-home:bs_1.52.0__0.9.7
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-home:bs_1.54.6__0.9.9
         disabled: false
       # RHDH Homepage (customized home page with widgets + root redirect)
       # The "recently-visited" and "top-visited" widgets are disabled via app.extensions

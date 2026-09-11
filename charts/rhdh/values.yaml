@@ -34,7 +34,7 @@ global:
         disabled: false
 
       # OAuth2 callback handler (may provide /oauth2/* route for OIDC flow)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.52.0__0.1.9
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.54.6__0.1.11
         disabled: false
 
       ##### Red Hat Plugins #####

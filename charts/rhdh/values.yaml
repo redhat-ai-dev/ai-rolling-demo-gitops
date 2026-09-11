@@ -181,7 +181,7 @@ global:
         disabled: false
       - package: ref://backstage-plugin-scaffolder-backend-module-github
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth-backend-module-oidc-provider:bs_1.52.0__0.4.17
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth-backend-module-oidc-provider:bs_1.54.6__0.4.20
         disabled: false
 
   clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com

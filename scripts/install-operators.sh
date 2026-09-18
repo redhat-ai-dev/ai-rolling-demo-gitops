@@ -36,6 +36,9 @@ POLL_INTERVAL=15
 # TIMEOUT: The maximum time (in seconds) to wait for an operator CSV to reach
 # the Succeeded phase or for custom resources to reach the desired conditions.
 TIMEOUT=900
+# PENDING_INSTALL_PLAN_TIMEOUT: The maximum time (in seconds) to look for an
+# optional Pipelines install plan that requires manual approval.
+PENDING_INSTALL_PLAN_TIMEOUT=60
 
 # ensure_namespace: creates a namespace if it doesn't exist
 ensure_namespace() {
@@ -111,10 +114,10 @@ install_cluster_scoped_operator() {
 approve_pending_install_plan() {
   local namespace="$1"
   local csv="$2"
-  local timeout="${3:-$TIMEOUT}"
+  local timeout="${3:-$PENDING_INSTALL_PLAN_TIMEOUT}"
   local elapsed=0
 
-  log "Looking for pending install plan containing '$csv' in namespace '$namespace'..."
+  log "Looking for pending install plan containing '$csv' in namespace '$namespace' for up to $timeout seconds..."
   while (( elapsed < timeout )); do
     local plan
     plan=$(oc get installplan -n "$namespace" -o json 2>/dev/null \

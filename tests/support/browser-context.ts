@@ -19,6 +19,7 @@ export const E2E_BROWSER_CONTEXT_OPTIONS = {
  */
 export async function createAuthenticatedSession(
   browser: Browser,
+  options?: { onPage?: (page: Page) => void },
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await browser.newContext({
     ...E2E_BROWSER_CONTEXT_OPTIONS,
@@ -28,6 +29,7 @@ export async function createAuthenticatedSession(
     "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
   );
   const page = await context.newPage();
+  options?.onPage?.(page);
   await loginViaKeycloakImpersonation(page, context);
   return { context, page };
 }

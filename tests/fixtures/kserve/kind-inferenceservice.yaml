@@ -1,0 +1,17 @@
+# Upstream KServe InferenceService for kind (no RHOAI ServingRuntime / registry.redhat.io image).
+# Uses RawDeployment so it works on kind clusters without Knative.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: sklearn-iris
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+    rhdh.io/catalog-source: kserve-qe
+    rhdh.io/catalog-model: sklearn-iris
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: sklearn
+      protocolVersion: v2
+      storageUri: "gs://kfserving-examples/models/sklearn/1.0/model"

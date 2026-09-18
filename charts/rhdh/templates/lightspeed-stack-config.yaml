@@ -16,7 +16,7 @@ data:
     llama_stack:
       use_as_library_client: true
       config:
-        baseline: byo-llm
+        baseline: default
         native_override:
           vector_stores:
             annotation_prompt_params:
@@ -160,7 +160,7 @@ data:
             db_path: /tmp/vector_db/custom_docs/faiss_store.db
             score_multiplier: 1.0
       okp:
-        rhokp_url: '${env.OKP_SERVICE_URL:=http://localhost:8080}'
+        rhokp_url: '${env.OKP_SERVICE_URL:=http://{{ .Release.Name }}-lightspeed-okp:8080}'
         offline: true
         chunk_filter_query: 'product:*developer_hub*'
       retrieval:

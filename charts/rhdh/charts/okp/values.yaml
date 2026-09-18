@@ -30,7 +30,7 @@ resources:
     memory: "2Gi"
   limits:
     cpu: "2"
-    memory: "4Gi"
+    memory: "8Gi"
 service:
   # -- OKP Service type.
   type: ClusterIP

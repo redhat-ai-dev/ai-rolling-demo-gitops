@@ -196,15 +196,15 @@ global:
   lightspeed:
     enabled: true
     plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.6__5.1.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.6__5.0.1
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.54.6__5.1.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.54.6__5.0.1
         disabled: false
     secret:
       create: false
       name: "llama-stack-secrets"
     sidecar:
-      image: quay.io/lightspeed-core/lightspeed-stack:dev-20260824-cbd182b
+      image: quay.io/rh-ee-lyoon/lightspeed-stack:pgvector
       args:
         - --synthesized-config-output
         - /tmp/.generated/run.yaml
@@ -218,16 +218,31 @@ global:
           value: /app-root/gcp-creds.json
         # Redirect the HuggingFace/sentence-transformers cache into the writable
         # /tmp emptyDir. Required because the sidecar runs readOnlyRootFilesystem:true;
-        # without this, embedding model loading fails writing to ~/.cache. Mirrors rhdh-chart.
+        # without this, embedding model loading fails writing to ~/.cache. Mirrors upstream.
         - name: HF_HOME
           value: /tmp/hf_cache
-        # Points LCORE at the OKP service. The lightspeed-stack-config.yaml is synced
-        # from lightspeed-configs (source of truth) with a localhost default, so the
-        # cluster-specific OKP URL is injected here instead. Rendered via
-        # common.tplvalues.render (tpl), so the Helm expression resolves; the sync
-        # generator only seds the sidecar image line, leaving this env intact.
-        - name: OKP_SERVICE_URL
-          value: "http://{{ .Release.Name }}-lightspeed-okp-{{ .Release.Namespace }}.{{ .Values.global.clusterRouterBase }}"
+        # Cap torch/OpenMP threads to the CPU limit. The node exposes 4 cores, so
+        # torch would otherwise spawn ~4 embedding threads while the CFS quota only
+        # allows the container's CPU limit worth of runtime, causing heavy throttling
+        # (observed ~89% of scheduler periods throttled) and slow RAG processing.
+        - name: OMP_NUM_THREADS
+          value: "4"
+        - name: TORCH_NUM_THREADS
+          value: "4"
+      # Raise the sidecar CPU + memory ceilings from the chart defaults. Embedding
+      # (sentence-transformers / torch) is CPU-bound and runs in-sidecar; a 1-core
+      # limit throttled it badly. The embedding model (nomic-embed ~440MB) + torch
+      # load lazily on first RAG query, so memory stays at 4Gi.
+      resources:
+        requests:
+          # Keep the request small so the pod schedules on the tight 2-node
+          # cluster; CFS throttling is bounded by the limit (quota), not the
+          # request, so limit=4 alone removes the embedding throttling.
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: "4"
+          memory: 4Gi
     configMaps:
       - name: stack
         create: false
@@ -397,7 +412,7 @@ backstage:
               rules:
                 - allow: [Component, System]
               type: url
-            - target: https://github.com/redhat-developer/rhdh-ai-template/blob/ai-rolling-demo-1_10/all.yaml
+            - target: https://github.com/JslYoon/ai-lab-template/blob/update-all-20260818/all.yaml
               type: url
               rules:
                 - allow: [Component, Location, Template]
@@ -901,4 +916,4 @@ backstage:
       destinationCACertificate: ""
       insecureEdgeTerminationPolicy: "Redirect"
 rhoai:
-  enabled: true
+  enabled: false

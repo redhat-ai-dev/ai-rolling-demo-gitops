@@ -185,19 +185,19 @@ export async function verifyPinnedSectionHidden(page: Page) {
 }
 
 export async function verifyDisablePinnedChatsOption(page: Page) {
-  await expect(
-    page.getByRole("menuitem", {
-      name: "Disable pinned chats Pinned chats are currently enabled",
-    }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Chatbot", { exact: true }))
+    .toMatchAriaSnapshot(`
+    - menu:
+      - menuitem "Disable pinned chats Pinned chats are currently enabled"
+    `);
 }
 
 export async function verifyEnablePinnedChatsOption(page: Page) {
-  await expect(
-    page.getByRole("menuitem", {
-      name: "Enable pinned chats Pinned chats are currently disabled",
-    }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Chatbot", { exact: true }))
+    .toMatchAriaSnapshot(`
+    - menu:
+      - menuitem "Enable pinned chats Pinned chats are currently disabled"
+    `);
 }
 
 export async function selectDisablePinnedChats(page: Page) {

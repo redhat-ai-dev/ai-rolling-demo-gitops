@@ -34,6 +34,9 @@ jobs:
       - name: Test skills volume patch
         run: bash tests/helm/test-skills-volume.sh
 
+      - name: Test operator installation helpers
+        run: bash tests/scripts/test-install-operators.sh
+
       - name: Deploy RHDH on Kind
         env:
           GH_APP_APP_ID: ${{ secrets.GH_APP_APP_ID }}

@@ -27,7 +27,7 @@ rules:
     verbs: ["get", "list", "watch"]
 
   - apiGroups: ["serving.kserve.io"]
-    resources: ["inferenceservices"]
+    resources: ["inferenceservices", "llminferenceservices"]
     verbs: ["get", "list", "watch"]
 
   - apiGroups: ["apps"]

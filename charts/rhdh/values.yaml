@@ -1,5 +1,10 @@
 global:
   ci: false
+  # RHDH 2.0 no longer bundles local dynamic-plugin wrappers. Use the matching
+  # catalog index, which provides the default plugins as OCI images.
+  catalogIndex:
+    image:
+      tag: "2.0"
   dynamic:
     includes:
       - "dynamic-plugins.default.yaml"
@@ -25,11 +30,11 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-defaults:bs_1.52.0__0.0.3
         disabled: false
       # Theme
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-theme:bs_1.52.0__1.0.2
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-theme:bs_1.54.6__1.2.1
         disabled: false
 
       # OAuth2 callback handler (may provide /oauth2/* route for OIDC flow)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.52.0__0.1.9
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.54.6__0.1.11
         disabled: false
 
       ##### Red Hat Plugins #####
@@ -43,22 +48,25 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-argocd:bs_1.49.4__1.8.1
         disabled: false
 
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-search-backend-module-techdocs:bs_1.54.6__0.4.17
+        disabled: false
+
       # MCP Actions plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.52.0__0.1.14
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.54.6__0.2.1
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras:bs_1.49.4__0.2.2
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras:bs_1.49.4__0.2.3
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras:bs_1.54.6__0.2.6
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras:bs_1.49.4__0.4.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras:bs_1.54.6__0.4.4
         disabled: false
 
       # Model Catalog Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.54.6__1.0.2
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.54.6__1.1.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.54.6__0.6.2
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.54.6__0.6.3
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.54.6__0.1.5
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.54.6__0.1.6
         disabled: false
 
       # AI Resource Kind Plugins
@@ -66,13 +74,13 @@ global:
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.54.6__0.4.1
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:bs_1.54.6__0.5.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:bs_1.54.6__0.5.2
         disabled: false
 
       # Boost Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.52.0__0.5.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.54.6__0.6.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.54.6__0.4.2
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.54.6__0.6.0
         disabled: false
 
       # Tekton CI (NFS — no pluginConfig needed)
@@ -93,22 +101,22 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-search:pr_2563__1.7.0
         disabled: false
       # Home page (NFS / route)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-home:bs_1.52.0__0.9.7
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-home:bs_1.54.6__0.9.9
         disabled: false
       # RHDH Homepage (customized home page with widgets + root redirect)
       # The "recently-visited" and "top-visited" widgets are disabled via app.extensions
       # because they require a visits API that the homepage-backend doesn't fully implement.
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.52.0__1.17.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.54.6__1.18.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage-backend:bs_1.52.0__0.4.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage-backend:bs_1.54.6__0.5.0
         disabled: false
 
       # Global Header
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-global-header:bs_1.52.0__2.0.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-global-header:bs_1.54.6__2.0.1
         disabled: false
 
       # Kubernetes
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes-backend:bs_1.52.0__0.21.5
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes-backend:bs_1.54.6__0.21.10
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes:bs_1.52.0__0.12.20
         disabled: false
@@ -121,57 +129,59 @@ global:
         disabled: true
 
       # TechDocs
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs-backend:bs_1.52.0__2.2.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs-backend:bs_1.54.6__2.2.4
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs:bs_1.52.0__1.17.7
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs:bs_1.54.6__1.18.0
         disabled: false
 
-      # Disable dist wrappers replaced by OCI images above
-      # (these are enabled by dynamic-plugins.default.yaml and must be explicitly disabled)
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
+      # Disable default catalog plugins replaced by OCI images above.
+      # These are enabled by dynamic-plugins.default.yaml and must be explicitly disabled.
+      - package: ref://red-hat-developer-hub-backstage-plugin-global-header
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
+      - package: ref://backstage-plugin-kubernetes
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
+      - package: ref://backstage-plugin-kubernetes-backend
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
+      - package: ref://backstage-community-plugin-topology
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+      - package: ref://backstage-community-plugin-catalog-backend-module-keycloak
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
+      - package: ref://backstage-plugin-techdocs
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
+      - package: ref://backstage-plugin-techdocs-backend
         disabled: true
       # Disable Scalprum-only frontend plugins that lack NFS support (no mf-manifest.json)
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-dynamic-home-page
+      - package: ref://red-hat-developer-hub-backstage-plugin-homepage
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-quickstart
+      - package: ref://red-hat-developer-hub-backstage-plugin-quickstart
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-analytics-provider-segment
+      - package: ref://backstage-community-plugin-analytics-provider-segment
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-module-addons-contrib
+      - package: ref://backstage-plugin-techdocs-module-addons-contrib
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-adoption-insights
+      - package: ref://red-hat-developer-hub-backstage-plugin-adoption-insights
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights-dynamic
+      - package: ref://red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights
         disabled: true
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-extensions
+      - package: ref://red-hat-developer-hub-backstage-plugin-extensions
         disabled: true
 
       # Gitlab Plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-github
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-gitlab-dynamic
+      - package: ref://backstage-plugin-scaffolder-backend-module-gitlab
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-gitlab
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-org-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-gitlab-org
         disabled: true
 
       # Github Plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-org-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-github-org
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
+      - package: ref://backstage-plugin-scaffolder-backend-module-github
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth-backend-module-oidc-provider:bs_1.54.6__0.4.20
         disabled: false
 
   clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
@@ -186,9 +196,9 @@ global:
   lightspeed:
     enabled: true
     plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.52.0__3.2.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.6__5.1.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.52.0__3.2.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.54.6__5.1.0
         disabled: false
     secret:
       create: false
@@ -264,7 +274,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "2.0-61"
+        tag: "2.0-84"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -316,7 +326,7 @@ backstage:
                 prompt: auto
                 signIn:
                   resolvers:
-                    - resolver: preferredUsernameMatchingUserEntityName
+                    - resolver: emailMatchingUserEntityProfileEmail
               development:
                 metadataUrl: "${KEYCLOAK_METADATA_URL}"
                 clientId: "${KEYCLOAK_CLIENT_ID}"
@@ -325,7 +335,7 @@ backstage:
                 prompt: auto
                 signIn:
                   resolvers:
-                    - resolver: preferredUsernameMatchingUserEntityName
+                    - resolver: emailMatchingUserEntityProfileEmail
         backend:
           actions:
             pluginSources:
@@ -453,7 +463,7 @@ backstage:
         mcpActions:
           namespacedToolNames: false
         permission:
-          enabled: true
+          enabled: false
           rbac:
             policies-csv-file: /opt/app-root/src/rbac-policy.csv
             defaultPermissions:

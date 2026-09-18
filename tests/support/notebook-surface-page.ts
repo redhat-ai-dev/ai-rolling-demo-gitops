@@ -8,10 +8,11 @@ import { openLightspeed } from "./test-helper";
 import { NotebookAddDocumentModalPage } from "./notebook-add-document-modal";
 import { NotebookDeleteDialogPage } from "./notebook-delete-dialog";
 import { NotebookOverwriteConfirmModalPage } from "./notebook-overwrite-confirm-modal";
-import { RenameNotebookModalPage } from "./notebook-rename-modal";
 import { selectDisplayMode } from "./lightspeed-page";
 
 export { NOTEBOOK_UNTITLED_GRID_NAME };
+
+const INLINE_RENAME_TOOLTIP = "Click to rename";
 
 export class NotebookSurfacePage {
   constructor(private readonly page: Page) {}
@@ -63,18 +64,18 @@ export class NotebookSurfacePage {
   }
 
   uploadResourceHeading(): Locator {
-    return this.page.getByText("Upload a resource to get started", {
+    return this.page.getByText("Add a resource to get started", {
       exact: true,
     });
   }
 
   uploadResourceActionButton(): Locator {
-    return this.page.getByRole("button", { name: "Upload a resource" });
+    return this.page.getByRole("button", { name: "Add a resource" });
   }
 
   disabledComposerPlaceholder(): Locator {
     return this.chatbotRegion().getByRole("textbox", {
-      name: "Ask about your documents...",
+      name: "Ask about your resources...",
     });
   }
 
@@ -91,13 +92,26 @@ export class NotebookSurfacePage {
   }
 
   sidebarAddDocumentButton(): Locator {
-    return this.chatbotRegion()
+    const labeledAdd = this.chatbotRegion()
       .getByRole("button", { name: "Add", exact: true })
-      .first();
+      .filter({ hasText: /^Add$/ });
+    const collapsedStripAdd = this.chatbotRegion()
+      .locator("div")
+      .filter({ has: this.sidebarExpandButton() })
+      .filter({
+        has: this.page.getByRole("button", { name: "Add", exact: true }),
+      })
+      .last()
+      .getByRole("button", { name: "Add", exact: true });
+    return labeledAdd.or(collapsedStripAdd);
   }
 
   async clickOpenUploadDocumentModal(): Promise<void> {
-    await this.sidebarAddDocumentButton().click();
+    await this.uploadResourceActionButton()
+      .or(this.sidebarAddDocumentButton())
+      .first()
+      .click();
+    await expect(this.uploadDocumentModal().dialog()).toBeVisible();
   }
 
   uploadDocumentModal(): NotebookAddDocumentModalPage {
@@ -114,10 +128,17 @@ export class NotebookSurfacePage {
     return new NotebookDeleteDialogPage(this.page, notebookDisplayName);
   }
 
-  renameNotebookDialog(
-    currentDisplayedNotebookName: string,
-  ): RenameNotebookModalPage {
-    return new RenameNotebookModalPage(this.page, currentDisplayedNotebookName);
+  inlineRenameInput(): Locator {
+    return this.chatbotRegion().getByRole("textbox", {
+      name: INLINE_RENAME_TOOLTIP,
+    });
+  }
+
+  async renameNotebookInline(newName: string): Promise<void> {
+    const input = this.inlineRenameInput();
+    await expect(input).toBeVisible();
+    await input.fill(newName);
+    await input.press("Enter");
   }
 
   async expectNewNotebookEditorEmptyStateOnboarding(): Promise<void> {
@@ -131,7 +152,16 @@ export class NotebookSurfacePage {
       ),
     ).toBeVisible();
 
-    await expect(this.disabledComposerPlaceholder()).toBeDisabled();
+    const disabledPrompt = this.disabledComposerPlaceholder();
+    await expect(disabledPrompt).toBeDisabled();
+    // Disabled composer does not receive pointer events; hover the wrapper instead.
+    // eslint-disable-next-line playwright/no-force-option
+    await disabledPrompt.locator("..").hover({ force: true });
+    await expect(
+      this.page.getByRole("tooltip", {
+        name: "Select at least one loaded resource to start chatting",
+      }),
+    ).toBeVisible();
     await expect(this.sidebarCollapseButton()).toBeVisible();
     await expect(this.sidebarAddDocumentButton()).toBeVisible();
   }
@@ -147,12 +177,19 @@ export class NotebookSurfacePage {
   }
 
   firstListedDocumentOverflowMenuToggle(): Locator {
+    return this.chatbotRegion().locator(".doc-kebab").first();
+  }
+
+  private firstDocumentFileName(): Locator {
     return this.chatbotRegion()
-      .getByRole("button", {
-        name: "Delete",
-        exact: true,
-      })
+      .locator("[title]")
+      .filter({ hasText: /.+\..+/ })
       .first();
+  }
+
+  private async hoverDocumentRowAndClickKebab(): Promise<void> {
+    await this.firstDocumentFileName().hover();
+    await this.firstListedDocumentOverflowMenuToggle().click();
   }
 
   documentRowDeleteMenuItem(): Locator {
@@ -176,7 +213,7 @@ export class NotebookSurfacePage {
   }
 
   async deleteFirstListedDocumentFromSidebarOverflowMenu(): Promise<void> {
-    await this.firstListedDocumentOverflowMenuToggle().click();
+    await this.hoverDocumentRowAndClickKebab();
     await this.documentRowDeleteMenuItem().click();
     await expect(this.deleteDocumentConfirmDialog()).toBeVisible();
     await this.deleteDocumentConfirmButton().click();
@@ -190,7 +227,7 @@ export class NotebookSurfacePage {
 
   uploadDocumentProgressbar(): Locator {
     return this.page.getByRole("progressbar", {
-      name: "Uploading document",
+      name: "Uploading resource",
     });
   }
 
@@ -200,19 +237,16 @@ export class NotebookSurfacePage {
     await progressbar
       .waitFor({ state: "visible", timeout: 10_000 })
       .catch(() => {
-        /* upload may complete too quickly */
+        /* no-op */
       });
     await this.expectDocumentFileListedInSidebar(fileName);
-    await expect(progressbar).toBeHidden({ timeout: 60_000 * 5 });
+    await expect(progressbar).toBeHidden({ timeout: 60_000 });
   }
 
   async expectNotebookEditorUploadResourceButtonVisible(
     timeout = 5_000,
   ): Promise<void> {
-    if (await this.uploadResourceActionButton().isVisible({ timeout })) {
-      return;
-    }
-    await expect(this.sidebarAddDocumentButton()).toBeVisible({ timeout });
+    await expect(this.uploadResourceActionButton()).toBeVisible({ timeout });
   }
 
   untitledNotebookCards(): Locator {
@@ -272,10 +306,15 @@ export class NotebookSurfacePage {
   async expectNotebookListShowsDocumentCountSummaryAndUpdatedToday(
     documentCountOnCard = 0,
   ): Promise<void> {
-    await expect(this.chatbotRegion()).toContainText(
-      `${documentCountOnCard} Documents`,
+    const card = this.newestUntitledNotebookCard();
+    const resourceSummary =
+      documentCountOnCard === 1
+        ? `${documentCountOnCard} Resource`
+        : `${documentCountOnCard} Resources`;
+    await expect(card).toContainText(
+      resourceSummary,
     );
-    await expect(this.chatbotRegion()).toContainText("Updated today");
+    await expect(card).toContainText("Updated today");
   }
 
   async uploadSingleDefaultDocumentForConversation(): Promise<string> {

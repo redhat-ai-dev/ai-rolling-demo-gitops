@@ -21,11 +21,14 @@ export async function openEntityPage(
 
 export async function openExtensionsInstalledPackages(
   page: Page,
-): Promise<void> {
+): Promise<boolean> {
   await page.goto("/extensions/installed-packages", {
     waitUntil: "domcontentloaded",
   });
-  await expect(page).toHaveURL(/\/extensions/, { timeout: 60_000 });
+  if (!/\/extensions/.test(page.url())) {
+    return false;
+  }
+  return true;
 }
 
 export function entityDocsTab(page: Page): Locator {

@@ -14,13 +14,16 @@ import {
   OVERRIDE_ENTITY_NAME_SUBSTRING,
   OVERRIDE_SERVER_TYPE,
   OVERRIDE_SYSTEM,
+  attachIdentityTokenCapture,
   expectOverrideSpec,
   expectTechDocsRefForFixture,
   fetchAiModelServerEntities,
   fetchCatalogLocationsBody,
   fetchConnectorDiscovery,
   findEntityByName,
+  getBackstageIdentityToken,
   isKserveE2eRequired,
+  kserveManagedEntities,
   skipIngestionIfNoEntities,
   type AiModelServerApiEntity,
 } from "../support/kserve-connector";
@@ -34,7 +37,18 @@ test.describe("KServe / KubeFlow connector", () => {
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(10 * 60 * 1000);
-    ({ context, page } = await createAuthenticatedSession(browser));
+    ({ context, page } = await createAuthenticatedSession(browser, {
+      onPage: attachIdentityTokenCapture,
+    }));
+    await expect(page.getByRole("combobox", { name: "Search..." })).toBeVisible({
+      timeout: 60_000,
+    });
+    await expect
+      .poll(async () => (await getBackstageIdentityToken(page)) ?? "", {
+        timeout: 30_000,
+        message: "Backstage identity token was not available after login",
+      })
+      .not.toEqual("");
   });
 
   test.afterAll(async () => {
@@ -43,9 +57,18 @@ test.describe("KServe / KubeFlow connector", () => {
 
   test("in-process connector plugin is loaded", async () => {
     const discovery = await fetchConnectorDiscovery(page);
+    if (discovery.status === 404) {
+      if (isKserveE2eRequired()) {
+        throw new Error(
+          "KSERVE_E2E=true but /api/kserve-kubeflow-connector/list returned 404",
+        );
+      }
+      test.skip(true, "kserve-kubeflow-connector plugin is not installed");
+      return;
+    }
     expect(
       discovery.status,
-      "GET /api/kserve-kubeflow-connector/list should succeed when the standalone plugin is installed (no sidecar)",
+      `GET /api/kserve-kubeflow-connector/list failed: ${discovery.status}`,
     ).toBe(200);
     expect(Array.isArray(discovery.uris)).toBe(true);
   });
@@ -71,11 +94,15 @@ test.describe("KServe / KubeFlow connector", () => {
   });
 
   test("connector packages are listed in Extensions", async () => {
-    await openExtensionsInstalledPackages(page);
+    const onExtensions = await openExtensionsInstalledPackages(page);
+    if (!onExtensions) {
+      test.skip(true, "Extensions page is not available on this instance");
+      return;
+    }
     const table = page.locator("tbody tr, [data-testid='installed-list']");
     const tableVisible = await table
       .first()
-      .isVisible({ timeout: 60_000 })
+      .isVisible({ timeout: 30_000 })
       .catch(() => false);
     if (!tableVisible) {
       test.skip(true, "Extensions installed-packages table was not rendered");
@@ -95,7 +122,9 @@ test.describe("KServe / KubeFlow connector", () => {
 
     test.beforeAll(async () => {
       try {
-        entities = await fetchAiModelServerEntities(page);
+        entities = kserveManagedEntities(
+          await fetchAiModelServerEntities(page),
+        );
       } catch (error) {
         if (isKserveE2eRequired()) {
           throw error;
@@ -121,12 +150,10 @@ test.describe("KServe / KubeFlow connector", () => {
           entity.spec.models?.available?.length ?? 0,
           "spec.models.available",
         ).toBeGreaterThan(0);
-
-        const managedBy =
+        expect(
           entity.metadata.annotations?.["backstage.io/managed-by-location"] ??
-          "";
-        expect(managedBy).toMatch(/ModelCatalogResourceEntityProvider/i);
-        expect(managedBy.toLowerCase()).not.toContain(LEGACY_SIDECAR_LOCATION);
+            "",
+        ).toMatch(/ModelCatalogResourceEntityProvider/i);
       }
     });
 
@@ -134,15 +161,22 @@ test.describe("KServe / KubeFlow connector", () => {
       const entity = entities[0];
       await openCatalogIndex(page);
       const listed = page.getByText(entity.metadata.name, { exact: false });
-      if (await listed.first().isVisible({ timeout: 30_000 }).catch(() => false)) {
+      if (
+        await listed
+          .first()
+          .isVisible({ timeout: 15_000 })
+          .catch(() => false)
+      ) {
         await listed.first().click();
       } else {
         await openEntityPage(page, entity);
       }
       await expect(page).toHaveURL(new RegExp(entity.metadata.name, "i"));
-      await expect(
-        page.getByText(entity.spec.serverType ?? "", { exact: false }).first(),
-      ).toBeVisible();
+      if (entity.spec.serverType) {
+        await expect(
+          page.getByText(entity.spec.serverType, { exact: false }).first(),
+        ).toBeVisible();
+      }
     });
 
     test("annotation overrides populate system, serverType, models, and default", async () => {

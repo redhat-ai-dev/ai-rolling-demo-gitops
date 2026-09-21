@@ -166,7 +166,7 @@ CI also runs `tests/helm/test-kserve-connector-no-sidecars.sh` on every PR to ca
 | No sidecar (`location`, `storage-rest`, `rhoai-normalizer`) | Helm unit test + Playwright plugin `/list` + catalog locations + optional live `assert-no-connector-sidecars.sh` |
 | Spec overrides (`system`, `serverType`, models, default) | `inferenceservice-overrides.yaml` + entity spec/UI assertions |
 | Credentials only via cluster config (no sidecar env vars) | `kserve-connector-app-config` / secrets (`K8S_*`, `KUBEFLOW_MODEL_CATALOG_URL`) |
-| `mlserver-serving-runtime.yaml` / IS YAML / `test-inference.sh` | `tests/fixtures/kserve/` (+ kind variants) |
+| `mlserver-serving-runtime.yaml` / IS YAML | `tests/fixtures/kserve/` (+ kind variants) |
 | `OCP-SET-UP-CLIENT-TLS.md` / `extract-ca-*` / `set-ca-env.sh` | `tests/fixtures/kserve/tls/` — feed `K8S_CA_DATA` into `private-env` / secrets |
 
 ### Fixtures
@@ -179,9 +179,6 @@ tests/fixtures/kserve/apply.sh rhoai ggmtest
 
 # Upstream KServe on kind (RawDeployment, no RHOAI runtime image)
 tests/fixtures/kserve/apply.sh kind ggmtest
-
-# Optional: confirm the predictor serves the sklearn-iris V2 API
-tests/fixtures/kserve/test-inference.sh ggmtest
 
 # Optional: live Deployment must not have legacy connector sidecar containers
 tests/fixtures/kserve/assert-no-connector-sidecars.sh rhdhai-development

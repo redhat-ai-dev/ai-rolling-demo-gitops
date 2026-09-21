@@ -19,3 +19,5 @@ jobs:
               with:
                   scandir: "."
                   ignore_paths: "tests"
+                  # Pin a release. The action's default "stable" download returned a non-archive in CI.
+                  version: v0.11.0

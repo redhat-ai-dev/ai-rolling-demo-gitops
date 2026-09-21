@@ -228,6 +228,15 @@ global:
         # generator only seds the sidecar image line, leaving this env intact.
         - name: OKP_SERVICE_URL
           value: "http://{{ .Release.Name }}-lightspeed-okp-{{ .Release.Namespace }}.{{ .Values.global.clusterRouterBase }}"
+      resources:
+        # Small request to schedule on the 2-node cluster; limit bumped to 6Gi
+        # to stop the notebooks embedding sidecar OOMKilling.
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: "6"
+          memory: 6Gi
     configMaps:
       - name: stack
         create: false
@@ -457,6 +466,10 @@ backstage:
             queryDefaults:
               model: ${NOTEBOOKS_QUERY_MODEL}
               provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
+            chunkingStrategy:
+              type: static
+              maxChunkSizeTokens: 1200
+              chunkOverlapTokens: 1 # min honored; 0 coerced to 50 by plugin bug
           mcpServers:
             - name: mcp-integration-tools
               auth: dcr

@@ -71,8 +71,21 @@ export async function verifyRenameChatForm(page: Page) {
 }
 
 export async function submitChatRename(page: Page, newName: string) {
-  await page.getByRole("textbox", { name: "Chat name" }).fill(newName);
-  await page.getByRole("button", { name: "Rename" }).click();
+  const dialog = page.locator("#rename-modal");
+  const input = dialog.getByRole("textbox", { name: "Chat name" });
+  const renameButton = dialog.getByRole("button", { name: "Rename" });
+
+  // The modal copies the current topic into the field when conversations load.
+  // Filling before that lands (or while a refetch resets the field) leaves
+  // Rename disabled, because the button stays off until the value changes.
+  await expect(input).not.toHaveValue("");
+  await expect(async () => {
+    if ((await input.inputValue()) !== newName) {
+      await input.fill(newName);
+    }
+    await expect(renameButton).toBeEnabled({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  await renameButton.click();
 }
 
 export async function verifyChatExists(page: Page, chatName: string) {

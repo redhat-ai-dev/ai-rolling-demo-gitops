@@ -152,18 +152,22 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 
 ## KServe / KubeFlow connector QE
 
-Playwright coverage for the standalone `kserve-kubeflow-connector` plugin lives in `tests/specs/kserve-connector.spec.ts`. It maps to the QE plan for both the RHOAI (devcluster) path and upstream KServe / KubeFlow Model Catalog on kind.
+Playwright coverage for the standalone `kserve-kubeflow-connector` plugin lives in `tests/specs/kserve-connector.spec.ts`. It maps to the original [RHIDP-14261](https://redhat.atlassian.net/browse/RHIDP-14261) description / ACs (and child [RHIDP-17132](https://redhat.atlassian.net/browse/RHIDP-17132)) for both the RHOAI (devcluster) path and upstream KServe / KubeFlow Model Catalog on kind.
 
 Install-level checks always run (plugin HTTP API, no leftover sidecar location at `localhost:9090`, Extensions packages). Ingestion checks skip unless the catalog contains `AiModelServerAPI` entities. Set `KSERVE_E2E=true` to fail instead of skip when nothing was ingested.
 
-| Ticket scenario | How it is covered |
+CI also runs `tests/helm/test-kserve-connector-no-sidecars.sh` on every PR to catch Helm regressions that would reintroduce legacy connector sidecars or drop `caData` wiring.
+
+| Ticket scenario / attachment | How it is covered |
 | --- | --- |
 | InferenceService discovery + Model Catalog on RHOAI 3.x+ | Apply RHOAI fixtures, then ingestion tests against `AiModelServerAPI` |
 | Upstream KServe on kind (no RHOAI APIs) | Apply kind fixtures; same ingestion tests |
 | KubeFlow Model Catalog / ModelCard + TechDocs | `rhdh.io/catalog-source` and `rhdh.io/catalog-model` on the IS; entity `backstage.io/techdocs-ref` |
-| No sidecar (`location`, `storage-rest`, `rhoai-normalizer`) | Plugin `/api/kserve-kubeflow-connector/list` plus catalog locations must not mention `localhost:9090` |
+| No sidecar (`location`, `storage-rest`, `rhoai-normalizer`) | Helm unit test + Playwright plugin `/list` + catalog locations + optional live `assert-no-connector-sidecars.sh` |
 | Spec overrides (`system`, `serverType`, models, default) | `inferenceservice-overrides.yaml` + entity spec/UI assertions |
-| Credentials only via cluster config (no sidecar env vars) | Plugin cluster fields in `kserve-connector-app-config` / `kubernetes.clusterLocatorMethods` in `charts/rhdh/values.yaml` |
+| Credentials only via cluster config (no sidecar env vars) | `kserve-connector-app-config` / secrets (`K8S_*`, `KUBEFLOW_MODEL_CATALOG_URL`) |
+| `mlserver-serving-runtime.yaml` / IS YAML / `test-inference.sh` | `tests/fixtures/kserve/` (+ kind variants) |
+| `OCP-SET-UP-CLIENT-TLS.md` / `extract-ca-*` / `set-ca-env.sh` | `tests/fixtures/kserve/tls/` — feed `K8S_CA_DATA` into `private-env` / secrets |
 
 ### Fixtures
 
@@ -178,6 +182,14 @@ tests/fixtures/kserve/apply.sh kind ggmtest
 
 # Optional: confirm the predictor serves the sklearn-iris V2 API
 tests/fixtures/kserve/test-inference.sh ggmtest
+
+# Optional: live Deployment must not have legacy connector sidecar containers
+tests/fixtures/kserve/assert-no-connector-sidecars.sh rhdhai-development
+
+# Optional: client TLS for non–Let's Encrypt API servers (RHIDP-14261 attachments)
+./tests/fixtures/kserve/tls/extract-ca-from-kubeconfig.sh "$KUBECONFIG" [cluster-name]
+source ./tests/fixtures/kserve/tls/set-ca-env.sh
+# then put K8S_CA_DATA into scripts/private-env and re-run setup-secrets / install
 ```
 
 The connector only emits an `AiModelServerAPI` entity after the InferenceService has `status.url` (or `status.address.url`). Wait for Ready, then give the entity provider a short reconcile window before running tests.
@@ -198,11 +210,10 @@ KSERVE_E2E=true npx playwright test specs/kserve-connector.spec.ts
 
 ### RHOAI devcluster
 
-1. Use the team RHOAI 3.x+ cluster that already backs the rolling demo / development instance.
+1. Use the team RHOAI 3.x+ cluster that already backs the rolling demo / development instance (`make install-kserve-catalog-bridge-rhoai-handled-separately`).
 2. Apply the RHOAI fixtures (`apply.sh rhoai`) in a namespace the connector's ServiceAccount can list (`inferenceservices`, `routes`, `serviceaccounts`).
 3. Run the same Playwright file with `KSERVE_E2E=true` against that RHDH `RHDH_BASE_URL`.
-
-Helm Chart vs Operator install without sidecars is validated by the GitOps config on `development` (sidecars job no longer injects `location` / `storage-rest` / `rhoai-normalizer`) plus the in-process plugin API test above.
+4. Run `assert-no-connector-sidecars.sh` against the Backstage Deployment.
 
 ## Troubleshooting
 

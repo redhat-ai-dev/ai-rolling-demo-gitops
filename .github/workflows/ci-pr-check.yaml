@@ -34,6 +34,9 @@ jobs:
       - name: Test skills volume patch
         run: bash tests/helm/test-skills-volume.sh
 
+      - name: Test KServe connector has no legacy sidecars
+        run: bash tests/helm/test-kserve-connector-no-sidecars.sh
+
       - name: Test operator installation helpers
         run: bash tests/scripts/test-install-operators.sh
 

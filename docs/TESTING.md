@@ -150,6 +150,68 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 | `ROLLING_DEMO_TEST_USERNAME`   | Keycloak username used by E2E tests           |
 | `RHDH_ENVIRONMENT`             | Environment label passed to tests (e.g. `ci`) |
 
+## KServe / KubeFlow connector QE
+
+Playwright coverage for the standalone `kserve-kubeflow-connector` plugin lives in `tests/specs/kserve-connector.spec.ts`. It maps to the original [RHIDP-14261](https://redhat.atlassian.net/browse/RHIDP-14261) description / ACs (and child [RHIDP-17132](https://redhat.atlassian.net/browse/RHIDP-17132)) for both the RHOAI (devcluster) path and upstream KServe / KubeFlow Model Catalog on kind.
+
+Install-level checks always run on Kind CI (plugin HTTP API, no leftover sidecar location at `localhost:9090`). The `cluster fixtures (KSERVE_E2E)` describe block is skipped unless `KSERVE_E2E=true` (Extensions listing + InferenceService ingestion / overrides / TechDocs).
+
+CI also runs `tests/helm/test-kserve-connector-no-sidecars.sh` on every PR to catch Helm regressions that would reintroduce legacy connector sidecars or drop `caData` wiring.
+
+| Ticket scenario / attachment | How it is covered |
+| --- | --- |
+| InferenceService discovery + Model Catalog on RHOAI 3.x+ | Apply RHOAI fixtures, then ingestion tests against `AiModelServerAPI` |
+| Upstream KServe on kind (no RHOAI APIs) | Apply kind fixtures; same ingestion tests |
+| KubeFlow Model Catalog / ModelCard + TechDocs | `rhdh.io/catalog-source` and `rhdh.io/catalog-model` on the IS; entity `backstage.io/techdocs-ref` |
+| No sidecar (`location`, `storage-rest`, `rhoai-normalizer`) | Helm unit test + Playwright plugin `/list` + catalog locations + optional live `assert-no-connector-sidecars.sh` |
+| Spec overrides (`system`, `serverType`, models, default) | `inferenceservice-overrides.yaml` + entity spec/UI assertions |
+| Credentials only via cluster config (no sidecar env vars) | `kserve-connector-app-config` / secrets (`K8S_*`, `KUBEFLOW_MODEL_CATALOG_URL`) |
+| `mlserver-serving-runtime.yaml` / IS YAML | `tests/fixtures/kserve/` (+ kind variants) |
+| `OCP-SET-UP-CLIENT-TLS.md` / `extract-ca-*` / `set-ca-env.sh` | `tests/fixtures/kserve/tls/` — feed `K8S_CA_DATA` into `private-env` / secrets |
+
+### Fixtures
+
+Manifests and helpers are under `tests/fixtures/kserve/`.
+
+```bash
+# RHOAI / OpenShift (MLServer ServingRuntime from registry.redhat.io)
+tests/fixtures/kserve/apply.sh rhoai ggmtest
+
+# Upstream KServe on kind (RawDeployment, no RHOAI runtime image)
+tests/fixtures/kserve/apply.sh kind ggmtest
+
+# Optional: live Deployment must not have legacy connector sidecar containers
+tests/fixtures/kserve/assert-no-connector-sidecars.sh rhdhai-development
+
+# Optional: client TLS for non–Let's Encrypt API servers (RHIDP-14261 attachments)
+./tests/fixtures/kserve/tls/extract-ca-from-kubeconfig.sh "$KUBECONFIG" [cluster-name]
+source ./tests/fixtures/kserve/tls/set-ca-env.sh
+# then put K8S_CA_DATA into scripts/private-env and re-run setup-secrets / install
+```
+
+The connector only emits an `AiModelServerAPI` entity after the InferenceService has `status.url` (or `status.address.url`). Wait for Ready, then give the entity provider a short reconcile window before running tests.
+
+Replace `rhdh.io/catalog-source` / `rhdh.io/catalog-model` with IDs that exist in the target KubeFlow Model Catalog when validating live ModelCard → TechDocs import. The checked-in values (`kserve-qe` / `sklearn-iris`) still prove the annotation → `backstage.io/techdocs-ref` mapping.
+
+### Kind cluster (upstream KServe / KubeFlow)
+
+1. Create a kind cluster and install [KServe](https://kserve.github.io/website/latest/get_started/) (RawDeployment is enough for these fixtures).
+2. Optionally install [KubeFlow Model Catalog](https://www.kubeflow.org/docs/components/model-registry/) if you need ModelCard/TechDocs, not just InferenceService discovery.
+3. Point RHDH at that cluster with the same credential mechanism used in production: `kubernetes.clusterLocatorMethods` or the connector's cluster `url` / `serviceAccountToken` / `caData` fields (see `charts/rhdh/templates/kserve-connector-config.yaml`). Do not add sidecar env vars.
+4. Apply the kind fixtures and run:
+
+```bash
+cd tests
+KSERVE_E2E=true npx playwright test specs/kserve-connector.spec.ts
+```
+
+### RHOAI devcluster
+
+1. Use the team RHOAI 3.x+ cluster that already backs the rolling demo / development instance (`make install-kserve-catalog-bridge-rhoai-handled-separately`).
+2. Apply the RHOAI fixtures (`apply.sh rhoai`) in a namespace the connector's ServiceAccount can list (`inferenceservices`, `routes`, `serviceaccounts`).
+3. Run the same Playwright file with `KSERVE_E2E=true` against that RHDH `RHDH_BASE_URL`.
+4. Run `assert-no-connector-sidecars.sh` against the Backstage Deployment.
+
 ## Troubleshooting
 
 - **Test suite fails on first authenticated Lightspeed spec**: If Kind cluster is created successfully but tests fail before the first `/lightspeed` assertions, the likely issue is missing or wrong auth variables used by the Keycloak impersonation flow (`RHDH_ENVIRONMENT`, `ROLLING_DEMO_TEST_USERNAME`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`).

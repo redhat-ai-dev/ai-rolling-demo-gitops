@@ -4,7 +4,7 @@ global:
   # catalog index, which provides the default plugins as OCI images.
   catalogIndex:
     image:
-      tag: "next"
+      tag: "2.0"
   dynamic:
     includes:
       - "dynamic-plugins.default.yaml"

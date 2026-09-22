@@ -46,13 +46,14 @@ redhat-developer-hub:
           subPath: gcp-creds.json
           readOnly: true
       resources:
-        # Higher limits: sidecar CPU-throttles and OOMKills during notebook embedding.
+        # Small request to schedule on the 2-node cluster; limit bumped to 6Gi
+        # to stop the notebooks embedding sidecar OOMKilling.
         requests:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "2"
-          memory: 4Gi
+          cpu: "6"
+          memory: 6Gi
     config:
       stack:
         existingConfigMap:

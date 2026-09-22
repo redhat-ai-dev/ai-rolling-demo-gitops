@@ -229,14 +229,13 @@ global:
         - name: OKP_SERVICE_URL
           value: "http://{{ .Release.Name }}-lightspeed-okp-{{ .Release.Namespace }}.{{ .Values.global.clusterRouterBase }}"
       resources:
-        # Small request to schedule on the 2-node cluster; limit bumped to 6Gi
-        # to stop the notebooks embedding sidecar OOMKilling.
+        # Higher limits: sidecar CPU-throttles and OOMKills during notebook embedding.
         requests:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "6"
-          memory: 6Gi
+          cpu: "3"
+          memory: 4Gi
     configMaps:
       - name: stack
         create: false

@@ -24,7 +24,6 @@ import {
   getBackstageIdentityToken,
   isKserveE2eRequired,
   kserveManagedEntities,
-  skipIngestionIfNoEntities,
   type AiModelServerApiEntity,
 } from "../support/kserve-connector";
 
@@ -33,7 +32,6 @@ test.describe("KServe / KubeFlow connector", () => {
 
   let context: BrowserContext;
   let page: Page;
-  let entities: AiModelServerApiEntity[] = [];
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(10 * 60 * 1000);
@@ -55,84 +53,62 @@ test.describe("KServe / KubeFlow connector", () => {
     await context?.close();
   });
 
-  test("in-process connector plugin is loaded", async () => {
-    const discovery = await fetchConnectorDiscovery(page);
-    if (discovery.status === 404) {
-      if (isKserveE2eRequired()) {
-        throw new Error(
-          "KSERVE_E2E=true but /api/kserve-kubeflow-connector/list returned 404",
-        );
+  // Always runs on Kind CI — no InferenceServices required.
+  test.describe("install checks", () => {
+    test("in-process connector plugin is loaded", async () => {
+      const discovery = await fetchConnectorDiscovery(page);
+      expect(
+        discovery.status,
+        `GET /api/kserve-kubeflow-connector/list failed: ${discovery.status}`,
+      ).toBe(200);
+      expect(Array.isArray(discovery.uris)).toBe(true);
+    });
+
+    test("catalog has no leftover sidecar location on localhost:9090", async () => {
+      const body = await fetchCatalogLocationsBody(page);
+      expect(body).not.toContain(LEGACY_SIDECAR_LOCATION);
+      for (const sidecar of LEGACY_SIDECAR_NAMES) {
+        expect(body.toLowerCase()).not.toContain(sidecar);
       }
-      test.skip(true, "kserve-kubeflow-connector plugin is not installed");
-      return;
-    }
-    expect(
-      discovery.status,
-      `GET /api/kserve-kubeflow-connector/list failed: ${discovery.status}`,
-    ).toBe(200);
-    expect(Array.isArray(discovery.uris)).toBe(true);
+    });
   });
 
-  test("catalog has no leftover sidecar location on localhost:9090", async () => {
-    let body: string;
-    try {
-      body = await fetchCatalogLocationsBody(page);
-    } catch (error) {
-      if (isKserveE2eRequired()) {
-        throw error;
-      }
-      test.skip(
-        true,
-        `Catalog locations API unavailable: ${String(error)}`,
-      );
-      return;
-    }
-    expect(body).not.toContain(LEGACY_SIDECAR_LOCATION);
-    for (const sidecar of LEGACY_SIDECAR_NAMES) {
-      expect(body.toLowerCase()).not.toContain(sidecar);
-    }
-  });
+  // Cluster / fixture coverage — skipped unless KSERVE_E2E=true.
+  test.describe("cluster fixtures (KSERVE_E2E)", () => {
+    test.skip(
+      !isKserveE2eRequired(),
+      "Set KSERVE_E2E=true after applying tests/fixtures/kserve (see docs/TESTING.md)",
+    );
 
-  test("connector packages are listed in Extensions", async () => {
-    const onExtensions = await openExtensionsInstalledPackages(page);
-    if (!onExtensions) {
-      test.skip(true, "Extensions page is not available on this instance");
-      return;
-    }
-    const table = page.locator("tbody tr, [data-testid='installed-list']");
-    const tableVisible = await table
-      .first()
-      .isVisible({ timeout: 30_000 })
-      .catch(() => false);
-    if (!tableVisible) {
-      test.skip(true, "Extensions installed-packages table was not rendered");
-      return;
-    }
-
-    for (const pkg of CONNECTOR_PACKAGE_SUBSTRINGS) {
-      await expect(
-        page.getByText(pkg, { exact: false }).first(),
-        `Installed packages should include ${pkg}`,
-      ).toBeVisible();
-    }
-  });
-
-  test.describe("entity provider ingestion", () => {
     test.describe.configure({ mode: "serial" });
 
+    let entities: AiModelServerApiEntity[] = [];
+
     test.beforeAll(async () => {
-      try {
-        entities = kserveManagedEntities(
-          await fetchAiModelServerEntities(page),
+      entities = kserveManagedEntities(await fetchAiModelServerEntities(page));
+      if (entities.length === 0) {
+        throw new Error(
+          "KSERVE_E2E=true but no kserve-managed AiModelServerAPI entities were found. " +
+            "Apply tests/fixtures/kserve and wait for status.url.",
         );
-      } catch (error) {
-        if (isKserveE2eRequired()) {
-          throw error;
-        }
-        test.skip(true, `Catalog API unavailable: ${String(error)}`);
-        return;
       }
-      skipIngestionIfNoEntities(entities);
+    });
+
+    test("connector packages are listed in Extensions", async () => {
+      const onExtensions = await openExtensionsInstalledPackages(page);
+      expect(
+        onExtensions,
+        "Extensions page should be available when KSERVE_E2E=true",
+      ).toBe(true);
+      const table = page.locator("tbody tr, [data-testid='installed-list']");
+      await expect(table.first()).toBeVisible({ timeout: 30_000 });
+
+      for (const pkg of CONNECTOR_PACKAGE_SUBSTRINGS) {
+        await expect(
+          page.getByText(pkg, { exact: false }).first(),
+          `Installed packages should include ${pkg}`,
+        ).toBeVisible();
+      }
     });
 
     test("ingests InferenceServices as AiModelServerAPI entities", async () => {
@@ -184,17 +160,14 @@ test.describe("KServe / KubeFlow connector", () => {
         entities,
         OVERRIDE_ENTITY_NAME_SUBSTRING,
       );
-      if (!override) {
-        test.skip(
-          true,
-          `Apply inferenceservice-overrides.yaml (entity name contains '${OVERRIDE_ENTITY_NAME_SUBSTRING}')`,
-        );
-        return;
-      }
+      expect(
+        override,
+        `Apply inferenceservice-overrides.yaml (entity name contains '${OVERRIDE_ENTITY_NAME_SUBSTRING}')`,
+      ).toBeTruthy();
 
-      expectOverrideSpec(override);
+      expectOverrideSpec(override!);
 
-      await openEntityPage(page, override);
+      await openEntityPage(page, override!);
       await expect(
         page.getByText(OVERRIDE_SYSTEM, { exact: false }),
       ).toBeVisible();
@@ -210,17 +183,14 @@ test.describe("KServe / KubeFlow connector", () => {
       const fixtureEntity =
         findEntityByName(entities, OVERRIDE_ENTITY_NAME_SUBSTRING) ??
         findEntityByName(entities, "sklearn-iris");
-      if (!fixtureEntity) {
-        test.skip(
-          true,
-          "Apply tests/fixtures/kserve InferenceServices with rhdh.io/catalog-source and rhdh.io/catalog-model",
-        );
-        return;
-      }
+      expect(
+        fixtureEntity,
+        "Apply tests/fixtures/kserve InferenceServices with rhdh.io/catalog-source and rhdh.io/catalog-model",
+      ).toBeTruthy();
 
-      expectTechDocsRefForFixture(fixtureEntity);
+      expectTechDocsRefForFixture(fixtureEntity!);
 
-      await openEntityPage(page, fixtureEntity);
+      await openEntityPage(page, fixtureEntity!);
       const docsTab = entityDocsTab(page);
       if (
         await docsTab

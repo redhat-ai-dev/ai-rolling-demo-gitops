@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 export const KSERVE_CONNECTOR_LIST_PATH = "/api/kserve-kubeflow-connector/list";
 
@@ -348,24 +348,6 @@ export function kserveManagedEntities(
 export function entityPagePath(entity: AiModelServerApiEntity): string {
   const namespace = entity.metadata.namespace || "default";
   return `/catalog/${namespace}/aimodelserverapi/${entity.metadata.name}`;
-}
-
-export function skipIngestionIfNoEntities(
-  entities: AiModelServerApiEntity[],
-): void {
-  if (entities.length > 0) {
-    return;
-  }
-  if (isKserveE2eRequired()) {
-    throw new Error(
-      "KSERVE_E2E=true but no kserve-managed AiModelServerAPI entities were found. " +
-        "Apply tests/fixtures/kserve (see docs/TESTING.md) and wait for status.url.",
-    );
-  }
-  test.skip(
-    true,
-    "No kserve-managed AiModelServerAPI entities ingested. Apply tests/fixtures/kserve and set KSERVE_E2E=true to fail when missing.",
-  );
 }
 
 export function expectOverrideSpec(entity: AiModelServerApiEntity): void {

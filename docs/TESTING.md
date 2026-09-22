@@ -154,7 +154,7 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 
 Playwright coverage for the standalone `kserve-kubeflow-connector` plugin lives in `tests/specs/kserve-connector.spec.ts`. It maps to the original [RHIDP-14261](https://redhat.atlassian.net/browse/RHIDP-14261) description / ACs (and child [RHIDP-17132](https://redhat.atlassian.net/browse/RHIDP-17132)) for both the RHOAI (devcluster) path and upstream KServe / KubeFlow Model Catalog on kind.
 
-Install-level checks always run (plugin HTTP API, no leftover sidecar location at `localhost:9090`, Extensions packages). Ingestion checks skip unless the catalog contains `AiModelServerAPI` entities. Set `KSERVE_E2E=true` to fail instead of skip when nothing was ingested.
+Install-level checks always run on Kind CI (plugin HTTP API, no leftover sidecar location at `localhost:9090`). The `cluster fixtures (KSERVE_E2E)` describe block is skipped unless `KSERVE_E2E=true` (Extensions listing + InferenceService ingestion / overrides / TechDocs).
 
 CI also runs `tests/helm/test-kserve-connector-no-sidecars.sh` on every PR to catch Helm regressions that would reintroduce legacy connector sidecars or drop `caData` wiring.
 

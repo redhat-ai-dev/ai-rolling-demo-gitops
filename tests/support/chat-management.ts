@@ -75,12 +75,15 @@ export async function verifyRenameChatForm(page: Page) {
 }
 
 export async function submitChatRename(page: Page, newName: string) {
+  const modal = page.getByLabel("Rename chat?");
   const input = page.getByRole("textbox", { name: "Chat name" });
-  const renameButton = page.getByRole("button", { name: "Rename" });
+  const renameButton = modal.getByRole("button", { name: "Rename" });
 
-  // Conversations can reload into the field after open; keep filling until the
-  // new name sticks and Rename enables (disabled when empty or unchanged).
+  // Conversations can reload into the field after open; clear and refill until
+  // the new name sticks and Rename enables (disabled when empty or unchanged).
   await expect(async () => {
+    await input.click();
+    await input.fill("");
     await input.fill(newName);
     await expect(input).toHaveValue(newName);
     await expect(renameButton).toBeEnabled({ timeout: 2_000 });

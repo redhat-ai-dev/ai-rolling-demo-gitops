@@ -10,12 +10,9 @@ function chatbotRegion(page: Page): Locator {
   return page.getByLabel("Chatbot", { exact: true });
 }
 
+/** History drawer panel (same shell as chat-management / sidebar helpers). */
 function savedPromptsHistoryDrawer(page: Page): Locator {
-  return chatbotRegion(page)
-    .getByRole("dialog")
-    .filter({
-      has: page.getByRole("button", { name: "Close drawer panel" }),
-    });
+  return page.locator(".pf-v6-c-drawer__panel-main");
 }
 
 function savedPromptsMenu(page: Page): Locator {
@@ -28,10 +25,10 @@ export function savedPromptSidebarItem(
   page: Page,
   promptName: string,
 ): Locator {
-  return savedPromptsMenu(page).getByRole("menuitem", {
-    name: promptName,
-    exact: true,
-  });
+  // Items may use aria-label "Options" like chat rows; match on visible title.
+  return savedPromptsMenu(page)
+    .locator("li.pf-chatbot__menu-item")
+    .filter({ hasText: promptName });
 }
 
 export async function expectSavedPromptsSidebarEmpty(

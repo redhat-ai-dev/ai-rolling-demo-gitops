@@ -2,8 +2,11 @@ import { expect, type Page } from "@playwright/test";
 
 export type DisplayMode = "Overlay" | "Dock to window" | "Fullscreen";
 
-/** Default chat model for e2e tests (CI uses OpenAI gpt-4o-mini). */
-export const DEFAULT_CHAT_MODEL = "gpt-4o-mini";
+/** Preferred chat model; Kind CI may only list the vLLM model. */
+export const DEFAULT_CHAT_MODEL =
+  process.env.E2E_CHAT_MODEL?.trim() ||
+  process.env.VALIDATION_MODEL_NAME?.trim() ||
+  "gpt-4o-mini";
 
 /** IA `settings.mcp.label` — renamed from "MCP settings" in 5.3.x (saved prompts). */
 export const MCP_SETTINGS_MENU_LABEL = "MCP and Prompt Settings";
@@ -24,15 +27,29 @@ export async function selectChatModel(
     return;
   }
 
-  const menuitem = page.getByRole("menuitem", {
+  const menuItems = page.getByRole("menu").getByRole("menuitem");
+  if ((await menuItems.count()) === 0) {
+    await dropdown.click();
+  }
+  await expect(menuItems.first()).toBeVisible({ timeout: 15_000 });
+
+  const preferred = page.getByRole("menuitem", {
     name: modelName,
     exact: true,
   });
-  if (!(await menuitem.isVisible())) {
-    await dropdown.click();
+  if ((await preferred.count()) > 0) {
+    await preferred.click();
+    await expect(dropdown).toContainText(modelName);
+    return;
   }
-  await menuitem.click();
-  await expect(dropdown).toContainText(modelName);
+
+  // Prefer whatever LCORE listed (e.g. meta-llama on Kind when OpenAI is absent).
+  const fallback = menuItems.first();
+  const selected = ((await fallback.textContent()) ?? "").trim();
+  await fallback.click();
+  if (selected) {
+    await expect(dropdown).toContainText(selected);
+  }
 }
 
 export async function openChatbot(page: Page): Promise<void> {

@@ -150,7 +150,7 @@ global:
         disabled: true
       - package: ref://backstage-plugin-techdocs-backend
         disabled: true
-      # Disable Scalprum-only frontend plugins that lack NFS support (no mf-manifest.json)
+      # Disable Segment Plugin (no segment key setup)
       - package: ref://backstage-community-plugin-analytics-provider-segment
         disabled: true
 

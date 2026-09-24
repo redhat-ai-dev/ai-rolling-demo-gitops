@@ -1,7 +1,7 @@
 global:
   # Disables OpenShift-specific resources (sidecars job, chart lightspeed-postgres).
-  # Kind still gets a slim pgvector Postgres via ci/lightspeed-postgres.yaml (ci-setup.sh)
-  # so LCORE remote::pgvector can start.
+  # Notebooks use the inline faiss vector store (on-disk at /tmp), so CI needs no
+  # pgvector Postgres.
   ci: true
   clusterRouterBase: apps.testing
   lightspeed:

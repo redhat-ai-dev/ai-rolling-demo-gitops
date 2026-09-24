@@ -16,6 +16,7 @@ function savedPromptsHistoryDrawer(page: Page): Locator {
 }
 
 function savedPromptsMenu(page: Page): Locator {
+  // Accessible name includes the settings gear: "Saved prompts Open saved prompts settings".
   return savedPromptsHistoryDrawer(page).getByRole("menu", {
     name: /Saved prompts/,
   });
@@ -25,10 +26,12 @@ export function savedPromptSidebarItem(
   page: Page,
   promptName: string,
 ): Locator {
-  // Items may use aria-label "Options" like chat rows; match on visible title.
-  return savedPromptsMenu(page)
-    .locator("li.pf-chatbot__menu-item")
-    .filter({ hasText: promptName });
+  // Saved-prompt rows are menuitems titled with the prompt name (not
+  // li.pf-chatbot__menu-item / aria-label "Options" like chat rows).
+  return savedPromptsMenu(page).getByRole("menuitem", {
+    name: promptName,
+    exact: true,
+  });
 }
 
 export async function expectSavedPromptsSidebarEmpty(
@@ -46,6 +49,15 @@ export async function expectSavedPromptInSidebar(
   promptName: string,
 ): Promise<void> {
   await expect(savedPromptSidebarItem(page, promptName)).toBeVisible({
+    timeout: 15_000,
+  });
+}
+
+export async function expectSavedPromptHiddenInSidebar(
+  page: Page,
+  promptName: string,
+): Promise<void> {
+  await expect(savedPromptSidebarItem(page, promptName)).toBeHidden({
     timeout: 15_000,
   });
 }

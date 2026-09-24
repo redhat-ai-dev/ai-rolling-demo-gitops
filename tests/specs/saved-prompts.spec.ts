@@ -12,11 +12,10 @@ import {
   applySavedPromptFromSidebar,
   createSavedPrompt,
   deleteSavedPromptFromSettings,
-  expectEmptySavedPromptsSettings,
   expectSavedPromptHiddenInSettings,
+  expectSavedPromptHiddenInSidebar,
   expectSavedPromptInSidebar,
   expectSavedPromptVisibleInSettings,
-  expectSavedPromptsSidebarEmpty,
   openSavedPromptsSettingsTab,
   closeSavedPromptsSettings,
 } from "../support/saved-prompts";
@@ -31,7 +30,8 @@ test.describe("Lightspeed saved prompts", () => {
   let context: BrowserContext;
   let page: Page;
 
-  const promptName = `E2E deploy checklist ${Date.now()}`;
+  // Set in the create test so serial retries get a fresh unique name.
+  let promptName = "";
   const promptContent =
     "List the first three steps for a production Kubernetes rollout.";
 
@@ -50,6 +50,7 @@ test.describe("Lightspeed saved prompts", () => {
   });
 
   test("creates a saved prompt from settings", async () => {
+    promptName = `E2E deploy checklist ${Date.now()}`;
     await openSavedPromptsSettingsTab(page);
     await createSavedPrompt(page, promptName, promptContent);
     await expectSavedPromptVisibleInSettings(page, promptName);
@@ -80,11 +81,11 @@ test.describe("Lightspeed saved prompts", () => {
     await openSavedPromptsSettingsTab(page);
     await deleteSavedPromptFromSettings(page, promptName);
     await expectSavedPromptHiddenInSettings(page, promptName);
-    await expectEmptySavedPromptsSettings(page);
     await closeSavedPromptsSettings(page);
 
+    // Serial retries leave earlier E2E prompts; only assert this run's prompt is gone.
     await openChatHistoryDrawer(page);
-    await expectSavedPromptsSidebarEmpty(page);
+    await expectSavedPromptHiddenInSidebar(page, promptName);
     await closeChatHistoryDrawer(page);
   });
 });

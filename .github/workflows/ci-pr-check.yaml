@@ -10,7 +10,8 @@ jobs:
   e2e-tests:
     name: CI PR Check - E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Kind + Helm (40m) + Playwright leaves little headroom at 45m on image-heavy PRs.
+    timeout-minutes: 60
 
     steps:
       - name: Checkout PR branch

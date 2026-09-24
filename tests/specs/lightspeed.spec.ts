@@ -315,7 +315,9 @@ test.describe.skip("Lightspeed UI", () => {
           .filter({ hasText: scrollPrompt }),
       ).toBeVisible();
 
-      await expect(jumpBottomButton).toBeVisible();
+      // Jump-bottom only appears once the viewport is away from the end; give
+      // the scroll animation and sticky controls time to settle under Kind.
+      await expect(jumpBottomButton).toBeVisible({ timeout: 60_000 });
       await jumpBottomButton.click();
 
       const responseMessage = page

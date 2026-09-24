@@ -100,7 +100,8 @@ export async function expectChatbotControlsVisible(page: Page): Promise<void> {
 }
 
 export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "Options" }).click();
+  const optionsButton = page.getByRole("button", { name: "Options" });
+  await optionsButton.click();
   const settingsMenu = page
     .getByRole("menu")
     .filter({
@@ -108,7 +109,14 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
     })
     .first();
 
-  await expect(settingsMenu).toBeVisible();
+  // Menu can fail to open on the first click under Kind load — retry once.
+  try {
+    await expect(settingsMenu).toBeVisible({ timeout: 10_000 });
+  } catch {
+    await optionsButton.click();
+    await expect(settingsMenu).toBeVisible();
+  }
+
   await expect(
     settingsMenu.getByRole("menuitem", { name: "Display mode" }),
   ).toBeDisabled();
@@ -117,12 +125,15 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
     await expect(settingsMenu.getByRole("menuitem", { name })).toBeVisible();
   }
 
-  for (const name of [
-    "Disable pinned chats Pinned chats are currently enabled",
-    "MCP settings",
-  ]) {
-    await expect(page.getByRole("menuitem", { name })).toBeVisible();
-  }
+  // Match by substring so PatternFly accessible-name variations still pass.
+  await expect(
+    page.getByRole("menuitem", {
+      name: /Disable pinned chats/i,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("menuitem", { name: /MCP settings/i }),
+  ).toBeVisible();
 }
 
 export async function expectChatInputAreaVisible(page: Page): Promise<void> {

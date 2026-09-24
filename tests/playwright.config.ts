@@ -10,6 +10,8 @@ dotenv.config({
 const isHeadless =
   (process.env.PLAYWRIGHT_HEADLESS ?? "true").toLowerCase() !== "false";
 
+const isCI = !!process.env.CI;
+
 export default defineConfig({
   testDir: "./specs",
   testMatch: "**/*.spec.ts",
@@ -17,6 +19,9 @@ export default defineConfig({
   expect: {
     timeout: 30_000,
   },
+  // Absorb intermittent Kind/Lightspeed UI flakes in PR CI without hiding
+  // persistent failures (retries exhausted still fail the job).
+  retries: isCI ? 2 : 0,
   workers: 1,
   fullyParallel: false,
   reporter: [

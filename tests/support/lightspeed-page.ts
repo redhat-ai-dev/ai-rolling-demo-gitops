@@ -120,15 +120,12 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
     await expect(settingsMenu.getByRole("menuitem", { name })).toBeVisible();
   }
 
-  // Substring match tolerates PatternFly accessible-name suffix variations.
-  await expect(
-    page.getByRole("menuitem", {
-      name: /Disable pinned chats/i,
-    }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("menuitem", { name: MCP_SETTINGS_MENU_LABEL }),
-  ).toBeVisible();
+  for (const name of [
+    "Disable pinned chats Pinned chats are currently enabled",
+    MCP_SETTINGS_MENU_LABEL,
+  ]) {
+    await expect(page.getByRole("menuitem", { name })).toBeVisible();
+  }
 }
 
 export async function expectChatInputAreaVisible(page: Page): Promise<void> {

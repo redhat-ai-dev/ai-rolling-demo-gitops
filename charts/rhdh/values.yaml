@@ -153,8 +153,6 @@ global:
       # Disable Scalprum-only frontend plugins that lack NFS support (no mf-manifest.json)
       - package: ref://backstage-community-plugin-analytics-provider-segment
         disabled: true
-      - package: ref://backstage-plugin-techdocs-module-addons-contrib
-        disabled: true
       - package: ref://red-hat-developer-hub-backstage-plugin-adoption-insights
         disabled: true
       - package: ref://red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights

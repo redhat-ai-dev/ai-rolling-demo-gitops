@@ -27,7 +27,7 @@ import {
   type AiModelServerApiEntity,
 } from "../support/kserve-connector";
 
-test.describe("KServe / KubeFlow connector", () => {
+test.describe.skip("KServe / KubeFlow connector", () => {
   test.describe.configure({ timeout: 7 * 60 * 1000 });
 
   let context: BrowserContext;

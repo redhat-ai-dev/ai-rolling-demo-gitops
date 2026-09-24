@@ -136,8 +136,6 @@ global:
 
       # Disable default catalog plugins replaced by OCI images above.
       # These are enabled by dynamic-plugins.default.yaml and must be explicitly disabled.
-      - package: ref://red-hat-developer-hub-backstage-plugin-global-header
-        disabled: true
       - package: ref://backstage-plugin-kubernetes
         disabled: true
       - package: ref://backstage-plugin-kubernetes-backend

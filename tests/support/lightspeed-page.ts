@@ -27,28 +27,29 @@ export async function selectChatModel(
     return;
   }
 
-  const menuItems = page.getByRole("menu").getByRole("menuitem");
-  if ((await menuItems.count()) === 0) {
+  // History drawer empty-states are disabled menuitems; the chatbot selector
+  // menu uses enabled items (names may include vision tooltip suffixes).
+  const enabledModels = page.getByRole("menuitem", { disabled: false });
+  if ((await enabledModels.count()) === 0) {
     await dropdown.click();
   }
-  await expect(menuItems.first()).toBeVisible({ timeout: 15_000 });
+  await expect(enabledModels.first()).toBeVisible({ timeout: 15_000 });
 
   const preferred = page.getByRole("menuitem", {
     name: modelName,
-    exact: true,
+    disabled: false,
   });
   if ((await preferred.count()) > 0) {
-    await preferred.click();
+    await preferred.first().click();
     await expect(dropdown).toContainText(modelName);
     return;
   }
 
-  // Prefer whatever LCORE listed (e.g. meta-llama on Kind when OpenAI is absent).
-  const fallback = menuItems.first();
+  const fallback = enabledModels.first();
   const selected = ((await fallback.textContent()) ?? "").trim();
   await fallback.click();
   if (selected) {
-    await expect(dropdown).toContainText(selected);
+    await expect(dropdown).toContainText(selected.split(/\s+/)[0] ?? selected);
   }
 }
 

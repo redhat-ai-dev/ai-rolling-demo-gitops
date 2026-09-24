@@ -179,7 +179,8 @@ test.describe.skip("Lightspeed UI", () => {
       await expect(dropdown).not.toBeEmpty();
 
       await dropdown.click();
-      const modelItems = page.getByRole("menu").getByRole("menuitem");
+      // Ignore disabled history empty-state menuitems on the Lightspeed page.
+      const modelItems = page.getByRole("menuitem", { disabled: false });
       await expect(modelItems.first()).toBeVisible();
       await expect(modelItems).not.toHaveCount(0);
 

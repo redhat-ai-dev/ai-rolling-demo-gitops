@@ -122,6 +122,7 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
 
   for (const name of [
     "Disable pinned chats Pinned chats are currently enabled",
+    "Enable screen context Screen context sharing is currently disabled",
     MCP_SETTINGS_MENU_LABEL,
   ]) {
     await expect(page.getByRole("menuitem", { name })).toBeVisible();
@@ -136,6 +137,7 @@ export async function expectChatInputAreaVisible(page: Page): Promise<void> {
 
 export async function expectEmptyChatHistory(page: Page): Promise<void> {
   for (const { name, exact } of [
+    { name: "Saved prompts" },
     { name: "Pinned chats" },
     { name: "Chats", exact: true },
   ]) {
@@ -144,7 +146,11 @@ export async function expectEmptyChatHistory(page: Page): Promise<void> {
     ).toBeVisible();
   }
 
-  for (const name of ["Pin chats to keep them on top", "No recent chats"]) {
+  for (const name of [
+    "No saved prompts yet",
+    "Pin chats to keep them on top",
+    "No recent chats",
+  ]) {
     await expect(page.getByRole("menuitem", { name })).toBeVisible();
   }
 }

@@ -28,6 +28,17 @@ export async function assertChatDialogInitialState(page: Page): Promise<void> {
   await expect(
     drawerPanel.getByRole("button", { name: "Sort conversations" }),
   ).toBeVisible();
+  // IA 5.3.x saved prompts group (see rhdh-plugins e2e-tests/utils/sidebar.ts).
+  await expect(
+    drawerPanel.getByRole("heading", {
+      name: /Saved prompts/,
+    }),
+  ).toBeVisible();
+  await expect(
+    drawerPanel
+      .locator(".lightspeed-saved-prompts-group")
+      .getByRole("menuitem", { name: "No saved prompts yet" }),
+  ).toBeDisabled();
   await expect(
     drawerPanel.getByRole("heading", {
       name: "Pinned chats",

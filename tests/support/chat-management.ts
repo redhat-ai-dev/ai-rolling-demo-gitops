@@ -22,7 +22,9 @@ export function recentChatItems(page: Page): Locator {
 }
 
 async function openChatOptionsOnItem(chatItem: Locator): Promise<void> {
-  await chatItem.locator("div").getByLabel("Options").click();
+  // Prefer the history kebab class used by IA 5.3+ (avoids clashing with
+  // header "Options" / saved-prompt action labels).
+  await chatItem.locator(".pf-chatbot__history-actions").click();
 }
 
 /** Opens the context menu on the active conversation in the history drawer. */

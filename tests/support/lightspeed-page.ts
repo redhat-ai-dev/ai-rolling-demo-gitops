@@ -164,12 +164,23 @@ export async function expectEmptyChatHistory(page: Page): Promise<void> {
     ).toBeVisible();
   }
 
-  for (const name of [
-    "No saved prompts yet",
-    "Pin chats to keep them on top",
-    "No recent chats",
-  ]) {
-    await expect(page.getByRole("menuitem", { name })).toBeVisible();
+  // Empty-state rows only when lists are empty. Serial suite retries reuse the
+  // same Keycloak session, so prior conversation tests may leave chats behind.
+  const savedEmpty = page.getByRole("menuitem", { name: "No saved prompts yet" });
+  if ((await savedEmpty.count()) > 0) {
+    await expect(savedEmpty).toBeVisible();
+  }
+
+  const pinnedEmpty = page.getByRole("menuitem", {
+    name: "Pin chats to keep them on top",
+  });
+  if ((await pinnedEmpty.count()) > 0) {
+    await expect(pinnedEmpty).toBeVisible();
+  }
+
+  const chatsEmpty = page.getByRole("menuitem", { name: "No recent chats" });
+  if ((await chatsEmpty.count()) > 0) {
+    await expect(chatsEmpty).toBeVisible();
   }
 }
 

@@ -351,7 +351,7 @@ test.describe.skip("Lightspeed UI", () => {
       await verifyChatExists(page, secondChatName);
 
       const sidePanel = page.locator(".pf-v6-c-drawer__panel-main");
-      const chats = sidePanel.locator("li.pf-chatbot__menu-item");
+      const chats = sidePanel.locator(".pf-chatbot__menu-item");
       const searchBox = sidePanel.getByRole("textbox", { name: "Search" });
       const alphaChat = chats.filter({ hasText: firstChatName }).first();
       const betaChat = chats.filter({ hasText: secondChatName }).first();

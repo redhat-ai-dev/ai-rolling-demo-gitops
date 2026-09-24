@@ -4,13 +4,14 @@ function historyDrawer(page: Page): Locator {
   return page.locator(".pf-v6-c-drawer__panel-main");
 }
 
+/** IA 5.3+ history groups are role=menu (not section+heading wrappers). */
+function drawerMenu(page: Page, label: string): Locator {
+  return historyDrawer(page).getByRole("menu", { name: label, exact: true });
+}
+
 function drawerListItems(page: Page, label: string): Locator {
-  return historyDrawer(page)
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", { name: label, exact: true }),
-    })
-    .locator("li.pf-chatbot__menu-item");
+  // Prefer li when present; IA 5.3 may also put pf-chatbot__menu-item on the button.
+  return drawerMenu(page, label).locator(".pf-chatbot__menu-item");
 }
 
 export function pinnedChatItems(page: Page): Locator {
@@ -30,14 +31,14 @@ async function openChatOptionsOnItem(chatItem: Locator): Promise<void> {
 /** Opens the context menu on the active conversation in the history drawer. */
 export async function openActiveChatContextMenu(page: Page): Promise<void> {
   await openChatOptionsOnItem(
-    historyDrawer(page).locator("li.pf-chatbot__menu-item--active"),
+    historyDrawer(page).locator(".pf-chatbot__menu-item--active"),
   );
 }
 
 export async function openChatContextMenuByName(page: Page, chatName: string) {
   await openChatOptionsOnItem(
     historyDrawer(page)
-      .locator("li.pf-chatbot__menu-item")
+      .locator(".pf-chatbot__menu-item")
       .filter({ hasText: chatName }),
   );
 }
@@ -170,7 +171,7 @@ export async function confirmChatDeletion(page: Page, chatName: string) {
 export async function verifyChatDeleted(page: Page, chatName: string) {
   await expect(
     historyDrawer(page)
-      .locator("li.pf-chatbot__menu-item")
+      .locator(".pf-chatbot__menu-item")
       .filter({ hasText: chatName }),
   ).toBeHidden();
 }

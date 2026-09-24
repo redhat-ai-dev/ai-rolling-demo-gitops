@@ -159,12 +159,7 @@ data:
             vector_db_id: vs_727b6321-1ff4-47bf-a76b-1cc12426c954
             db_path: /tmp/vector_db/custom_docs/faiss_store.db
             score_multiplier: 1.0
-      okp:
-        rhokp_url: '${env.OKP_SERVICE_URL:=http://localhost:8080}'
-        offline: true
-        chunk_filter_query: 'product:*developer_hub*'
       retrieval:
         tool:
           sources:
-            - okp
             - custom-org-docs

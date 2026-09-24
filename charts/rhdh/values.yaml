@@ -274,7 +274,7 @@ backstage:
       image:
         registry: quay.io
         repository: rhdh/rhdh-hub-rhel9
-        tag: "2.0-84"
+        tag: "2.0-90"
         pullSecrets:
           - quay-pull-secret
       command: []
@@ -726,11 +726,6 @@ backstage:
         # Only for demo purposes: Remove in production
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: "0"
-        # Enable NFS app-next frontend shell (required for pure-NFS plugins like boost)
-        - name: APP_CONFIG_app_packageName
-          value: "app-next"
-        - name: ENABLE_STANDARD_MODULE_FEDERATION
-          value: "true"
       extraEnvVarsSecrets:
         - github-secrets
         - kubernetes-secrets

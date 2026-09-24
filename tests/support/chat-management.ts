@@ -10,8 +10,9 @@ function drawerMenu(page: Page, label: string): Locator {
 }
 
 function drawerListItems(page: Page, label: string): Locator {
-  // Prefer li when present; IA 5.3 may also put pf-chatbot__menu-item on the button.
-  return drawerMenu(page, label).locator(".pf-chatbot__menu-item");
+  // Both li and nested button carry pf-chatbot__menu-item; prefer li to avoid
+  // Playwright strict-mode duplicates.
+  return drawerMenu(page, label).locator("li.pf-chatbot__menu-item");
 }
 
 export function pinnedChatItems(page: Page): Locator {
@@ -31,14 +32,14 @@ async function openChatOptionsOnItem(chatItem: Locator): Promise<void> {
 /** Opens the context menu on the active conversation in the history drawer. */
 export async function openActiveChatContextMenu(page: Page): Promise<void> {
   await openChatOptionsOnItem(
-    historyDrawer(page).locator(".pf-chatbot__menu-item--active"),
+    historyDrawer(page).locator("li.pf-chatbot__menu-item--active"),
   );
 }
 
 export async function openChatContextMenuByName(page: Page, chatName: string) {
   await openChatOptionsOnItem(
     historyDrawer(page)
-      .locator(".pf-chatbot__menu-item")
+      .locator("li.pf-chatbot__menu-item")
       .filter({ hasText: chatName }),
   );
 }
@@ -171,7 +172,7 @@ export async function confirmChatDeletion(page: Page, chatName: string) {
 export async function verifyChatDeleted(page: Page, chatName: string) {
   await expect(
     historyDrawer(page)
-      .locator(".pf-chatbot__menu-item")
+      .locator("li.pf-chatbot__menu-item")
       .filter({ hasText: chatName }),
   ).toBeHidden();
 }

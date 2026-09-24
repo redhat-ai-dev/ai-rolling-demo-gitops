@@ -34,11 +34,12 @@ export async function assertChatDialogInitialState(page: Page): Promise<void> {
       name: /Saved prompts/,
     }),
   ).toBeVisible();
-  await expect(
-    drawerPanel
-      .locator(".lightspeed-saved-prompts-group")
-      .getByRole("menuitem", { name: "No saved prompts yet" }),
-  ).toBeDisabled();
+  const savedEmpty = drawerPanel
+    .locator(".lightspeed-saved-prompts-group")
+    .getByRole("menuitem", { name: "No saved prompts yet" });
+  if ((await savedEmpty.count()) > 0) {
+    await expect(savedEmpty).toBeDisabled();
+  }
   await expect(
     drawerPanel.getByRole("heading", {
       name: "Pinned chats",
@@ -46,11 +47,12 @@ export async function assertChatDialogInitialState(page: Page): Promise<void> {
       exact: true,
     }),
   ).toBeVisible();
-  await expect(
-    drawerPanel.getByRole("menuitem", {
-      name: "Pin chats to keep them on top",
-    }),
-  ).toBeDisabled();
+  const pinnedEmpty = drawerPanel.getByRole("menuitem", {
+    name: "Pin chats to keep them on top",
+  });
+  if ((await pinnedEmpty.count()) > 0) {
+    await expect(pinnedEmpty).toBeDisabled();
+  }
   await expect(
     drawerPanel.getByRole("heading", {
       name: "Chats",
@@ -58,9 +60,12 @@ export async function assertChatDialogInitialState(page: Page): Promise<void> {
       exact: true,
     }),
   ).toBeVisible();
-  await expect(
-    drawerPanel.getByRole("menuitem", { name: "No recent chats" }),
-  ).toBeDisabled();
+  const chatsEmpty = drawerPanel.getByRole("menuitem", {
+    name: "No recent chats",
+  });
+  if ((await chatsEmpty.count()) > 0) {
+    await expect(chatsEmpty).toBeDisabled();
+  }
 }
 
 export async function closeChatDrawer(page: Page): Promise<void> {

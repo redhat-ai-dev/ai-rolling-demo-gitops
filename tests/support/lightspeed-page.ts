@@ -5,6 +5,9 @@ export type DisplayMode = "Overlay" | "Dock to window" | "Fullscreen";
 /** Default chat model for e2e tests (CI uses OpenAI gpt-4o-mini). */
 export const DEFAULT_CHAT_MODEL = "gpt-4o-mini";
 
+/** IA `settings.mcp.label` — renamed from "MCP settings" in 5.3.x (saved prompts). */
+export const MCP_SETTINGS_MENU_LABEL = "MCP and Prompt Settings";
+
 export function chatModelSelector(page: Page) {
   return page.getByRole("button", { name: "Chatbot selector" });
 }
@@ -131,8 +134,10 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
       name: /Disable pinned chats/i,
     }),
   ).toBeVisible();
+  // IA 5.3.x renamed settings.mcp.label → "MCP and Prompt Settings"
+  // (see rhdh-plugins intelligent-assistant e2e LightspeedPage).
   await expect(
-    page.getByRole("menuitem", { name: /MCP settings/i }),
+    page.getByRole("menuitem", { name: MCP_SETTINGS_MENU_LABEL }),
   ).toBeVisible();
 }
 

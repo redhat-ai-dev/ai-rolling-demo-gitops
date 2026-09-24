@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import {
+  MCP_SETTINGS_MENU_LABEL,
   openChatbot,
   selectDisplayMode,
   type DisplayMode,
@@ -16,7 +17,7 @@ function getMcpSettingsTable(page: Page): Locator {
 
 async function openMcpSettings(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Options" }).click();
-  await page.getByRole("menuitem", { name: "MCP settings" }).click();
+  await page.getByRole("menuitem", { name: MCP_SETTINGS_MENU_LABEL }).click();
 }
 
 async function closeMcpSettingsIfOpen(page: Page): Promise<void> {

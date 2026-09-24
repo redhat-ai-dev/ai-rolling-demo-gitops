@@ -153,16 +153,31 @@ rm -f "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml.bak"
 
 # initial installation of rhdh-chart provided our ci values
 log "Installing RHDH chart via Helm..."
-# Disable plugins that aren't needed for CI/kind environments.
-# NOTE: If the dynamic plugins list in values.yaml changes, these indices may need adjustment.
-# Current: plugins[12] = scaffolder-mcp-extras
+# Disable scaffolder-mcp-extras by package identity (not array index) so plugin
+# list reorderings in values.yaml cannot silently disable the wrong plugin.
+VALUES_CI_PLUGINS="$(mktemp)"
+trap 'rm -f "$VALUES_CI_PLUGINS"' EXIT
+cp "$GITOPS_DIR/charts/rhdh/values.yaml" "$VALUES_CI_PLUGINS"
+yq -i \
+  '(.global.dynamic.plugins[] | select(.package | test("scaffolder-mcp-extras"))).disabled = true' \
+  "$VALUES_CI_PLUGINS"
+DISABLED_PKG="$(yq -r \
+  '.global.dynamic.plugins[] | select(.disabled == true and (.package | test("scaffolder-mcp-extras"))) | .package' \
+  "$VALUES_CI_PLUGINS")"
+if [[ -z "$DISABLED_PKG" || "$DISABLED_PKG" == "null" ]]; then
+  log_fail "Failed to disable scaffolder-mcp-extras in CI values overlay"
+  exit 1
+fi
+log "CI plugin disable applied: $DISABLED_PKG"
+
 helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
   --namespace "$RHDH_NAMESPACE" \
-  -f "$GITOPS_DIR/charts/rhdh/values.yaml" \
+  -f "$VALUES_CI_PLUGINS" \
   -f "$GITOPS_DIR/ci/values-ci.yaml" \
-  --set 'global.dynamic.plugins[12].disabled=true' \
   --timeout 40m \
   --wait
+trap - EXIT
+rm -f "$VALUES_CI_PLUGINS"
 
 # generate a self-signed TLS certificate so node-openid-client accepts the HTTPS callback URL
 log "Generating self-signed TLS certificate for $CI_HOSTNAME..."

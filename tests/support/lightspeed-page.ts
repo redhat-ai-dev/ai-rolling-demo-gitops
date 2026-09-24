@@ -122,7 +122,7 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
 
   for (const name of [
     "Disable pinned chats Pinned chats are currently enabled",
-    "Enable screen context Screen context sharing is currently disabled",
+    "Disable saved prompts Saved prompts are currently enabled",
     MCP_SETTINGS_MENU_LABEL,
   ]) {
     await expect(page.getByRole("menuitem", { name })).toBeVisible();

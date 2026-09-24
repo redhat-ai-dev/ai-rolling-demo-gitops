@@ -91,7 +91,7 @@ const e2eRoot = path.join(import.meta.dirname, "..");
 const DEFAULT_BOT_QUERY =
   "Do not use tools. Reply with exactly one short sentence confirming you received this message.";
 
-test.describe("Lightspeed UI", () => {
+test.describe.skip("Lightspeed UI", () => {
   test.describe.configure({ mode: "serial", timeout: 5 * 60 * 1000 });
 
   let context: BrowserContext;

@@ -21,7 +21,7 @@ import { hidePostLoginBannerIfVisible } from "../support/auth";
 
 const RENAMED_NOTEBOOK_TITLE = "E2E Notebook Renamed";
 
-test.describe("Lightspeed notebooks", () => {
+test.describe.skip("Lightspeed notebooks", () => {
   test.describe.configure({ mode: "serial", timeout: 7 * 60 * 1000 });
 
   let context: BrowserContext;

@@ -78,7 +78,7 @@ global:
         disabled: false
 
       # AI Catalog Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ai-catalog:bs_1.54.6__0.8.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ai-catalog:bs_1.54.6__1.0.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.54.6__0.8.0
         disabled: false

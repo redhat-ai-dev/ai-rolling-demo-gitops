@@ -103,8 +103,7 @@ export async function expectChatbotControlsVisible(page: Page): Promise<void> {
 }
 
 export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
-  const optionsButton = page.getByRole("button", { name: "Options" });
-  await optionsButton.click();
+  await page.getByRole("button", { name: "Options" }).click();
   const settingsMenu = page
     .getByRole("menu")
     .filter({
@@ -112,14 +111,7 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
     })
     .first();
 
-  // Menu can fail to open on the first click under Kind load — retry once.
-  try {
-    await expect(settingsMenu).toBeVisible({ timeout: 10_000 });
-  } catch {
-    await optionsButton.click();
-    await expect(settingsMenu).toBeVisible();
-  }
-
+  await expect(settingsMenu).toBeVisible();
   await expect(
     settingsMenu.getByRole("menuitem", { name: "Display mode" }),
   ).toBeDisabled();
@@ -128,14 +120,12 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
     await expect(settingsMenu.getByRole("menuitem", { name })).toBeVisible();
   }
 
-  // Match by substring so PatternFly accessible-name variations still pass.
+  // Substring match tolerates PatternFly accessible-name suffix variations.
   await expect(
     page.getByRole("menuitem", {
       name: /Disable pinned chats/i,
     }),
   ).toBeVisible();
-  // IA 5.3.x renamed settings.mcp.label → "MCP and Prompt Settings"
-  // (see rhdh-plugins intelligent-assistant e2e LightspeedPage).
   await expect(
     page.getByRole("menuitem", { name: MCP_SETTINGS_MENU_LABEL }),
   ).toBeVisible();

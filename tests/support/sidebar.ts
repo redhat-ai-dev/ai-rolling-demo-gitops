@@ -73,23 +73,17 @@ export async function closeChatDrawer(page: Page): Promise<void> {
 }
 
 export async function openChatDrawer(page: Page): Promise<void> {
-  const chatHistoryMenu = page.getByRole("button", {
-    name: "Chat history menu",
-  });
-  const expandHistory = page.getByRole("button", {
-    name: "Expand chat history",
-  });
-
-  if (await chatHistoryMenu.isVisible().catch(() => false)) {
-    await chatHistoryMenu.click();
-  } else {
-    await expect(expandHistory).toBeVisible({ timeout: 5_000 });
-    await expandHistory.click();
+  const closeDrawer = page.getByRole("button", { name: "Close drawer panel" });
+  if (await closeDrawer.isVisible().catch(() => false)) {
+    return;
   }
 
-  await expect(
-    page.getByRole("button", { name: "Close drawer panel" }),
-  ).toBeVisible({ timeout: 5_000 });
+  const opener = page
+    .getByRole("button", { name: "Chat history menu" })
+    .or(page.getByRole("button", { name: "Expand chat history" }));
+  await expect(opener.first()).toBeVisible({ timeout: 30_000 });
+  await opener.first().click();
+  await expect(closeDrawer).toBeVisible({ timeout: 15_000 });
 }
 
 export async function assertDrawerState(

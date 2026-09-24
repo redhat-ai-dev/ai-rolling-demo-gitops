@@ -66,25 +66,18 @@ export async function selectDisplayMode(
 }
 
 export async function openChatHistoryDrawer(page: Page): Promise<void> {
-  const chatHistoryMenu = page.getByRole("button", {
-    name: "Chat history menu",
-  });
-  const expandHistory = page.getByRole("button", {
-    name: "Expand chat history",
-  });
   const closeDrawer = page.getByRole("button", { name: "Close drawer panel" });
-
   if (await closeDrawer.isVisible().catch(() => false)) {
     return;
   }
 
-  if (await chatHistoryMenu.isVisible().catch(() => false)) {
-    await chatHistoryMenu.click();
-  } else {
-    await expect(expandHistory).toBeVisible({ timeout: 5_000 });
-    await expandHistory.click();
-  }
-
+  // Overlay uses "Chat history menu"; docked/fullscreen uses "Expand chat history".
+  // Wait for either — a one-shot isVisible() races chatbot header remounts.
+  const opener = page
+    .getByRole("button", { name: "Chat history menu" })
+    .or(page.getByRole("button", { name: "Expand chat history" }));
+  await expect(opener.first()).toBeVisible({ timeout: 30_000 });
+  await opener.first().click();
   await expect(closeDrawer).toBeVisible({ timeout: 15_000 });
 }
 

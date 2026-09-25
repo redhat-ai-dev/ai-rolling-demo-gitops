@@ -134,14 +134,9 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs:bs_1.54.6__1.18.0
         disabled: false
 
-      # Disable default catalog plugins replaced by OCI images above.
-      # These are enabled by dynamic-plugins.default.yaml and must be explicitly disabled.
+      # Enable keycloak (TODO: replace with https://redhat.atlassian.net/browse/RHIDP-16480 solution)
       - package: ref://backstage-community-plugin-catalog-backend-module-keycloak
         disabled: false
-      - package: ref://backstage-plugin-techdocs
-        disabled: true
-      - package: ref://backstage-plugin-techdocs-backend
-        disabled: true
       # Disable Segment Plugin (no segment key setup)
       - package: ref://backstage-community-plugin-analytics-provider-segment
         disabled: true

@@ -156,6 +156,8 @@ global:
         disabled: false
       - package: ref://backstage-plugin-scaffolder-backend-module-github
         disabled: false
+
+      # OIDC Plugin
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth-backend-module-oidc-provider:bs_1.54.6__0.4.20
         disabled: false
 

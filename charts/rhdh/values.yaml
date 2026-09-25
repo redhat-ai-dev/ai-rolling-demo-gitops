@@ -647,10 +647,6 @@ redhat-developer-hub:
         disabled: false
       # Disable default catalog plugins replaced by OCI images above.
       # These are enabled by dynamic-plugins.default.yaml and must be explicitly disabled.
-      - package: ref://backstage-plugin-kubernetes
-        disabled: true
-      - package: ref://backstage-plugin-kubernetes-backend
-        disabled: true
       - package: ref://backstage-community-plugin-topology
         disabled: true
       - package: ref://backstage-plugin-techdocs

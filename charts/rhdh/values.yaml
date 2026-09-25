@@ -136,8 +136,6 @@ global:
 
       # Disable default catalog plugins replaced by OCI images above.
       # These are enabled by dynamic-plugins.default.yaml and must be explicitly disabled.
-      - package: ref://backstage-community-plugin-topology
-        disabled: true
       - package: ref://backstage-community-plugin-catalog-backend-module-keycloak
         disabled: false
       - package: ref://backstage-plugin-techdocs

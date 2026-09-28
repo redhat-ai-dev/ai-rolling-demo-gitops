@@ -37,6 +37,9 @@ jobs:
       - name: Test KServe connector has no legacy sidecars
         run: bash tests/helm/test-kserve-connector-no-sidecars.sh
 
+      - name: Test OGX entity provider uses ai-catalog config
+        run: bash tests/helm/test-ogx-entity-provider-config.sh
+
       - name: Test operator installation helpers
         run: bash tests/scripts/test-install-operators.sh
 

@@ -60,15 +60,11 @@ data:
       default_provider: notebooks
       providers:
         - id: notebooks
-          type: pgvector
+          type: faiss
           embedding_model: nomic-ai/nomic-embed-text-v1.5
           embedding_dimension: 768
           config:
-            host: ${env.PGVECTOR_HOST:=lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local}
-            port: "5432"  # TODO: fix lcore parsing and revert back to env
-            db: ${env.PGVECTOR_DB}
-            user: ${env.PGVECTOR_USER}
-            password: ${env.PGVECTOR_PASSWORD}
+            path: /tmp/vector_db/notebooks/faiss_store.db
     user_data_collection:
       feedback_enabled: true
       feedback_storage: '/tmp/data/feedback'

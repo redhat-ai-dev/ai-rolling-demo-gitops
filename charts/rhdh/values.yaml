@@ -51,7 +51,7 @@ redhat-developer-hub:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "3"
+          cpu: "2"
           memory: 4Gi
     config:
       stack:
@@ -197,7 +197,7 @@ redhat-developer-hub:
           type: url
           rules:
             - allow: [Component, Location, Template]
-        - target: https://github.com/redhat-developer/rhdh-llama-stack-agentic-sample/blob/ai-rolling-demo-2_1/all.yaml
+        - target: https://github.com/JslYoon/rhdh-llama-stack-agentic-sample/blob/ogx-client-migration/all.yaml
           type: url
           rules:
             - allow: [Component, Location, Template]
@@ -715,7 +715,6 @@ redhat-developer-hub:
   auth:
     backend:
       enabled: true
-<<<<<<< HEAD
       existingSecretRef:
         name: rhdh-secrets
         key: BACKEND_SECRET
@@ -763,72 +762,6 @@ redhat-developer-hub:
       command:
         - sh
         - -c
-=======
-      existingSecret: ""
-      value: ""
-
-  # Configure lightspeed post GA
-  lightspeed:
-    enabled: true
-    plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.6__5.1.0
-        disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.54.6__5.1.0
-        disabled: false
-    secret:
-      create: false
-      name: "llama-stack-secrets"
-    sidecar:
-      image: quay.io/lightspeed-core/lightspeed-stack:0.7.0rc3
-      args:
-        - --synthesized-config-output
-        - /tmp/.generated/run.yaml
-      # Path to the VERTEX_AI_CREDENTIALS key mounted from llama-stack-secrets.
-      # volumeMount is applied by rolling-demo-sidecars-job (chart 6.1.1 has no sidecar.extraVolumeMounts).
-      # TODO: after upgrading to an rhdh-chart with lightspeed.core.extraVolumeMounts
-      # (https://github.com/redhat-developer/rhdh-chart/pull/438), mount via values and drop the
-      # PostSync patch — that workaround will be redundant.
-      env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /app-root/gcp-creds.json
-        # Redirect the HuggingFace/sentence-transformers cache into the writable
-        # /tmp emptyDir. Required because the sidecar runs readOnlyRootFilesystem:true;
-        # without this, embedding model loading fails writing to ~/.cache. Mirrors rhdh-chart.
-        - name: HF_HOME
-          value: /tmp/hf_cache
-        # Points LCORE at the OKP service. The lightspeed-stack-config.yaml is synced
-        # from lightspeed-configs (source of truth) with a localhost default, so the
-        # cluster-specific OKP URL is injected here instead. Rendered via
-        # common.tplvalues.render (tpl), so the Helm expression resolves; the sync
-        # generator only seds the sidecar image line, leaving this env intact.
-        - name: OKP_SERVICE_URL
-          value: "http://{{ .Release.Name }}-lightspeed-okp-{{ .Release.Namespace }}.{{ .Values.global.clusterRouterBase }}"
-      resources:
-        # Higher limits: sidecar CPU-throttles and OOMKills during notebook embedding.
-        requests:
-          cpu: 200m
-          memory: 512Mi
-        limits:
-          cpu: "3"
-          memory: 4Gi
-    configMaps:
-      - name: stack
-        create: false
-        nameOverride: "lightspeed-stack-config"
-        mountPath: /app-root/lightspeed-stack.yaml
-        subPath: lightspeed-stack.yaml
-        sourceFile: lightspeed-stack.yaml
-        optional: false
-      - name: rhdh-profile
-        create: false
-        nameOverride: "rhdh-profile"
-        mountPath: /app-root/rhdh-profile.py
-        subPath: rhdh-profile.py
-        sourceFile: rhdh-profile.py
-        optional: false
-    initContainer:
-      name: lightspeed-rag-init
->>>>>>> 1f6254c (fix(lightspeed): lower sidecar CPU limit to 3 & GPU limit to 4gi)
       args:
         - >-
           echo 'Staging BYOK RAG data...' &&

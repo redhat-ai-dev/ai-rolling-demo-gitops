@@ -7,7 +7,7 @@ ci_rendered="$(mktemp)"
 trap 'rm -f "$rendered" "$ci_rendered"' EXIT
 
 helm template rhdhai-rhdh-dev "$repo_root/charts/rhdh" \
-  --namespace rhdhai-development > "$rendered"
+  --namespace rhdhai-development --kube-version 1.31.0 > "$rendered"
 
 yq -o=json '.' "$rendered" | jq -s -e '
   [.[] | select(.kind == "Deployment" and .metadata.name == "rhdhai-rhdh-dev-backstage")]
@@ -67,10 +67,11 @@ yq -e '
   | select(. == "/app-root/skills")
 ' "$rendered" > /dev/null
 
-helm template rhdh-ci "$repo_root/charts/rhdh" \
-  --namespace rolling-demo-ns -f "$repo_root/ci/values-ci.yaml" > "$ci_rendered"
+helm template rolling-demo "$repo_root/charts/rhdh" \
+  --namespace rolling-demo-ns --kube-version 1.31.0 \
+  -f "$repo_root/ci/values-ci.yaml" > "$ci_rendered"
 yq -o=json '.' "$ci_rendered" | jq -s -e '
-  [.[] | select(.kind == "Deployment" and .metadata.name == "rhdh-ci-backstage")]
+  [.[] | select(.kind == "Deployment" and .metadata.name == "rolling-demo-backstage")]
   | length == 1 and
     (.[0].spec.template.spec.containers | any(.name == "feedback-harvester"))
 ' > /dev/null

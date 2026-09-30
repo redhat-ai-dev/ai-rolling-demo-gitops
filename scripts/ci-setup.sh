@@ -82,7 +82,7 @@ kubectl cluster-info --context kind-rhdh-ci
 
 # create the ingress-nginx controller
 log "Installing nginx ingress controller..."
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/kind/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.8/deploy/static/provider/kind/deploy.yaml
 log "Waiting for ingress-nginx controller pod to be created..."
 until kubectl get pods --namespace ingress-nginx \
   --selector=app.kubernetes.io/component=controller \
@@ -138,6 +138,7 @@ helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
   --namespace "$RHDH_NAMESPACE" \
   -f "$CI_RHDH_VALUES" \
   -f "$GITOPS_DIR/ci/values-ci.yaml" \
+  --set "redhat-developer-hub.postgresql.auth.existingSecret=${ARGOCD_APP_NAME}-postgresql" \
   --timeout 40m \
   --wait
 

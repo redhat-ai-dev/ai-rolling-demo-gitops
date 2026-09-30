@@ -1,5 +1,5 @@
 global:
-  # Disables OpenShift-specific resources (sidecars job, chart lightspeed-postgres).
+  # Disables the chart-managed Lightspeed PostgreSQL resources on Kind.
   # Notebooks use the inline faiss vector store (on-disk at /tmp), so CI needs no
   # pgvector Postgres.
   ci: true

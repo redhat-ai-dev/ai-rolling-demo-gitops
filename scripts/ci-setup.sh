@@ -113,9 +113,8 @@ source "$SCRIPTS_DIR/setup-sa-tokens.sh"
 # we have already prepared all necessary env vars
 source "$SCRIPTS_DIR/setup-secrets.sh"
 
-# Notebooks now use the inline faiss vector store (on-disk at /tmp), so CI no
-# longer needs a pgvector Postgres. The feedback-harvester sidecar (the other
-# Postgres consumer) is disabled in CI via global.ci.
+# Notebooks use the inline faiss vector store (on-disk at /tmp), so CI does not
+# deploy a pgvector Postgres instance.
 
 # Strip OKP config from lightspeed-stack so LCORE starts without OKP on Kind.
 # The file is a Helm ConfigMap template ({{ .Release.Namespace }}), so yq can't
@@ -130,14 +129,15 @@ rm -f "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml.bak"
 
 # initial installation of rhdh-chart provided our ci values
 log "Installing RHDH chart via Helm..."
-# Disable plugins that aren't needed for CI/kind environments.
-# NOTE: If the dynamic plugins list in values.yaml changes, these indices may need adjustment.
-# Current: plugins[12] = scaffolder-mcp-extras
+# Disable the scaffolder MCP extras plugin for the Kind environment.
+CI_RHDH_VALUES="$(mktemp)"
+trap 'rm -f "$CI_RHDH_VALUES"' EXIT
+yq '( ."redhat-developer-hub".dynamicPlugins.plugins[] | select(.package | contains("scaffolder-mcp-extras")) ).disabled = true' \
+  "$GITOPS_DIR/charts/rhdh/values.yaml" > "$CI_RHDH_VALUES"
 helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
   --namespace "$RHDH_NAMESPACE" \
-  -f "$GITOPS_DIR/charts/rhdh/values.yaml" \
+  -f "$CI_RHDH_VALUES" \
   -f "$GITOPS_DIR/ci/values-ci.yaml" \
-  --set 'global.dynamic.plugins[12].disabled=true' \
   --timeout 40m \
   --wait
 
@@ -185,29 +185,6 @@ spec:
 EOF
 
 log "Waiting for RHDH to be ready..."
-kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
-  -n "$RHDH_NAMESPACE" --timeout=600s
-
-# Kind limited resources (better not to install Argo): render the job
-# template with global.ci=false to override values-ci.yaml, then apply
-# it directly. This will by-pass the postsync hook of ArgoCD and add
-# all sidecars through a normal job.
-log "Applying sidecars job..."
-helm template "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
-  --namespace "$RHDH_NAMESPACE" \
-  -f "$GITOPS_DIR/charts/rhdh/values.yaml" \
-  -f "$GITOPS_DIR/ci/values-ci.yaml" \
-  --set global.ci=false \
-  -s templates/rolling-demo-sidecars-job.yaml \
-  | kubectl apply -n "$RHDH_NAMESPACE" -f -
-
-log "Waiting for sidecars job to complete..."
-kubectl wait job/update-deployment-containers \
-  -n "$RHDH_NAMESPACE" \
-  --for=condition=complete \
-  --timeout=1200s
-
-log "Waiting for RHDH to be ready after sidecars patch..."
 kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
   -n "$RHDH_NAMESPACE" --timeout=600s
 

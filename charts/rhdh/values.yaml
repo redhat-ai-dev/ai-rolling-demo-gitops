@@ -32,6 +32,15 @@ redhat-developer-hub:
       extraEnv:
         - name: OKP_SERVICE_URL
           value: "https://{{ .Release.Name }}-lightspeed-okp-{{ .Release.Namespace }}.{{ .Values.openshift.clusterRouterBase }}"
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /app-root/gcp-creds.json
+      extraVolumeMounts:
+        - name: lightspeed-skills
+          mountPath: /app-root/skills
+        - name: gcp-creds
+          mountPath: /app-root/gcp-creds.json
+          subPath: gcp-creds.json
+          readOnly: true
     config:
       stack:
         existingConfigMap:
@@ -699,6 +708,8 @@ redhat-developer-hub:
         items:
           - key: VERTEX_AI_CREDENTIALS
             path: gcp-creds.json
+    - name: lightspeed-skills
+      emptyDir: {}
   extraInitContainers:
     - name: byok-rag-init
       image: quay.io/redhat-ai-dev/byok-sample:latest
@@ -708,13 +719,15 @@ redhat-developer-hub:
         - -c
       args:
         - >-
-          set -eu;
-          echo 'Staging BYOK RAG data...';
-          mkdir -p /tmp/byok-staging /tmp/vector_db;
-          cp -r /byok/vector_db /tmp/byok-staging/;
-          cp -r /tmp/byok-staging/vector_db/. /tmp/vector_db/;
-          chmod -R a+rwX /tmp/vector_db;
-          echo 'BYOK merge complete.'
+          echo 'Staging BYOK RAG data...' &&
+          mkdir -p /tmp/byok-staging /tmp/vector_db &&
+          if cp -r /byok/vector_db /tmp/byok-staging/ 2>&1 &&
+             cp -r /tmp/byok-staging/vector_db/. /tmp/vector_db/ 2>&1 &&
+             chmod -R a+rwX /tmp/vector_db; then
+            echo 'BYOK merge complete.';
+          else
+            echo 'WARNING: BYOK merge failed. LCS will start without BYOK sources.' >&2;
+          fi
       volumeMounts:
         - name: lightspeed-data
           mountPath: /tmp
@@ -727,6 +740,77 @@ redhat-developer-hub:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      resources:
+        requests:
+          cpu: 50m
+          memory: 50Mi
+        limits:
+          cpu: 100m
+          memory: 150Mi
+    - name: fetch-lightspeed-skills
+      image: quay.io/redhat-ai-dev/utils:latest
+      imagePullPolicy: Always
+      command:
+        - /bin/bash
+        - -c
+      args:
+        - >-
+          set -euo pipefail;
+          rm -rf /skills/.source;
+          git clone --depth 1 --branch main https://github.com/redhat-developer/rhdh-skills.git /skills/.source;
+          test -d /skills/.source/skills;
+          find /skills -mindepth 1 -maxdepth 1 ! -name .source -exec rm -rf {} +;
+          cp -R /skills/.source/skills/. /skills/;
+          rm -rf /skills/.source
+      volumeMounts:
+        - name: lightspeed-skills
+          mountPath: /skills
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        seccompProfile:
+          type: RuntimeDefault
+      resources:
+        requests:
+          cpu: 25m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+  extraContainers:
+    - name: feedback-harvester
+      image: quay.io/redhat-ai-dev/feedback-harvester:v0.1.0
+      env:
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: password
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: db-name
+        - name: PGHOST
+          value: lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local
+        - name: PGPORT
+          value: "5432"
+        - name: FEEDBACK_DIRECTORY
+          value: /tmp/data/feedback
+        - name: FETCH_FREQUENCY
+          value: "60"
+      volumeMounts:
+        - name: lightspeed-data
+          mountPath: /tmp/data/feedback
+          subPath: data/feedback
   postgresql:
     enabled: true
     postgresqlDataDir: /var/lib/pgsql/data/userdata

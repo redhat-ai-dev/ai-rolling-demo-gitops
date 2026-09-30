@@ -47,6 +47,33 @@ yq -o=json '.' "$rendered" | jq -s -e '
 ' > /dev/null
 
 yq -o=json '.' "$rendered" | jq -s -e '
+  any(.[];
+    .kind == "Deployment" and
+    .metadata.name == "postgres" and
+    .metadata.namespace == "lightspeed-postgres" and
+    .spec.template.metadata.labels.app == "postgres"
+  ) and
+  ([.[] | select(.kind == "NetworkPolicy" and .metadata.name == "rhdhai-rhdh-dev-allow-lightspeed-postgres-egress")]
+    | length == 1 and
+      .[0].metadata.namespace == "rhdhai-development" and
+      .[0].spec == {
+        podSelector: {matchLabels: {
+          "app.kubernetes.io/name": "backstage",
+          "app.kubernetes.io/instance": "rhdhai-rhdh-dev",
+          "app.kubernetes.io/component": "backstage"
+        }},
+        policyTypes: ["Egress"],
+        egress: [{
+          to: [{
+            namespaceSelector: {matchLabels: {"kubernetes.io/metadata.name": "lightspeed-postgres"}},
+            podSelector: {matchLabels: {app: "postgres"}}
+          }],
+          ports: [{port: 5432, protocol: "TCP"}]
+        }]
+      })
+' > /dev/null
+
+yq -o=json '.' "$rendered" | jq -s -e '
   all(.[];
     .kind != "Job" or .metadata.name != "update-deployment-containers"
   ) and
@@ -74,6 +101,12 @@ yq -o=json '.' "$ci_rendered" | jq -s -e '
   [.[] | select(.kind == "Deployment" and .metadata.name == "rolling-demo-backstage")]
   | length == 1 and
     (.[0].spec.template.spec.containers | any(.name == "feedback-harvester"))
+' > /dev/null
+yq -o=json '.' "$ci_rendered" | jq -s -e '
+  all(.[];
+    .kind != "NetworkPolicy" or
+    .metadata.name != "rolling-demo-allow-lightspeed-postgres-egress"
+  )
 ' > /dev/null
 
 echo "Chart-managed RHDH pod additions render without the patch Job"

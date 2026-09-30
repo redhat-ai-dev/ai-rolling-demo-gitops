@@ -271,6 +271,24 @@ global:
             echo 'No BYOK staging data, skipping.';
           fi
 
+redhat-developer-hub:
+  nameOverride: backstage
+  image:
+    registry: quay.io
+    repository: rhdh-community/rhdh
+    tag: next-2.1-1c8771d7
+  imagePullSecrets:
+    - name: quay-pull-secret
+  catalogIndex:
+    image:
+      registry: quay.io
+      repository: rhdh/plugin-catalog-index
+      tag: "2.1"
+  intelligentAssistant:
+    okp:
+      enabled: false
+
+# Legacy values retained for phase 3 translation; the new dependency does not read them.
 backstage:
   # override the default name to stay in the context
   # of the same deployment resource (e.g. rolling-demo-backstage)

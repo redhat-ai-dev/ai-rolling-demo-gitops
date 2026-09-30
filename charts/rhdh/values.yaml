@@ -556,6 +556,11 @@ backstage:
             adminUsers:
               - 'user:default/admin'
               - 'user:default/guest'
+          providers:
+            ogx:
+              baseUrl: ${BOOST_OGX_URL:-http://localhost:8321}
+              defaultModel: ${BOOST_MODEL:-default}
+        ai-catalog:
           entityProviders:
             ogx:
               baseUrl: ${BOOST_OGX_URL:-http://localhost:8321}
@@ -693,10 +698,6 @@ backstage:
                   enableRAG: true
                   model: ${BOOST_MODEL:-}
                   lifecycleStage: published
-          providers:
-            ogx:
-              baseUrl: ${BOOST_OGX_URL:-http://localhost:8321}
-              defaultModel: ${BOOST_MODEL:-default}
       readinessProbe:
         failureThreshold: 3
         httpGet:

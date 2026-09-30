@@ -1,9 +1,9 @@
 dependencies:
-- name: backstage
+- name: redhat-developer-hub
   repository: https://redhat-developer.github.io/rhdh-chart/
-  version: 7.0.99
+  version: 3.4.4
 - name: okp
   repository: ""
   version: 0.1.0
-digest: sha256:cf7262105827655ac0d649276df8a45d786071df7c3b074282c1f9cf88dfa457
-generated: "2026-09-07T21:31:02.799316748Z"
+digest: sha256:9031b012f9bad90d8ef31305b1c1ea6e611b0fda420764bbd387d59a2994d547
+generated: "2026-09-30T17:45:18Z"

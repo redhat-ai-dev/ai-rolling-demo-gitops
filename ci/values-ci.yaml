@@ -4,6 +4,7 @@ global:
 
 redhat-developer-hub:
   openshift:
+    # OpenShift Routes are unavailable on Kind; CI uses nginx Ingress.
     route:
       enabled: false
   intelligentAssistant:
@@ -64,10 +65,12 @@ redhat-developer-hub:
           cpu: 100m
           memory: 128Mi
   postgresql:
+    # Use Fedora PostgreSQL 15 because Kind CI has no Red Hat registry credentials.
     image:
       registry: quay.io
       repository: fedora/postgresql-15
-      tag: latest
+      tag: "latest"
+    # Match the data directory and mount path to the Fedora image.
     postgresqlDataDir: /fedora/postgresql/data
     auth:
       existingSecret: rolling-demo-postgresql
@@ -79,7 +82,7 @@ redhat-developer-hub:
       persistence:
         mountPath: /fedora/postgresql
 
-# The vendored OKP chart uses OpenShift Routes and is not installed on Kind.
+# The vendored OKP chart uses OpenShift Routes, and its image is too large for Kind.
 okp:
   enabled: false
 

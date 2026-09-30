@@ -11,7 +11,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-LEGACY_ARTIFACTS=(
+LEGACY_SIDECARS=(
   storage-rest
   rhoai-normalizer
   model-catalog-location-service
@@ -48,7 +48,7 @@ yq eval -e '
 ' "${TEMP_DIR}/kserve-connector-config.yaml" >/dev/null
 
 # No rendered resource should reintroduce the legacy connector bridge.
-for needle in "${LEGACY_ARTIFACTS[@]}"; do
+for needle in "${LEGACY_SIDECARS[@]}"; do
   if grep -Fqi -- "$needle" "${TEMP_DIR}/rendered-chart.yaml"; then
     echo "FAIL: rendered chart contains legacy connector artifact: ${needle}" >&2
     exit 1

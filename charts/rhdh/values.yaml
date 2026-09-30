@@ -1,6 +1,8 @@
 global:
   ci: false
 redhat-developer-hub:
+  # Keep the existing <release>-backstage Route, Service, and Deployment names.
+  # Setup URLs, OIDC callbacks, and CI ingress/service references depend on them.
   nameOverride: backstage
   image:
     registry: quay.io

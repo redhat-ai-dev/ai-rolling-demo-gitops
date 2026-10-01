@@ -6,8 +6,8 @@ redhat-developer-hub:
   nameOverride: backstage
   image:
     registry: quay.io
-    repository: rhdh-community/rhdh
-    tag: next-2.1-1c8771d7
+    repository: rhdh/rhdh-hub-rhel10
+    tag: 2.1-105
   imagePullSecrets:
     - name: quay-pull-secret
   catalogIndex:

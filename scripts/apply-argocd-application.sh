@@ -19,13 +19,13 @@ apply_argocd_application() {
   local helm_params
   if [[ "${SKIP_RHOAI_SETUP:-}" == "true" && "${RHOAI_PREINSTALLED:-}" != "true" ]]; then
     helm_params="[
-       {\"name\": \"global.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
+       {\"name\": \"redhat-developer-hub.openshift.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
        {\"name\": \"global.isSecondaryInstance\", \"value\": \"${IS_SECONDARY_INSTANCE:-false}\"},
        {\"name\": \"rhoai.enabled\", \"value\": \"false\"}
      ]"
   else
     helm_params="[
-       {\"name\": \"global.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
+       {\"name\": \"redhat-developer-hub.openshift.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
        {\"name\": \"global.isSecondaryInstance\", \"value\": \"${IS_SECONDARY_INSTANCE:-false}\"}
      ]"
   fi

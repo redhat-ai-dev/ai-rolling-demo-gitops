@@ -17,6 +17,12 @@ jobs:
         with:
           ref: development
 
+      - name: Install yq
+        run: |
+          curl -fsSLo /tmp/yq \
+            "https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64"
+          sudo install /tmp/yq /usr/local/bin/yq
+
       - name: Generate GitHub App token
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -28,12 +34,12 @@ jobs:
       # (e.g. "1.10" from "1.10-123"), then query quay.io for the highest minor
       # number available under that same prefix. Outputs update_needed,
       # current_tag, and latest_tag for use in subsequent steps.
-      - name: Check for newer minor version of rhdh/rhdh-hub-rhel9
+      - name: Check for newer minor version of rhdh/rhdh-hub-rhel10
         id: check-image
         run: |
           VALUES_FILE="charts/rhdh/values.yaml"
 
-          CURRENT_TAG=$(grep -A3 'registry: quay.io' "$VALUES_FILE" | grep 'tag:' | head -1 | sed 's/.*tag: *"\?\([^"]*\)"\?.*/\1/')
+          CURRENT_TAG=$(yq -er '."redhat-developer-hub".image.tag' "$VALUES_FILE")
           echo "Current tag: $CURRENT_TAG"
 
           # Extract the MAJOR.MAJOR prefix (everything before the last "-")
@@ -42,7 +48,7 @@ jobs:
           echo "Looking for tags with prefix: $TAG_PREFIX"
 
           LATEST_TAG=$(curl -sf \
-            "https://quay.io/api/v1/repository/rhdh/rhdh-hub-rhel9/tag/?filter_tag_name=like:${TAG_PREFIX}&limit=100&onlyActiveTags=true" \
+            "https://quay.io/api/v1/repository/rhdh/rhdh-hub-rhel10/tag/?filter_tag_name=like:${TAG_PREFIX}&limit=100&onlyActiveTags=true" \
             | jq -r --arg prefix "$TAG_PREFIX" \
               '[.tags[].name | select(startswith($prefix) and test("^[^-]+-[0-9]+$"))]
                | sort_by(split("-")[-1] | tonumber) | last')
@@ -64,14 +70,18 @@ jobs:
             echo "update_needed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # patch values.yaml in-place: update only the tag, keeping rhdh/rhdh-hub-rhel9.
+      # patch values.yaml in-place: update only the tag, keeping rhdh/rhdh-hub-rhel10.
       - name: Update values.yaml
         if: steps.check-image.outputs.update_needed == 'true'
         run: |
           VALUES_FILE="charts/rhdh/values.yaml"
           LATEST_TAG="${{ steps.check-image.outputs.latest_tag }}"
 
-          sed -i "s|tag: \"[^\"]*\"|tag: \"$LATEST_TAG\"|g" "$VALUES_FILE"
+          TAG_LINE=$(yq -r '."redhat-developer-hub".image.tag | line' "$VALUES_FILE")
+          test "$TAG_LINE" -gt 0
+          # Use sed to preserve formatting elsewhere in values.yaml.
+          sed -i "${TAG_LINE}s|^    tag: .*|    tag: $LATEST_TAG|" "$VALUES_FILE"
+          test "$(yq -er '."redhat-developer-hub".image.tag' "$VALUES_FILE")" = "$LATEST_TAG"
 
           echo "Updated $VALUES_FILE:"
           grep -A4 'registry: quay.io' "$VALUES_FILE" | head -5
@@ -116,7 +126,7 @@ jobs:
 
           WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          printf '## PR Description\n\nAutomated update triggered by the [Update RHDH Image](%s) workflow.\n\nUpdates the RHDH image in `charts/rhdh/values.yaml` from `%s` to:\n- `rhdh`: `quay.io/rhdh/rhdh-hub-rhel9:%s`\n' \
+          printf '## PR Description\n\nAutomated update triggered by the [Update RHDH Image](%s) workflow.\n\nUpdates the RHDH image in `charts/rhdh/values.yaml` from `%s` to:\n- `rhdh`: `quay.io/rhdh/rhdh-hub-rhel10:%s`\n' \
             "$WORKFLOW_URL" "$CURRENT_TAG" "$LATEST_TAG" > /tmp/pr-body.md
 
           gh pr create \

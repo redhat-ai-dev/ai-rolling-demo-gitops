@@ -139,7 +139,7 @@ helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
   -f "$CI_RHDH_VALUES" \
   -f "$GITOPS_DIR/ci/values-ci.yaml" \
   --set "redhat-developer-hub.postgresql.auth.existingSecret=${ARGOCD_APP_NAME}-postgresql" \
-  --timeout 15m \
+  --timeout 40m \
   --wait
 
 # generate a self-signed TLS certificate so node-openid-client accepts the HTTPS callback URL

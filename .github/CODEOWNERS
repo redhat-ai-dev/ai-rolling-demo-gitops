@@ -1,5 +1,5 @@
 # Global owner for the repository
-* @johnmcollier @gabemontero @JslYoon @michael-valdron
+* @redhat-ai-dev/ai-development-team
 
 # Lightspeed and Llama Stack owners
 charts/rhdh/templates/lightspeed-postgres.yaml @maysunfaisal @Jdubrick @yangcao77

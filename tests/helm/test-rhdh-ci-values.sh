@@ -27,6 +27,8 @@ yq -o=json '.' "$rendered" | jq -s -e '
    | length == 1 and
      (.[0].spec.template.spec.containers[0] as $db |
        $db.image == "quay.io/fedora/postgresql-15:latest" and
+       $db.securityContext.readOnlyRootFilesystem == false and
+       $db.securityContext.runAsGroup == 0 and
        ($db.env | any(.name == "POSTGRESQL_ADMIN_PASSWORD" and
          .valueFrom.secretKeyRef.name == "rolling-demo-postgresql"))))
 ' > /dev/null

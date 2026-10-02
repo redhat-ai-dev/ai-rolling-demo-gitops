@@ -79,6 +79,9 @@ redhat-developer-hub:
         enabled: true
       containerSecurityContext:
         enabled: true
+        # Fedora's entrypoint creates /var/lib/pgsql; retain the working Kind permissions.
+        readOnlyRootFilesystem: false
+        runAsGroup: 0
       persistence:
         mountPath: /fedora/postgresql
 

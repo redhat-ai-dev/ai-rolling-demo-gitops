@@ -111,10 +111,17 @@ jobs:
       - name: Collect RHDH logs
         if: always()
         run: |
-          kubectl logs -n rolling-demo-ns \
-            -l app.kubernetes.io/component=backstage \
-            --all-containers --tail=-1 \
-            > /tmp/rhdh.log 2>&1 || true
+          kubectl get pods -n rolling-demo-ns -o wide > /tmp/rhdh.log 2>&1 || true
+          kubectl describe pods -n rolling-demo-ns >> /tmp/rhdh.log 2>&1 || true
+          kubectl get events -n rolling-demo-ns --sort-by=.lastTimestamp >> /tmp/rhdh.log 2>&1 || true
+          for pod in $(kubectl get pods -n rolling-demo-ns -o name 2>/dev/null); do
+            for container in $(kubectl get "$pod" -n rolling-demo-ns \
+              -o jsonpath='{.spec.initContainers[*].name} {.spec.containers[*].name}'); do
+              printf '\n### %s / %s\n' "$pod" "$container" >> /tmp/rhdh.log
+              kubectl logs -n rolling-demo-ns "$pod" -c "$container" \
+                --tail=200 >> /tmp/rhdh.log 2>&1 || true
+            done
+          done
 
       - name: Upload test results
         if: always()

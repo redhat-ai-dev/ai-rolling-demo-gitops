@@ -9,5 +9,3 @@ Some files in this /templates directory are **auto-generated** from [rhdh-intell
 | `lightspeed-stack-config.yaml` | `lightspeed-core-configs/lightspeed-stack.yaml` | `scripts/generate-gitops-manifests.sh` |
 
 To make changes to these files, update the source in [rhdh-intelligent-assistant-configs](https://github.com/redhat-developer/rhdh-intelligent-assistant-configs) and the sync workflow will open a PR with the regenerated manifests.
-
-The RHDH chart now supplies `rhdh-profile.py`. The upstream sync workflow must stop regenerating the removed profile manifest and file before its next update is accepted here.

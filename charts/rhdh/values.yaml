@@ -462,6 +462,12 @@ backstage:
                   resolvers:
                     - resolver: emailMatchingUserEntityProfileEmail
         intelligent-assistant:
+          screen-context:
+            enabled: true
+            screenshots:
+              enabled: true
+            dom-extraction:
+              enabled: true
           notebooks:
             enabled: true
             queryDefaults:

@@ -299,6 +299,8 @@ backstage:
                   redirects:
                     - from: /
                       to: /home
+            # Disable as it conflicts with (nav-content:app/sidebar)
+            - nav-content:app: false
             # Disable homepage widgets and visit tracking infrastructure
             # to avoid "Something Went Wrong" error boxes on the home page
             - home-page-widget:home/recently-visited: false

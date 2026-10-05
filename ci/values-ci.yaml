@@ -104,5 +104,9 @@ backstage:
 okp:
   enabled: false
 
+# Enable the in-process KServe connector + bridge SA/token on Kind.
+# modelRegistry RoleBindings target an OpenShift-only namespace — keep off.
 rhoai:
-  enabled: false
+  enabled: true
+  modelRegistry:
+    enabled: false

@@ -27,6 +27,9 @@ import {
   type AiModelServerApiEntity,
 } from "../support/kserve-connector";
 
+// Kind CI installs upstream KServe (RawDeployment) + fixtures when
+// INSTALL_KSERVE_KIND=true and ungates cluster-fixture cases via KSERVE_E2E
+// (RHIDP-17561 / follow-up to #339).
 test.describe("KServe / KubeFlow connector", () => {
   test.describe.configure({ timeout: 7 * 60 * 1000 });
 

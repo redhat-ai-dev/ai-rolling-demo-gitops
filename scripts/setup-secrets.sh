@@ -106,7 +106,9 @@ KSERVE_CLUSTER_URL="${K8S_CLUSTER_URL:-}"
 KSERVE_SA_TOKEN="${K8S_SA_TOKEN:-}"
 KSERVE_CA_DATA="${K8S_CA_DATA:-}"
 KSERVE_MODEL_CATALOG_URL="${KUBEFLOW_MODEL_CATALOG_URL:-}"
-if [[ "${SKIP_RHOAI_SETUP:-}" != "true" || "${RHOAI_PREINSTALLED:-}" == "true" ]]; then
+# Populate cluster URL/token when RHOAI is in play, or when Kind CI installs
+# upstream KServe for connector QE (INSTALL_KSERVE_KIND=true / RHIDP-17561).
+if [[ "${SKIP_RHOAI_SETUP:-}" != "true" || "${RHOAI_PREINSTALLED:-}" == "true" || "${INSTALL_KSERVE_KIND:-}" == "true" ]]; then
   if [[ -z "$KSERVE_CLUSTER_URL" ]]; then
     KSERVE_CLUSTER_URL="https://kubernetes.default.svc"
     log "Using in-cluster API URL: $KSERVE_CLUSTER_URL"
@@ -123,7 +125,7 @@ if [[ "${SKIP_RHOAI_SETUP:-}" != "true" || "${RHOAI_PREINSTALLED:-}" == "true" ]
       fi
     fi
   fi
-  if [[ -z "$KSERVE_MODEL_CATALOG_URL" ]]; then
+  if [[ -z "$KSERVE_MODEL_CATALOG_URL" && "${INSTALL_KSERVE_KIND:-}" != "true" ]]; then
     KSERVE_MODEL_CATALOG_URL=$(kubectl get route -n rhoai-model-registries -o jsonpath='{.items[0].spec.host}' 2>/dev/null || true)
     if [[ -n "$KSERVE_MODEL_CATALOG_URL" ]]; then
       KSERVE_MODEL_CATALOG_URL="https://${KSERVE_MODEL_CATALOG_URL}"

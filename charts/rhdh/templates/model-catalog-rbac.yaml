@@ -48,6 +48,8 @@ subjects:
     name: default
     namespace: {{ .Release.Namespace }}
 ---
+{{- /* OpenShift / RHOAI Model Registry RoleBinding — skip on Kind CI. */ -}}
+{{- if dig "modelRegistry" "enabled" true .Values.rhoai }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -62,6 +64,7 @@ subjects:
     kind: Group
     name: system:serviceaccounts:{{ .Release.Namespace }}
 ---
+{{- end }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:

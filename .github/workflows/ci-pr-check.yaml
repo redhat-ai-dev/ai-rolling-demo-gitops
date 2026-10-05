@@ -10,7 +10,8 @@ jobs:
   e2e-tests:
     name: CI PR Check - E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Includes Kind KServe RawDeployment + InferenceService fixtures (RHIDP-17561).
+    timeout-minutes: 75
 
     steps:
       - name: Checkout PR branch
@@ -94,6 +95,9 @@ jobs:
           ROLLING_DEMO_TEST_USERNAME: ${{ secrets.ROLLING_DEMO_TEST_USERNAME }}
           KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
           KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+          # Ungate KServe connector cluster-fixture cases after Kind install.
+          KSERVE_E2E: "true"
+          INSTALL_KSERVE_KIND: "true"
         run: make ci-tests
 
       - name: Collect RHDH logs

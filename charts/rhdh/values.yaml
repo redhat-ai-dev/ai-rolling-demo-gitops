@@ -917,3 +917,6 @@ backstage:
       insecureEdgeTerminationPolicy: "Redirect"
 rhoai:
   enabled: true
+  # RoleBindings into rhoai-model-registries. Set false on Kind (no RHOAI).
+  modelRegistry:
+    enabled: true

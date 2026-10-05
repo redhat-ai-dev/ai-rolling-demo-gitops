@@ -299,6 +299,14 @@ backstage:
                   redirects:
                     - from: /
                       to: /home
+            # The RHDH app-defaults plugin provides the populated sidebar
+            # (nav-content:app/sidebar) that all nav items attach to, while the
+            # hub image's @backstage/plugin-app still enables the empty core
+            # default (nav-content:app). Both feed app/nav's single-value
+            # 'content' input, which fails startup with
+            # EXTENSION_ATTACHMENT_CONFLICT. Disable the empty core nav so the
+            # app-defaults sidebar is the only one.
+            - nav-content:app: false
             # Disable homepage widgets and visit tracking infrastructure
             # to avoid "Something Went Wrong" error boxes on the home page
             - home-page-widget:home/recently-visited: false

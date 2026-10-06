@@ -18,6 +18,7 @@ import {
   pauseScreenContextChip,
   resumeScreenContextChip,
   selectEnableScreenContext,
+  screenContextChip,
   verifyEnableScreenContextOption,
 } from "../support/screen-context";
 
@@ -30,7 +31,7 @@ const SCREEN_CONTEXT_MODES = [
   "Dock to window",
 ] as const satisfies readonly DisplayMode[];
 
-test.describe.skip("Intelligent assistant screen context", () => {
+test.describe("Intelligent assistant screen context", () => {
   test.describe.configure({ mode: "serial", timeout: 5 * 60 * 1000 });
 
   let context: BrowserContext;
@@ -56,6 +57,10 @@ test.describe.skip("Intelligent assistant screen context", () => {
         await expect(page.getByLabel("Chatbot", { exact: true })).toBeVisible({
           timeout: 30_000,
         });
+        // Preference sticks across serial modes; reset so kebab Enable is available.
+        if ((await screenContextChip(page).count()) > 0) {
+          await disableScreenContextViaKebab(page);
+        }
       });
 
       // Assertions live in screen-context helpers.
@@ -69,7 +74,6 @@ test.describe.skip("Intelligent assistant screen context", () => {
         await expectScreenContextRecordingVisible(page);
 
         await disableScreenContextViaKebab(page);
-        await expectScreenContextChipHidden(page);
       });
 
       test("chip pause/resume toggles Context: paused label", async () => {

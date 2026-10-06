@@ -1,8 +1,15 @@
 import { expect, type Page } from "@playwright/test";
 import { openChatbotSettings } from "./chat-management";
 
+/** Either recording or paused chip (`aria-label` starts with Pause/Resume). */
 export const screenContextChip = (page: Page) =>
-  page.locator(".lightspeed-page-context-label");
+  page.getByLabel(/^(Pause|Resume) screen context/);
+
+export const screenContextRecordingChip = (page: Page) =>
+  page.getByLabel(/^Pause screen context/);
+
+export const screenContextPausedChip = (page: Page) =>
+  page.getByLabel(/^Resume screen context/);
 
 export async function expectScreenContextChipHidden(page: Page): Promise<void> {
   await expect(screenContextChip(page)).toHaveCount(0);
@@ -11,17 +18,13 @@ export async function expectScreenContextChipHidden(page: Page): Promise<void> {
 export async function expectScreenContextRecordingVisible(
   page: Page,
 ): Promise<void> {
-  await expect(
-    page.locator(".lightspeed-page-context-label-recording"),
-  ).toBeVisible();
+  await expect(screenContextRecordingChip(page)).toBeVisible();
 }
 
 export async function expectScreenContextPausedVisible(
   page: Page,
 ): Promise<void> {
-  await expect(
-    page.locator(".lightspeed-page-context-label-paused"),
-  ).toBeVisible();
+  await expect(screenContextPausedChip(page)).toBeVisible();
 }
 
 export async function verifyEnableScreenContextOption(
@@ -67,9 +70,9 @@ export async function disableScreenContextViaKebab(page: Page): Promise<void> {
 }
 
 export async function pauseScreenContextChip(page: Page): Promise<void> {
-  await page.locator(".lightspeed-page-context-label-recording").click();
+  await screenContextRecordingChip(page).click();
 }
 
 export async function resumeScreenContextChip(page: Page): Promise<void> {
-  await page.locator(".lightspeed-page-context-label-paused").click();
+  await screenContextPausedChip(page).click();
 }

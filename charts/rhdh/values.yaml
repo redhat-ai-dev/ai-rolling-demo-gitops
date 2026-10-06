@@ -106,7 +106,7 @@ global:
       # RHDH Homepage (customized home page with widgets + root redirect)
       # The "recently-visited" and "top-visited" widgets are disabled via app.extensions
       # because they require a visits API that the homepage-backend doesn't fully implement.
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.54.9__1.18.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.54.9__3.0.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage-backend:bs_1.54.9__0.5.0
         disabled: false

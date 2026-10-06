@@ -52,7 +52,18 @@ export async function expectChatInputValue(
 }
 
 export async function startNewChat(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "New chat" }).click();
+  const newChat = page.getByRole("button", { name: "New chat" });
+  await expect(newChat).toBeVisible({ timeout: 30_000 });
+
+  // Empty welcome/new-chat shells keep this button disabled. Clicking it
+  // retries until the test timeout, then Playwright reports the page closed.
+  const alreadyBlank =
+    (await page.locator(".pf-chatbot__message--user").count()) === 0;
+  if (!alreadyBlank) {
+    await expect(newChat).toBeEnabled({ timeout: BOT_RESPONSE_TIMEOUT_MS });
+    await newChat.click();
+  }
+
   await expect(
     page.getByRole("textbox", { name: CHAT_PROMPT_PLACEHOLDER }),
   ).toBeVisible();
@@ -92,10 +103,12 @@ export async function submitFeedback(
 ): Promise<void> {
   await page.getByRole("button", { name: ratingButtonName }).click();
 
-  const feedbackCard = page.getByLabel("Why did you choose this rating?");
+  const feedbackCard = page.locator(".pf-chatbot__feedback-card");
   await expect(feedbackCard).toBeVisible();
 
-  const quickFeedbackLabels = feedbackCard.locator("li");
+  const quickFeedbackLabels = feedbackCard.locator(
+    ".pf-v6-c-label-group__list-item",
+  );
   await expect(quickFeedbackLabels).toHaveCount(3);
   await quickFeedbackLabels.first().click();
 
@@ -109,30 +122,35 @@ export async function submitFeedback(
   await feedbackConfirmationPanel.waitFor({ state: "hidden" });
 }
 
-/**
- * Latest completed bot bubble (has feedback/copy actions).
- * Skips hidden a11y echoes and in-progress tool-only messages.
- */
 export function lastBotMessage(page: Page) {
   return page
-    .locator(".pf-chatbot__message--bot")
-    .filter({ has: page.locator(".pf-chatbot__response-actions") })
+    .getByLabel("Scrollable message log")
+    .locator(".pf-chatbot__message--bot:visible")
     .last();
 }
 
-/**
- * Textual reply body only — excludes model name, timestamp, action buttons,
- * and tool-call chrome (collapsed "Tool response: …" controls share the
- * message-response container and pollute innerText / clipboard checks).
- */
+/** Response body only — excludes model name, timestamp, and action buttons. */
 export function lastBotResponseBody(page: Page) {
-  return lastBotMessage(page).getByRole("paragraph").last();
+  return lastBotMessage(page)
+    .locator(".pf-chatbot__message-response:visible")
+    .last();
 }
 
 export async function getLastBotResponseText(page: Page): Promise<string> {
-  const body = lastBotResponseBody(page);
-  await expect(body).toBeVisible();
-  const text = (await body.innerText()).trim();
+  const textParagraph = lastBotMessage(page)
+    .locator(".pf-chatbot__message-response p:visible")
+    .last();
+
+  let text: string;
+  if ((await textParagraph.count()) > 0) {
+    await expect(textParagraph).toBeVisible();
+    text = (await textParagraph.innerText()).trim();
+  } else {
+    const body = lastBotResponseBody(page);
+    await expect(body).toBeVisible();
+    text = (await body.innerText()).trim();
+  }
+
   expect(text.length).toBeGreaterThan(0);
   return text;
 }

@@ -6,10 +6,7 @@ function historyDrawer(page: Page): Locator {
 
 function drawerListItems(page: Page, label: string): Locator {
   return historyDrawer(page)
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", { name: label, exact: true }),
-    })
+    .getByRole("menu", { name: label, exact: true })
     .locator("li.pf-chatbot__menu-item");
 }
 
@@ -21,32 +18,38 @@ export function recentChatItems(page: Page): Locator {
   return drawerListItems(page, "Chats");
 }
 
+function chatRowByName(page: Page, section: string, chatName: string): Locator {
+  return drawerListItems(page, section).filter({ hasText: chatName }).first();
+}
+
 async function openChatOptionsOnItem(chatItem: Locator): Promise<void> {
-  await chatItem.locator("div").getByLabel("Options").click();
+  await chatItem.scrollIntoViewIfNeeded();
+  await chatItem.hover();
+  await chatItem.locator(".pf-chatbot__history-actions").click();
 }
 
 /** Opens the context menu on the active conversation in the history drawer. */
 export async function openActiveChatContextMenu(page: Page): Promise<void> {
-  await openChatOptionsOnItem(
-    historyDrawer(page).locator("li.pf-chatbot__menu-item--active"),
+  const active = historyDrawer(page).locator(
+    "li.pf-chatbot__menu-item--active",
   );
+  await expect(active).toBeVisible({ timeout: 30_000 });
+  await openChatOptionsOnItem(active);
 }
 
 export async function openChatContextMenuByName(page: Page, chatName: string) {
-  await openChatOptionsOnItem(
-    historyDrawer(page)
-      .locator("li.pf-chatbot__menu-item")
-      .filter({ hasText: chatName }),
-  );
+  const chat = chatRowByName(page, "Chats", chatName);
+  await expect(chat).toBeVisible({ timeout: 30_000 });
+  await openChatOptionsOnItem(chat);
 }
 
 export async function openPinnedChatContextMenuByName(
   page: Page,
   chatName: string,
 ) {
-  await openChatOptionsOnItem(
-    pinnedChatItems(page).filter({ hasText: chatName }),
-  );
+  const chat = chatRowByName(page, "Pinned chats", chatName);
+  await expect(chat).toBeVisible({ timeout: 30_000 });
+  await openChatOptionsOnItem(chat);
 }
 
 export async function verifyChatContextMenuOptions(page: Page) {
@@ -85,9 +88,9 @@ export async function submitChatRename(page: Page, newName: string) {
 }
 
 export async function verifyChatExists(page: Page, chatName: string) {
-  await expect(
-    recentChatItems(page).filter({ hasText: chatName }),
-  ).toBeVisible();
+  const chat = chatRowByName(page, "Chats", chatName);
+  await expect(chat).toBeVisible({ timeout: 30_000 });
+  await chat.scrollIntoViewIfNeeded();
 }
 
 const EMPTY_PINNED_CHATS_MESSAGE = "Pin chats to keep them on top";
@@ -174,11 +177,19 @@ export async function verifyChatDeleted(page: Page, chatName: string) {
 }
 
 export async function openChatbotSettings(page: Page) {
-  await page.getByRole("button", { name: "Options" }).click();
+  const options = page
+    .locator(".pf-chatbot__header")
+    .getByRole("button", { name: "Options" });
+  await expect(options).toBeVisible({ timeout: 15_000 });
+  await options.click();
 }
 
 export async function verifyChatbotSettingsVisible(page: Page) {
-  await expect(page.getByRole("button", { name: "Options" })).toBeVisible();
+  await expect(
+    page
+      .locator(".pf-chatbot__header")
+      .getByRole("button", { name: "Options" }),
+  ).toBeVisible();
 }
 
 export async function verifyPinnedSectionVisible(page: Page) {

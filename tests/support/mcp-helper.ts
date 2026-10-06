@@ -16,7 +16,7 @@ function getMcpSettingsTable(page: Page): Locator {
 
 async function openMcpSettings(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Options" }).click();
-  await page.getByRole("menuitem", { name: "MCP settings" }).click();
+  await page.getByRole("menuitem", { name: "MCP and Prompt Settings" }).click();
 }
 
 async function closeMcpSettingsIfOpen(page: Page): Promise<void> {

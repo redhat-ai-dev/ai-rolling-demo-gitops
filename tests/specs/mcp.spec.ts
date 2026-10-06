@@ -17,7 +17,7 @@ import {
 const MCP_TOOL_CALL_PROMPT =
   "Use the mcp_list_tools tool for server mcp-integration-tools, then respond with exactly: MCP tool call done.";
 
-test.describe.skip("Lightspeed MCP", () => {
+test.describe("Lightspeed MCP", () => {
   test.describe.configure({ mode: "serial", timeout: 12 * 60 * 1000 });
 
   let context: BrowserContext;
@@ -84,10 +84,9 @@ test.describe.skip("Lightspeed MCP", () => {
       .toBe(initiallyEnabled);
   });
 
-  // Real backend ships mcp-integration-tools with an organization token
-  // (charts/rhdh/values.yaml). Org mode hides #mcp-pat-input — same UI as
-  // rhdh-plugins MCP configure modal refactor (#3698).
-  test("edit opens configure modal with organization token", async () => {
+  // Rolling demo ships mcp-integration-tools with auth: dcr (no PAT radios).
+  // Kind CI values-ci.yaml still uses an organization token.
+  test("edit opens configure modal for the MCP server", async () => {
     await openMcpSettingsInMode(page, "Overlay");
     const modal = await openConfigureServerModal(page, MCP_SERVER_NAME);
 
@@ -98,9 +97,19 @@ test.describe.skip("Lightspeed MCP", () => {
     ).toBeVisible();
 
     await expect(modal.getByText("Status", { exact: true })).toBeVisible();
-    // Heading is "Tools (N)"; avoid matching tool names like mcp_list_tools.
-    await expect(modal.getByText(/^Tools \(\d+\)$/)).toBeVisible();
+    await expect(modal.getByText(/^Tools \(\d+\)$/).first()).toBeVisible();
     await expect(modal.getByText("Enabled", { exact: true })).toBeVisible();
+
+    const dcrNotice = modal.getByText(/Dynamic Client Registration \(DCR\)/i);
+    if (await dcrNotice.isVisible()) {
+      await expect(
+        modal.getByText("Authentication", { exact: true }),
+      ).toBeHidden();
+      await expect(page.locator("#mcp-pat-input")).toBeHidden();
+      await closeConfigureServerModal(page);
+      return;
+    }
+
     await expect(
       modal.getByText("Authentication", { exact: true }),
     ).toBeVisible();
@@ -124,8 +133,7 @@ test.describe.skip("Lightspeed MCP", () => {
     await closeConfigureServerModal(page);
   });
 
-  // Can be unskipped once https://redhat.atlassian.net/browse/RHDHBUGS-3655 is fixed.
-  test.skip("MCP tool calling renders in chat UI", async () => {
+  test("MCP tool calling renders in chat UI", async () => {
     await openMcpSettingsInMode(page, "Fullscreen");
     await ensureMcpServerEnabled(MCP_SERVER_NAME);
     await closeMcpSettings(page);

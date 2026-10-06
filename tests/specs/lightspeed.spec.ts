@@ -89,9 +89,9 @@ const fixturesDir = path.join(import.meta.dirname, "../fixtures/uploads");
 const e2eRoot = path.join(import.meta.dirname, "..");
 
 const DEFAULT_BOT_QUERY =
-  "Do not use tools. Reply with exactly one short sentence confirming you received this message.";
+  "How do I view the software catalog in Red Hat Developer Hub? Answer in one short sentence.";
 
-test.describe.skip("Lightspeed UI", () => {
+test.describe("Lightspeed UI", () => {
   test.describe.configure({ mode: "serial", timeout: 5 * 60 * 1000 });
 
   let context: BrowserContext;
@@ -271,8 +271,7 @@ test.describe.skip("Lightspeed UI", () => {
     let managementChatName: string;
 
     test("bot response, feedback submission, and copy to clipboard", async () => {
-      await selectChatModel(page);
-      await sendMessage(DEFAULT_BOT_QUERY, page);
+      await sendMessageInNewChat(page, DEFAULT_BOT_QUERY);
 
       const userMessage = page.locator(".pf-chatbot__message--user").last();
 
@@ -296,9 +295,7 @@ test.describe.skip("Lightspeed UI", () => {
     test("scroll controls in conversation", async () => {
       const scrollPrompt =
         "Do not use tools. Write a numbered list of 20 Kubernetes deployment best practices. One short line per item.";
-      // Do not wait for the spinner to clear: long replies keep
-      // .pf-chatbot__message-loading visible while content already overflows.
-      await sendMessageInNewChat(page, scrollPrompt, false);
+      await sendMessageInNewChat(page, scrollPrompt);
 
       const jumpTopButton = page.getByRole("button", {
         name: "Back to top",
@@ -307,7 +304,7 @@ test.describe.skip("Lightspeed UI", () => {
         name: "Back to bottom",
       });
 
-      await expect(jumpTopButton).toBeVisible({ timeout: 180_000 });
+      await expect(jumpTopButton).toBeVisible({ timeout: 30_000 });
       await jumpTopButton.click();
       await expect(
         page

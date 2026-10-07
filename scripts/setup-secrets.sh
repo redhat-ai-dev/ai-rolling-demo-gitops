@@ -45,7 +45,7 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=KV_STORE_PATH="${KV_STORE_PATH:-/tmp/kvstore.db}" \
     --from-literal=SQL_STORE_PATH="${SQL_STORE_PATH:-/tmp/sql_store.db}" \
     --from-literal=SQLITE_STORE_DIR="${SQLITE_STORE_DIR:-/tmp/llama-stack-files}" \
-    --from-literal=BOOST_OGX_URL="${BOOST_OGX_URL:-}" \
+    --from-literal=BOOST_OGX_URL="${BOOST_OGX_URL:-http://localhost:8321}" \
     --from-literal=BOOST_MODEL="${BOOST_MODEL:-}" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."

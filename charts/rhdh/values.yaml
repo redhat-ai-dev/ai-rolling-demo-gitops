@@ -584,6 +584,8 @@ backstage:
           entityProviders:
             ogx:
               baseUrl: ${BOOST_OGX_URL:-http://localhost:8321}
+              # Fast enough for Kind CI agent ingest checks; models stay at plugin default (60s).
+              agentRefreshIntervalSeconds: 30
               defaultAgent: router
               maxAgentTurns: 10
               agents:

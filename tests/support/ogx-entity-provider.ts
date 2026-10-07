@@ -55,7 +55,7 @@ export type AiResourceEntity = {
 };
 
 type CatalogByQueryResponse<T> = {
-  items?: Array<{ entity?: T }>;
+  items?: Array<T | { entity?: T }>;
 };
 
 function parseJson<T>(text: string): T | undefined {
@@ -64,6 +64,33 @@ function parseJson<T>(text: string): T | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Catalog `/entities/by-query` returns `items: Entity[]` (see QueryEntitiesResponse).
+ * Older helpers incorrectly assumed `{ entity }[]` and dropped every match.
+ */
+function entitiesFromByQueryItems<T extends { kind?: string }>(
+  items: Array<T | { entity?: T }> | undefined,
+): T[] {
+  if (!Array.isArray(items) || items.length === 0) {
+    return [];
+  }
+  return items
+    .map((item) => {
+      if (
+        item &&
+        typeof item === "object" &&
+        "entity" in item &&
+        item.entity &&
+        typeof item.entity === "object" &&
+        "kind" in item.entity
+      ) {
+        return item.entity;
+      }
+      return item as T;
+    })
+    .filter((entity): entity is T => Boolean(entity?.kind));
 }
 
 export function isOgxE2eRequired(): boolean {
@@ -82,10 +109,9 @@ export async function fetchAiResourceEntities(
     const body = parseJson<CatalogByQueryResponse<AiResourceEntity>>(
       byQuery.text,
     );
-    if (Array.isArray(body?.items)) {
-      return body.items
-        .map((item) => item.entity)
-        .filter((entity): entity is AiResourceEntity => Boolean(entity));
+    const fromQuery = entitiesFromByQueryItems(body?.items);
+    if (fromQuery.length > 0) {
+      return fromQuery;
     }
   }
 
@@ -113,10 +139,9 @@ export async function fetchAiModelServerEntities(
     const body = parseJson<CatalogByQueryResponse<AiModelServerApiEntity>>(
       byQuery.text,
     );
-    if (Array.isArray(body?.items)) {
-      return body.items
-        .map((item) => item.entity)
-        .filter((entity): entity is AiModelServerApiEntity => Boolean(entity));
+    const fromQuery = entitiesFromByQueryItems(body?.items);
+    if (fromQuery.length > 0) {
+      return fromQuery;
     }
   }
 

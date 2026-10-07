@@ -74,17 +74,28 @@ export async function verifyRenameChatForm(page: Page) {
 }
 
 export async function submitChatRename(page: Page, newName: string) {
-  const input = page.getByRole("textbox", { name: "Chat name" });
-  const renameButton = page.getByRole("button", { name: "Rename" });
+  const dialog = page.getByRole("dialog", { name: "Rename chat?" });
+  const input = dialog.getByRole("textbox", { name: "Chat name" });
+  const renameButton = dialog.getByRole("button", { name: "Rename" });
+  const clearInput = dialog.getByRole("button", { name: "clear-input" });
 
-  // Conversations can reload into the field after open; keep filling until the
-  // new name sticks and Rename enables (disabled when empty or unchanged).
+  // RenameConversationModal resets the field whenever the conversations query
+  // refetches (useEffect depends on `conversations`). Fill + enable can win a
+  // race, then the effect restores the original name and disables Rename again
+  // before a separate click. Keep clear → type → click → closed in one retry.
   await expect(async () => {
+    if (!(await dialog.isVisible().catch(() => false))) {
+      return;
+    }
+    await clearInput.click();
     await input.fill(newName);
     await expect(input).toHaveValue(newName);
     await expect(renameButton).toBeEnabled({ timeout: 2_000 });
-  }).toPass({ timeout: 30_000 });
-  await renameButton.click();
+    await renameButton.click();
+    await expect(dialog).toBeHidden({ timeout: 15_000 });
+  }).toPass({ timeout: 60_000 });
+
+  await expect(dialog).toBeHidden({ timeout: 5_000 });
 }
 
 export async function verifyChatExists(page: Page, chatName: string) {

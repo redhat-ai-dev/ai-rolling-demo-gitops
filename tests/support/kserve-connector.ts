@@ -65,7 +65,8 @@ export type AiModelServerApiEntity = {
 };
 
 type CatalogByQueryResponse = {
-  items?: Array<{ entity?: AiModelServerApiEntity }>;
+  // Catalog by-query returns Entity[] (QueryEntitiesResponse), not { entity }[].
+  items?: Array<AiModelServerApiEntity | { entity?: AiModelServerApiEntity }>;
 };
 
 type AuthGetResult = {
@@ -297,10 +298,25 @@ export async function fetchAiModelServerEntities(
   );
   if (byQuery.status >= 200 && byQuery.status < 300) {
     const body = parseJson<CatalogByQueryResponse>(byQuery.text);
-    if (Array.isArray(body?.items)) {
-      return body.items
-        .map((item) => item.entity)
-        .filter((entity): entity is AiModelServerApiEntity => Boolean(entity));
+    if (Array.isArray(body?.items) && body.items.length > 0) {
+      const entities = body.items
+        .map((item) => {
+          if (
+            item &&
+            typeof item === "object" &&
+            "entity" in item &&
+            item.entity?.kind
+          ) {
+            return item.entity;
+          }
+          return item as AiModelServerApiEntity;
+        })
+        .filter((entity): entity is AiModelServerApiEntity =>
+          Boolean(entity?.kind),
+        );
+      if (entities.length > 0) {
+        return entities;
+      }
     }
   }
 

@@ -47,25 +47,9 @@ test.describe("OGX entity provider", () => {
   });
 
   // Always runs on Kind CI — agents come from app-config, no live OGX required.
+  // Run catalog assertions before optional Extensions UI (Kind often has an empty
+  // installed-packages table; package presence is covered by Helm CI).
   test.describe("install checks", () => {
-    test("OGX / AI Catalog packages are listed in Extensions", async () => {
-      const onExtensions = await openExtensionsInstalledPackages(page);
-      test.skip(
-        !onExtensions,
-        "Extensions page unavailable in this deployment",
-      );
-
-      const table = page.locator("tbody tr, [data-testid='installed-list']");
-      await expect(table.first()).toBeVisible({ timeout: 30_000 });
-
-      for (const pkg of OGX_PACKAGE_SUBSTRINGS) {
-        await expect(
-          page.getByText(pkg, { exact: false }).first(),
-          `Installed packages should include ${pkg}`,
-        ).toBeVisible();
-      }
-    });
-
     test("ingests config agents as AiResource (type agent)", async () => {
       let agents: AiResourceEntity[] = [];
       await expect
@@ -122,6 +106,33 @@ test.describe("OGX entity provider", () => {
       await expect(
         page.getByText(/FantaCo Router|agent/i).first(),
       ).toBeVisible({ timeout: 30_000 });
+    });
+
+    // Optional per RHIDP-17280 — same UI gate as KServe (only useful when the
+    // Extensions installed-packages table is populated).
+    test("OGX / AI Catalog packages are listed in Extensions", async () => {
+      const onExtensions = await openExtensionsInstalledPackages(page);
+      test.skip(
+        !onExtensions,
+        "Extensions page unavailable in this deployment",
+      );
+
+      const table = page.locator("tbody tr");
+      const hasRows = await table
+        .first()
+        .isVisible({ timeout: 15_000 })
+        .catch(() => false);
+      test.skip(
+        !hasRows,
+        "Extensions installed-packages table empty (Kind CI); packages asserted by Helm",
+      );
+
+      for (const pkg of OGX_PACKAGE_SUBSTRINGS) {
+        await expect(
+          page.getByText(pkg, { exact: false }).first(),
+          `Installed packages should include ${pkg}`,
+        ).toBeVisible();
+      }
     });
   });
 

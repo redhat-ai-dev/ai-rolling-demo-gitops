@@ -10,14 +10,23 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VALUES="${REPO_ROOT}/charts/rhdh/values.yaml"
 
-# Dynamic plugins values must ship the standalone OGX entity provider package.
-if ! yq eval -e '
-  .global.dynamic.plugins[]
-  | select(.package | test("ogx-entity-provider"))
-' "${VALUES}" >/dev/null; then
-  echo "FAIL: values.yaml missing ogx-entity-provider dynamic plugin" >&2
-  exit 1
-fi
+# Dynamic plugins values must ship OGX + AI Catalog packages (Kind Extensions UI
+# often has an empty installed-packages table, so assert packages here instead).
+REQUIRED_PACKAGES=(
+  ogx-entity-provider
+  ai-catalog
+  catalog-backend-module-ai-resource-agent
+  catalog-backend-module-ai-model-server
+)
+for pkg in "${REQUIRED_PACKAGES[@]}"; do
+  if ! yq eval -e "
+    .global.dynamic.plugins[]
+    | select(.package | test(\"${pkg}\"))
+  " "${VALUES}" >/dev/null; then
+    echo "FAIL: values.yaml missing dynamic plugin matching ${pkg}" >&2
+    exit 1
+  fi
+done
 
 # Catalog provider config must use the AI Catalog namespace.
 yq eval -e '

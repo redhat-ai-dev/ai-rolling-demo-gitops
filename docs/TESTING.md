@@ -221,10 +221,10 @@ Config must live under `ai-catalog.entityProviders.ogx` in `charts/rhdh/values.y
 
 | Check | How |
 | --- | --- |
-| Helm config namespace | `tests/helm/test-ogx-entity-provider-config.sh` (PR CI) |
+| Helm config namespace + packages | `tests/helm/test-ogx-entity-provider-config.sh` (PR CI) |
 | Config agents → `AiResource` / `agent` | Playwright install checks (Kind CI — no live OGX required) |
 | OGX `/v1/models` → `AiModelServerAPI` | Playwright `cluster OGX models (OGX_E2E)` when `OGX_E2E=true` |
-| Extensions packages | Playwright install checks |
+| Extensions packages (optional) | Playwright when installed-packages table is populated; otherwise Helm |
 
 ```bash
 # PR CI / local Helm assertion

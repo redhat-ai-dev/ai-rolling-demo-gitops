@@ -106,7 +106,7 @@ global:
       # RHDH Homepage (customized home page with widgets + root redirect)
       # The "recently-visited" and "top-visited" widgets are disabled via app.extensions
       # because they require a visits API that the homepage-backend doesn't fully implement.
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.54.9__1.18.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.54.9__3.0.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage-backend:bs_1.54.9__0.5.0
         disabled: false
@@ -299,12 +299,16 @@ backstage:
                   redirects:
                     - from: /
                       to: /home
+            - page:home: false
+            - page:homepage:
+                config:
+                  path: /home
             # Disable as it conflicts with (nav-content:app/sidebar)
             - nav-content:app: false
             # Disable homepage widgets and visit tracking infrastructure
             # to avoid "Something Went Wrong" error boxes on the home page
-            - home-page-widget:home/recently-visited: false
-            - home-page-widget:home/top-visited: false
+            - home-page-widget:homepage/recently-visited-card: false
+            - home-page-widget:homepage/top-visited-card: false
             - api:home/visits: false
             - app-root-element:home/visit-listener: false
           analytics:
@@ -313,6 +317,20 @@ backstage:
               flushInterval: 5000
               debug: false
               licensedUsers: 50
+        homepage:
+          defaultWidgets:
+            - id: rhdh-onboarding-section
+              ref: rhdh-onboarding-section
+              props:
+                title: Onboarding section
+            - id: rhdh-entity-section
+              ref: rhdh-entity-section
+              props:
+                title: Entity section
+            - id: rhdh-template-section
+              ref: rhdh-template-section
+              props:
+                title: Template section
         auth:
           environment: production
           # Enable experimental features for OIDC auth

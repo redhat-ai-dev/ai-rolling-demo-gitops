@@ -134,8 +134,9 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 | `LIGHTSPEED_POSTGRES_DB`       | Lightspeed DB name                            |
 | `NOTEBOOKS_QUERY_PROVIDER_ID`  | Notebooks query provider ID                   |
 | `NOTEBOOKS_QUERY_MODEL`        | Notebooks query model                         |
-| `BOOST_OGX_URL`                | OGX (LlamaStack) endpoint URL for Boost agent chat |
-| `BOOST_MODEL`                  | Model name for Boost agents (optional)        |
+| `BOOST_OGX_URL`                | OGX endpoint URL for `ai-catalog.entityProviders.ogx` (and legacy `boost.providers.ogx`) |
+| `BOOST_MODEL`                  | Model name for OGX agents (optional)          |
+| `OGX_E2E`                      | When `true`, require live OGX `/v1/models` → `AiModelServerAPI` in Playwright |
 | `GH_APP_APP_ID`                | GitHub App ID (maps to `GITHUB_APP_APP_ID`)   |
 | `GH_APP_CLIENT_ID`             | GitHub App client ID                          |
 | `GH_APP_CLIENT_SECRET`         | GitHub App client secret                      |
@@ -211,6 +212,32 @@ KSERVE_E2E=true npx playwright test specs/kserve-connector.spec.ts
 2. Apply the RHOAI fixtures (`apply.sh rhoai`) in a namespace the connector's ServiceAccount can list (`inferenceservices`, `routes`, `serviceaccounts`).
 3. Run the same Playwright file with `KSERVE_E2E=true` against that RHDH `RHDH_BASE_URL`.
 4. Run `assert-no-connector-sidecars.sh` against the Backstage Deployment.
+
+## OGX entity provider QE
+
+Playwright coverage for the standalone `ogx-entity-provider` plugin lives in `tests/specs/ogx-entity-provider.spec.ts` ([RHIDP-16560](https://redhat.atlassian.net/browse/RHIDP-16560) / [RHIDP-17280](https://redhat.atlassian.net/browse/RHIDP-17280)).
+
+Config must live under `ai-catalog.entityProviders.ogx` in `charts/rhdh/values.yaml`. The plugin ignores legacy `boost.entityProviders.ogx` / `boost.providers.ogx` for entity ingestion (those namespaces are not a second path for the standalone provider).
+
+| Check | How |
+| --- | --- |
+| Helm config namespace + packages | `tests/helm/test-ogx-entity-provider-config.sh` (PR CI) |
+| Config agents → `AiResource` / `agent` | Playwright install checks (Kind CI — no live OGX required) |
+| OGX `/v1/models` → `AiModelServerAPI` | Playwright `cluster OGX models (OGX_E2E)` when `OGX_E2E=true` |
+| Extensions packages (optional) | Playwright when installed-packages table is populated; otherwise Helm |
+
+```bash
+# PR CI / local Helm assertion
+bash tests/helm/test-ogx-entity-provider-config.sh
+
+# Kind / rolling-demo (agents from app-config)
+cd tests
+npx playwright test specs/ogx-entity-provider.spec.ts
+
+# RHOAI / team OGX with live /v1/models
+export BOOST_OGX_URL="<ogx-url>"
+OGX_E2E=true npx playwright test specs/ogx-entity-provider.spec.ts
+```
 
 ## Troubleshooting
 

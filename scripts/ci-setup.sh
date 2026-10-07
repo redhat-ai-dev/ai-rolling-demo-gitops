@@ -227,14 +227,29 @@ if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
   log "Reconciling kserve-connector-secrets from rhdh-rhoai-bridge-token..."
   bash "$SCRIPTS_DIR/reconcile-kserve-secrets.sh"
 
-  log "Applying Kind KServe InferenceService fixtures in ${KSERVE_FIXTURE_NAMESPACE}..."
-  bash "$GITOPS_DIR/tests/fixtures/kserve/apply.sh" kind "$KSERVE_FIXTURE_NAMESPACE"
-
+  # Restart *before* applying InferenceService fixtures. Fixture predictors pull
+  # model images and compete with RHDH for Kind memory; a post-fixture restart
+  # previously timed out with old replicas stuck pending termination.
   log "Restarting RHDH so connector picks up reconciled cluster credentials..."
   kubectl rollout restart deployment/"${ARGOCD_APP_NAME}-backstage" \
     -n "$RHDH_NAMESPACE"
-  kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
-    -n "$RHDH_NAMESPACE" --timeout=600s
+  if ! kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
+    -n "$RHDH_NAMESPACE" --timeout=900s; then
+    log "RHDH rollout after secret reconcile failed — collecting diagnostics..."
+    kubectl get pods -n "$RHDH_NAMESPACE" -o wide || true
+    kubectl describe deployment/"${ARGOCD_APP_NAME}-backstage" -n "$RHDH_NAMESPACE" || true
+    kubectl get events -n "$RHDH_NAMESPACE" --sort-by='.lastTimestamp' | tail -40 || true
+    exit 1
+  fi
+
+  log "Applying Kind KServe InferenceService fixtures in ${KSERVE_FIXTURE_NAMESPACE}..."
+  bash "$GITOPS_DIR/tests/fixtures/kserve/apply.sh" kind "$KSERVE_FIXTURE_NAMESPACE"
+
+  # Predictors already reported Ready; the connector only needs InferenceService
+  # status fields. Scale them down so Playwright keeps Kind memory headroom.
+  log "Scaling down fixture predictors to free Kind capacity..."
+  kubectl -n "$KSERVE_FIXTURE_NAMESPACE" scale deploy --all --replicas=0 \
+    2>/dev/null || true
 
   # Give ModelCatalogResourceEntityProvider a short window after IS Ready.
   log "Waiting for connector reconcile window after InferenceServices are Ready..."

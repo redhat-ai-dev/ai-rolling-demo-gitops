@@ -370,17 +370,6 @@ test.describe("Lightspeed UI", () => {
       managementChatName = firstChatName;
     });
 
-    test("stop ends in-progress reply and restores the prompt in the input", async () => {
-      const stopFlowPrompt =
-        "Write an extremely long and detailed essay about OpenShift architecture with at least 50 paragraphs.";
-
-      await sendMessageInNewChat(page, stopFlowPrompt, false);
-      await expectChatStopButtonVisible(page);
-      await chatStopButton(page).click();
-      await expectChatInputValue(page, stopFlowPrompt);
-      await waitForChatMessageLoadingHidden(page, 15_000);
-    });
-
     // eslint-disable-next-line playwright/max-nested-describe -- shared page session under Conversation
     test.describe("Chat management", () => {
       const testChatName = "Test Rename";
@@ -493,6 +482,19 @@ test.describe("Lightspeed UI", () => {
         await page.waitForTimeout(2000);
         await verifyConversationsSortedAlphabetically(page, "desc");
       });
+    });
+
+    // After chat management: stop-stream creates heavy conversation list
+    // refetch that races RenameConversationModal's useEffect reset.
+    test("stop ends in-progress reply and restores the prompt in the input", async () => {
+      const stopFlowPrompt =
+        "Write an extremely long and detailed essay about OpenShift architecture with at least 50 paragraphs.";
+
+      await sendMessageInNewChat(page, stopFlowPrompt, false);
+      await expectChatStopButtonVisible(page);
+      await chatStopButton(page).click();
+      await expectChatInputValue(page, stopFlowPrompt);
+      await waitForChatMessageLoadingHidden(page, 15_000);
     });
   });
 });

@@ -105,7 +105,7 @@ bash "$SCRIPTS_DIR/apply-argocd-application.sh"
 # The kserve-connector-secrets created by setup-secrets.sh may have empty K8S_SA_TOKEN
 # because the rhdh-rhoai-bridge-token secret is Helm-managed and only exists after
 # ArgoCD syncs. Re-resolve now that the application has been deployed.
-if [[ "${SKIP_RHOAI_SETUP:-}" != "true" || "${RHOAI_PREINSTALLED:-}" == "true" ]]; then
+if [[ "${SKIP_RHOAI_SETUP:-}" != "true" || "${RHOAI_PREINSTALLED:-}" == "true" || "${INSTALL_KSERVE_KIND:-}" == "true" ]]; then
   bash "$SCRIPTS_DIR/reconcile-kserve-secrets.sh"
 fi
 

@@ -102,4 +102,5 @@ env \
   KEYCLOAK_CLIENT_ID="$KEYCLOAK_CLIENT_ID" \
   KEYCLOAK_CLIENT_SECRET="$KEYCLOAK_CLIENT_SECRET" \
   PLAYWRIGHT_HEADLESS="${PLAYWRIGHT_HEADLESS:-true}" \
+  KSERVE_E2E="${KSERVE_E2E:-}" \
   npx playwright test "${playwright_extra_args[@]}"

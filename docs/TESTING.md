@@ -155,7 +155,7 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 
 Playwright coverage for the standalone `kserve-kubeflow-connector` plugin lives in `tests/specs/kserve-connector.spec.ts`. It maps to the original [RHIDP-14261](https://redhat.atlassian.net/browse/RHIDP-14261) description / ACs (and child [RHIDP-17132](https://redhat.atlassian.net/browse/RHIDP-17132)) for both the RHOAI (devcluster) path and upstream KServe / KubeFlow Model Catalog on kind.
 
-Install-level checks always run on Kind CI (plugin HTTP API, no leftover sidecar location at `localhost:9090`). The `cluster fixtures (KSERVE_E2E)` describe block is skipped unless `KSERVE_E2E=true` (Extensions listing + InferenceService ingestion / overrides / TechDocs).
+Install-level checks always run on Kind CI (plugin HTTP API, no leftover sidecar location at `localhost:9090`). The `cluster fixtures (KSERVE_E2E)` describe block needs live InferenceServices; Kind CI now installs upstream KServe (RawDeployment) and applies `tests/fixtures/kserve` so those cases run with `KSERVE_E2E=true` ([RHIDP-17561](https://redhat.atlassian.net/browse/RHIDP-17561)). Set `INSTALL_KSERVE_KIND=false` to skip that path (fixtures describe soft-skips again).
 
 CI also runs `tests/helm/test-kserve-connector-no-sidecars.sh` on every PR to catch Helm regressions that would reintroduce legacy connector sidecars or drop `caData` wiring.
 
@@ -196,15 +196,22 @@ Replace `rhdh.io/catalog-source` / `rhdh.io/catalog-model` with IDs that exist i
 
 ### Kind cluster (upstream KServe / KubeFlow)
 
-1. Create a kind cluster and install [KServe](https://kserve.github.io/website/latest/get_started/) (RawDeployment is enough for these fixtures).
-2. Optionally install [KubeFlow Model Catalog](https://www.kubeflow.org/docs/components/model-registry/) if you need ModelCard/TechDocs, not just InferenceService discovery.
+`make ci-install` (with `INSTALL_KSERVE_KIND=true`, the default) installs cert-manager + KServe RawDeployment via `scripts/install-kserve-kind.sh`, enables the connector ConfigMap (`rhoai.enabled=true`, `rhoai.modelRegistry.enabled=false`), reconciles `kserve-connector-secrets` from `rhdh-rhoai-bridge-token`, restarts RHDH (before fixtures, to avoid Kind memory pressure), applies Kind InferenceService fixtures, and exports `KSERVE_E2E=true` for `make ci-tests`.
+
+Manual / existing cluster:
+
+1. Create a kind cluster (or reuse one) and run `make install-kserve-kind` (or install [KServe](https://kserve.github.io/website/latest/get_started/) yourself — RawDeployment is enough). Recipe notes from Gabe: [Kind KServe / InferenceService](https://docs.google.com/document/d/1tKtfZjmgVfwxvxKJuJhwwqOnYrj2XAPgVT5pYHq9wKQ/edit).
+2. Optionally install [KubeFlow Model Catalog](https://www.kubeflow.org/docs/components/model-registry/) if you need ModelCard/TechDocs, not just InferenceService discovery. Kind CI does **not** install Model Catalog; TechDocs assertions still cover the annotation → `backstage.io/techdocs-ref` mapping.
 3. Point RHDH at that cluster with the same credential mechanism used in production: `kubernetes.clusterLocatorMethods` or the connector's cluster `url` / `serviceAccountToken` / `caData` fields (see `charts/rhdh/templates/kserve-connector-config.yaml`). Do not add sidecar env vars.
 4. Apply the kind fixtures and run:
 
 ```bash
+tests/fixtures/kserve/apply.sh kind ggmtest
 cd tests
 KSERVE_E2E=true npx playwright test specs/kserve-connector.spec.ts
 ```
+
+`LLMInferenceService` coverage is intentionally out of this ticket — follow-up after InferenceService Kind CI is stable.
 
 ### RHOAI devcluster
 

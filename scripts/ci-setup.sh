@@ -75,6 +75,12 @@ export NOTEBOOKS_QUERY_MODEL="${NOTEBOOKS_QUERY_MODEL:-gpt-4o-mini}"
 # and lightspeed-postgres-info secrets, since their namespaces do not exist on kind
 export IS_SECONDARY_INSTANCE="true"
 
+# Install upstream KServe (RawDeployment) + apply InferenceService fixtures so
+# Kind CI can run the KServe connector cluster-fixture Playwright cases
+# (RHIDP-17561). Set INSTALL_KSERVE_KIND=false to skip.
+export INSTALL_KSERVE_KIND="${INSTALL_KSERVE_KIND:-true}"
+export KSERVE_FIXTURE_NAMESPACE="${KSERVE_FIXTURE_NAMESPACE:-ggmtest}"
+
 # create the kind cluster
 log "Creating Kind cluster..."
 kind create cluster --config "$GITOPS_DIR/ci/kind-config.yaml" --name rhdh-ci
@@ -95,6 +101,11 @@ kubectl wait --namespace ingress-nginx \
   --timeout=240s
 log "Adding $CI_HOSTNAME to /etc/hosts..."
 echo "127.0.0.1 $CI_HOSTNAME" | sudo tee -a /etc/hosts
+
+if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
+  log "Installing upstream KServe (RawDeployment) on Kind..."
+  bash "$SCRIPTS_DIR/install-kserve-kind.sh"
+fi
 
 # create namespaces for RHDH
 source "$SCRIPTS_DIR/setup-namespaces.sh"
@@ -210,5 +221,40 @@ kubectl wait job/update-deployment-containers \
 log "Waiting for RHDH to be ready after sidecars patch..."
 kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
   -n "$RHDH_NAMESPACE" --timeout=600s
+
+if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
+  # Bridge token is Helm-managed; reconcile after install (same as setup.sh).
+  log "Reconciling kserve-connector-secrets from rhdh-rhoai-bridge-token..."
+  bash "$SCRIPTS_DIR/reconcile-kserve-secrets.sh"
+
+  # Restart *before* applying InferenceService fixtures. Fixture predictors pull
+  # model images and compete with RHDH for Kind memory; a post-fixture restart
+  # previously timed out with old replicas stuck pending termination.
+  log "Restarting RHDH so connector picks up reconciled cluster credentials..."
+  kubectl rollout restart deployment/"${ARGOCD_APP_NAME}-backstage" \
+    -n "$RHDH_NAMESPACE"
+  if ! kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
+    -n "$RHDH_NAMESPACE" --timeout=900s; then
+    log "RHDH rollout after secret reconcile failed — collecting diagnostics..."
+    kubectl get pods -n "$RHDH_NAMESPACE" -o wide || true
+    kubectl describe deployment/"${ARGOCD_APP_NAME}-backstage" -n "$RHDH_NAMESPACE" || true
+    kubectl get events -n "$RHDH_NAMESPACE" --sort-by='.lastTimestamp' | tail -40 || true
+    exit 1
+  fi
+
+  log "Applying Kind KServe InferenceService fixtures in ${KSERVE_FIXTURE_NAMESPACE}..."
+  bash "$GITOPS_DIR/tests/fixtures/kserve/apply.sh" kind "$KSERVE_FIXTURE_NAMESPACE"
+
+  # Predictors already reported Ready; the connector only needs InferenceService
+  # status fields. Scale them down so Playwright keeps Kind memory headroom.
+  log "Scaling down fixture predictors to free Kind capacity..."
+  kubectl -n "$KSERVE_FIXTURE_NAMESPACE" scale deploy --all --replicas=0 \
+    2>/dev/null || true
+
+  # Give ModelCatalogResourceEntityProvider a short window after IS Ready.
+  log "Waiting for connector reconcile window after InferenceServices are Ready..."
+  sleep 60
+  export KSERVE_E2E=true
+fi
 
 log "CI setup complete. RHDH is available at http://$CI_HOSTNAME"

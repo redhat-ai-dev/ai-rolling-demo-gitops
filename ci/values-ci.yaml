@@ -9,6 +9,7 @@ redhat-developer-hub:
       enabled: false
   intelligentAssistant:
     okp:
+      # Kind omits the large OKP image and its OpenShift Route.
       enabled: false
   appConfig:
     permission:
@@ -84,10 +85,6 @@ redhat-developer-hub:
         runAsGroup: 0
       persistence:
         mountPath: /fedora/postgresql
-
-# The vendored OKP chart uses OpenShift Routes, and its image is too large for Kind.
-okp:
-  enabled: false
 
 # Enable the in-process KServe connector + bridge SA/token on Kind.
 # modelRegistry RoleBindings target an OpenShift-only namespace — keep off.

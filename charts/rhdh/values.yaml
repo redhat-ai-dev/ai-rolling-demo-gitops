@@ -18,8 +18,7 @@ redhat-developer-hub:
   intelligentAssistant:
     enabled: true
     okp:
-      # OKP is supplied by this repository's separate okp subchart.
-      enabled: false
+      enabled: true
     plugins:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.9__5.3.6
         disabled: false
@@ -32,8 +31,6 @@ redhat-developer-hub:
         repository: lightspeed-core/lightspeed-stack
         tag: 0.7.0
       extraEnv:
-        - name: OKP_SERVICE_URL
-          value: "https://{{ .Release.Name }}-lightspeed-okp-{{ .Release.Namespace }}.{{ .Values.openshift.clusterRouterBase }}"
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app-root/gcp-creds.json
       extraVolumeMounts:
@@ -881,5 +878,3 @@ rhoai:
   # RoleBindings into rhoai-model-registries. Set false on Kind (no RHOAI).
   modelRegistry:
     enabled: true
-okp:
-  enabled: true

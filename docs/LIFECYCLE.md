@@ -66,4 +66,4 @@ Once we have sufficiently validated the changes to the `development` branch and 
 
 ### The RHDH Image Updater (`rhdh-image-updater.yaml`) Workflow
 
-Runs nightly (or manually via `workflow_dispatch`). Reads the current `MAJOR.MAJOR-MINOR` tag (e.g. `1.10-123`) from `charts/rhdh/values.yaml`, queries `quay.io/rhdh/rhdh-hub-rhel9` for the highest minor number available under the same `MAJOR.MAJOR-` prefix, and opens a PR against `development` if a newer tag is found. The major version is never bumped automatically. Any previously open PR for an older tag is automatically closed and its branch deleted.
+Runs nightly from `main` (or manually via `workflow_dispatch`), checks out `development`, reads `redhat-developer-hub.image.tag` from `charts/rhdh/values.yaml`, queries `quay.io/rhdh/rhdh-hub-rhel10` for the highest numeric build under the same `MAJOR.MINOR-` prefix (e.g. `2.1-105`), and opens a PR against `development` if a newer tag is found. The release prefix is never bumped automatically. Any previously open PR for an older tag is automatically closed and its branch deleted.

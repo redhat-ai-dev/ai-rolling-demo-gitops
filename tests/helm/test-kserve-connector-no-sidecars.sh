@@ -20,6 +20,7 @@ LEGACY_SIDECARS=(
 
 helm template rolling-demo "${REPO_ROOT}/charts/rhdh" \
   --namespace rhdhai-development \
+  --kube-version 1.31.0 \
   --set okp.enabled=false \
   --set rhoai.enabled=true \
   --show-only templates/kserve-connector-config.yaml \
@@ -27,10 +28,15 @@ helm template rolling-demo "${REPO_ROOT}/charts/rhdh" \
 
 helm template rolling-demo "${REPO_ROOT}/charts/rhdh" \
   --namespace rhdhai-development \
+  --kube-version 1.31.0 \
   --set okp.enabled=false \
   --set rhoai.enabled=true \
-  --show-only templates/rolling-demo-sidecars-job.yaml \
-  > "${TEMP_DIR}/sidecars-job.yaml"
+  > "${TEMP_DIR}/rendered-chart.yaml"
+
+yq eval -e '
+  select(.kind == "Deployment" and .metadata.name == "rolling-demo-backstage")
+  | .metadata.name
+' "${TEMP_DIR}/rendered-chart.yaml" > /dev/null
 
 # Connector ConfigMap must exist and wire TLS + Model Catalog fields.
 yq eval -e '
@@ -41,17 +47,17 @@ yq eval -e '
   | select(test("kubeflow-model-catalog-url"))
 ' "${TEMP_DIR}/kserve-connector-config.yaml" >/dev/null
 
-# Sidecars job must not inject legacy connector bridge containers.
+# No rendered resource should reintroduce the legacy connector bridge.
 for needle in "${LEGACY_SIDECARS[@]}"; do
-  if grep -Fqi -- "$needle" "${TEMP_DIR}/sidecars-job.yaml"; then
-    echo "FAIL: rolling-demo-sidecars-job still references legacy connector artifact: ${needle}" >&2
+  if grep -Fqi -- "$needle" "${TEMP_DIR}/rendered-chart.yaml"; then
+    echo "FAIL: rendered chart contains legacy connector artifact: ${needle}" >&2
     exit 1
   fi
 done
 
 # Dynamic plugins values must ship the standalone connector package.
 if ! yq eval -e '
-  .global.dynamic.plugins[]
+  ."redhat-developer-hub".dynamicPlugins.plugins[]
   | select(.package | test("kserve-kubeflow-connector-backend"))
 ' "${REPO_ROOT}/charts/rhdh/values.yaml" >/dev/null; then
   echo "FAIL: values.yaml missing kserve-kubeflow-connector-backend dynamic plugin" >&2
@@ -60,7 +66,7 @@ fi
 
 # Catalog provider config in values must use the connector key (not a sidecar URL).
 yq eval -e '
-  .backstage.upstream.backstage.appConfig.catalog.providers.modelCatalog["kserve-kubeflow-connector"]
+  ."redhat-developer-hub".appConfig.catalog.providers.modelCatalog["kserve-kubeflow-connector"]
 ' "${REPO_ROOT}/charts/rhdh/values.yaml" >/dev/null
 
 echo "PASS: KServe connector Helm path has no legacy sidecars and wires caData."

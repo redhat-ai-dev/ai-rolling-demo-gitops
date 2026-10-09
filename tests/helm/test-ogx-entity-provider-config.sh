@@ -20,7 +20,7 @@ REQUIRED_PACKAGES=(
 )
 for pkg in "${REQUIRED_PACKAGES[@]}"; do
   if ! yq eval -e "
-    .global.dynamic.plugins[]
+    .\"redhat-developer-hub\".dynamicPlugins.plugins[]
     | select(.package | test(\"${pkg}\"))
   " "${VALUES}" >/dev/null; then
     echo "FAIL: values.yaml missing dynamic plugin matching ${pkg}" >&2
@@ -30,17 +30,17 @@ done
 
 # Catalog provider config must use the AI Catalog namespace.
 yq eval -e '
-  .backstage.upstream.backstage.appConfig["ai-catalog"].entityProviders.ogx.baseUrl
+  ."redhat-developer-hub".appConfig["ai-catalog"].entityProviders.ogx.baseUrl
 ' "${VALUES}" >/dev/null
 
 yq eval -e '
-  .backstage.upstream.backstage.appConfig["ai-catalog"].entityProviders.ogx.agents
+  ."redhat-developer-hub".appConfig["ai-catalog"].entityProviders.ogx.agents
   | length > 0
 ' "${VALUES}" >/dev/null
 
 # Legacy boost.entityProviders.ogx must not remain (plugin ignores it).
 if yq eval -e '
-  .backstage.upstream.backstage.appConfig.boost.entityProviders.ogx
+  ."redhat-developer-hub".appConfig.boost.entityProviders.ogx
 ' "${VALUES}" >/dev/null 2>&1; then
   echo "FAIL: values.yaml still has boost.entityProviders.ogx (ignored by plugin)" >&2
   exit 1

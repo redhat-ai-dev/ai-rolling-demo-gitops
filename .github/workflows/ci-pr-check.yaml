@@ -21,7 +21,7 @@ jobs:
         run: |
           # kind
           curl -sSLo /tmp/kind \
-            "https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64"
+            "https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64"
           sudo install /tmp/kind /usr/local/bin/kind
 
           # helm
@@ -32,8 +32,11 @@ jobs:
             "https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64"
           sudo install /tmp/yq /usr/local/bin/yq
 
-      - name: Test skills volume patch
-        run: bash tests/helm/test-skills-volume.sh
+      - name: Test chart-managed RHDH pod additions
+        run: bash tests/helm/test-rhdh-pod-additions.sh
+
+      - name: Test RHDH CI values
+        run: bash tests/helm/test-rhdh-ci-values.sh
 
       - name: Test KServe connector has no legacy sidecars
         run: bash tests/helm/test-kserve-connector-no-sidecars.sh

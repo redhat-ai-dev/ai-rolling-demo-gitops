@@ -148,6 +148,16 @@ make install-no-rhoai
 make install-kserve-catalog-bridge-rhoai-handled-separately
 ```
 
+#### Offline Knowledge Portal
+
+OKP is enabled through `redhat-developer-hub.intelligentAssistant.okp.enabled` in `charts/rhdh/values.yaml`. The RHDH chart owns its Deployment, Service, Route, image, resources, and runtime settings. The rolling demo uses the chart's shipped OKP defaults, which may change when the chart dependency is updated.
+
+The chart supplies `OKP_SERVICE_URL` to the Lightspeed Core container, including when Core mounts the existing `lightspeed-stack-config` ConfigMap. Do not add a manual URL in `intelligentAssistant.core.extraEnv`. On OpenShift, the chart derives the HTTPS endpoint from the release name, namespace, and `redhat-developer-hub.openshift.clusterRouterBase`.
+
+Native OKP resources use `<release>-backstage-ia-okp`, replacing the former `<release>-lightspeed-okp` resources. The RHDH resources retain `<release>-backstage`. OKP uses the index included in its image and does not declare a PVC. The separate `custom-org-docs` BYOK initialization and retrieval configuration continue to use the shared Lightspeed data volume.
+
+Kind disables native OKP in `ci/values-ci.yaml`; `scripts/ci-setup.sh` also removes OKP retrieval configuration for that environment. Before promoting `development` to `main`, validate the native endpoint, certificate trust, product-documentation retrieval, and BYOK retrieval on a test cluster. Record the resource replacement and any deployed storage overrides as part of that validation.
+
 #### `make install-no-rhoai` — lightweight install for smaller clusters
 
 `make install-no-rhoai` sets `SKIP_RHOAI_SETUP=true` and runs the same `setup.sh` entry point as the full install. It is the right choice when your cluster has no GPU nodes or you do not need the Model Catalog Bridge.

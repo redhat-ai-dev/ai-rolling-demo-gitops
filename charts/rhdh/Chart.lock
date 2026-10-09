@@ -2,8 +2,5 @@ dependencies:
 - name: redhat-developer-hub
   repository: https://redhat-developer.github.io/rhdh-chart/
   version: 3.4.5
-- name: okp
-  repository: ""
-  version: 0.1.0
-digest: sha256:565e5afa2b3b660443bb1a3d65585dedd71a51571fb583e93bab1d11341507d4
-generated: "2026-10-02T15:47:45.174433-04:00"
+digest: sha256:3401fef6991826d9e72a5423740474b8e9623b89428a74a26d3120ff920b9a2e
+generated: "2026-10-09T13:34:12.508344-04:00"

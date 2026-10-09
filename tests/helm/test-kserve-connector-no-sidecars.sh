@@ -21,7 +21,7 @@ LEGACY_SIDECARS=(
 helm template rolling-demo "${REPO_ROOT}/charts/rhdh" \
   --namespace rhdhai-development \
   --kube-version 1.31.0 \
-  --set okp.enabled=false \
+  --set redhat-developer-hub.intelligentAssistant.okp.enabled=false \
   --set rhoai.enabled=true \
   --show-only templates/kserve-connector-config.yaml \
   > "${TEMP_DIR}/kserve-connector-config.yaml"
@@ -29,7 +29,7 @@ helm template rolling-demo "${REPO_ROOT}/charts/rhdh" \
 helm template rolling-demo "${REPO_ROOT}/charts/rhdh" \
   --namespace rhdhai-development \
   --kube-version 1.31.0 \
-  --set okp.enabled=false \
+  --set redhat-developer-hub.intelligentAssistant.okp.enabled=false \
   --set rhoai.enabled=true \
   > "${TEMP_DIR}/rendered-chart.yaml"
 

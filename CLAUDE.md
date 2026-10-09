@@ -21,7 +21,7 @@ shellcheck scripts/*.sh       # Lint shell scripts locally before pushing
 | `main`        | `rolling-demo`    | `rolling-demo-ns`    | Production, auto-synced |
 | `development` | `rhdhai-rhdh-dev` | `rhdhai-development` | Staging, auto-synced    |
 
-Always target `development` for new changes. Promote to `main` via PR after validation on staging. Automation branches (`automation/rhdh-image-*`, `automation/plugin-*`) are created by GitHub Actions — do not edit them manually.
+Always target `development` for new changes. Scheduled workflow changes must also reach `main` to take effect. Promote to `main` via PR after validation on staging. Automation branches (`automation/rhdh-image-*`, `automation/plugin-*`) are created by GitHub Actions — do not edit them manually.
 
 ## Environment Setup
 
@@ -63,7 +63,7 @@ Test markers:
 | Workflow                  | Branch        | What it does                                                      |
 | ------------------------- | ------------- | ----------------------------------------------------------------- |
 | `plugins-updater.yaml`    | `development` | Opens one PR per plugin with a new OCI tag                        |
-| `rhdh-image-updater.yaml` | `development` | Opens a PR when a new `next-<hash>` RHDH image appears on Quay.io |
+| `rhdh-image-updater.yaml` | `main` → `development` | Runs from `main`, checks out `development`, and opens a PR there using `quay.io/rhdh/rhdh-hub-rhel10` and `redhat-developer-hub.image.tag` |
 | `nightly.yml`             | `main`        | Runs Playwright E2E tests; sends Slack alert on failure           |
 
 When updating plugin config in `charts/rhdh/values.yaml`, always cross-reference the RHDH release notes for the target version: `https://docs.redhat.com/en/documentation/red_hat_developer_hub/<version>/html/red_hat_developer_hub_release_notes` (e.g. replace `<version>` with `1.9`).

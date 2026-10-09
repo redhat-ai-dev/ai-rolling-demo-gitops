@@ -32,6 +32,9 @@ jobs:
             "https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64"
           sudo install /tmp/yq /usr/local/bin/yq
 
+      - name: Check vendored chart dependencies are in sync
+        run: bash tests/helm/test-chart-dependencies.sh
+
       - name: Test chart-managed RHDH pod additions
         run: bash tests/helm/test-rhdh-pod-additions.sh
 

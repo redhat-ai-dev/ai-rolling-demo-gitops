@@ -14,7 +14,7 @@ redhat-developer-hub:
     image:
       registry: quay.io
       repository: rhdh/plugin-catalog-index
-      tag: "2.1"
+      tag: "2.2"
   intelligentAssistant:
     enabled: true
     okp:

@@ -146,7 +146,7 @@ export async function verifyDisplayModeMenuOptions(page: Page): Promise<void> {
 
 export async function expectChatInputAreaVisible(page: Page): Promise<void> {
   await expect(
-    page.getByRole("textbox", { name: "Send a message" }),
+    page.getByRole("textbox", { name: "Enter a prompt." }),
   ).toBeVisible();
 }
 

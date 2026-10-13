@@ -126,9 +126,7 @@ export async function toggleMcpServer(
 
 /** Configure-server modal (token and org-credential flows). */
 export function mcpConfigureModal(page: Page): Locator {
-  return page
-    .locator("[role='dialog'], .pf-v6-c-modal-box")
-    .filter({ has: page.locator("#mcp-configure-modal-body") });
+  return page.locator('[role="dialog"][aria-labelledby="mcp-configure-modal"]');
 }
 
 export async function openConfigureServerModal(

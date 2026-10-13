@@ -44,7 +44,8 @@
       "commitMessageTopic": "{{depName}}"
     },
     {
-      "description": "Keep the RHDH chart on the release-2.1 version line",
+      "description": "Keep the RHDH chart on the release-2.1 version line on main",
+      "matchBaseBranches": ["main"],
       "matchManagers": ["helmv3"],
       "matchPackageNames": ["redhat-developer-hub"],
       "allowedVersions": ">=3.4.0 <3.5.0"

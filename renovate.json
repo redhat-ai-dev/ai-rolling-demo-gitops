@@ -16,6 +16,9 @@
     "helm-values",
     "helmv3"
   ],
+  "postUpdateOptions": [
+    "helmUpdateSubChartArchives"
+  ],
   "packageRules": [
     {
       "matchBaseBranches": ["main"],

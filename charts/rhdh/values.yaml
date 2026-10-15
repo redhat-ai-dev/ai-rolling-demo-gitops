@@ -29,7 +29,7 @@ redhat-developer-hub:
       image:
         registry: quay.io
         repository: lightspeed-core/lightspeed-stack
-        tag: 0.7.0
+        tag: 0.7.1
       extraEnv:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app-root/gcp-creds.json

@@ -26,7 +26,7 @@ jobs:
                   private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
             - name: Update plugins for next__ and bs_ tags
-              uses: redhat-ai-dev/rhdh-plugin-gitops-updater@f2a3be8411e9d032e63c27a015e7ffe97765d52b # v1.0.10
+              uses: redhat-ai-dev/rhdh-plugin-gitops-updater@573eea06affab90efaef8baa8596e6f7e0a67ca2 # v1.0.11
               with:
                   config-path: "charts/rhdh/values.yaml"
                   github-token: ${{ steps.app-token.outputs.token }}
@@ -34,5 +34,5 @@ jobs:
                   tag-prefixes: |
                       next__
                       bs_
-                  update-pr-strategy: "separate"
+                  update-pr-strategy: "grouped"
                   verbose: "1"

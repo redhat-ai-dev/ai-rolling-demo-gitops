@@ -543,9 +543,6 @@ redhat-developer-hub:
                 signInPage:
                   importName: RollingDemoCustomizedSignInPage
       ##### NFS Frontend Plugins #####
-      # App Defaults (NFS default extensions)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-defaults:bs_1.54.9__1.12.1
-        disabled: false
       # Theme
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-theme:bs_1.54.9__1.4.1
         disabled: false

@@ -542,29 +542,11 @@ redhat-developer-hub:
               red-hat-developer-hub.backstage-plugin-rolling-demo-customized-sign-in-page:
                 signInPage:
                   importName: RollingDemoCustomizedSignInPage
-      ##### NFS Frontend Plugins #####
-      # App Auth (NFS sign-in page, replaces custom sign-in page)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-auth:bs_1.54.9__1.2.0
-        disabled: false
-      # App Integrations (NFS provider integrations)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-integrations:bs_1.54.9__1.1.1
-        disabled: false
-      # App Defaults (NFS default extensions)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-app-defaults:bs_1.54.9__1.12.1
-        disabled: false
-      # Theme
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-theme:bs_1.54.9__1.4.1
-        disabled: false
-      # OAuth2 callback handler (may provide /oauth2/* route for OIDC flow)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.54.9__0.1.11
-        disabled: false
       ##### Red Hat Plugins #####
-      # ArgoCD (frontend disabled — no NFS version yet; backends kept)
-      # TODO: re-enable when https://github.com/backstage/community-plugins/pull/10112 merges
-      # and updated dynamic plugin images are available for argocd and argocd-backend
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.49.4__2.8.0
-        disabled: true
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-argo-cd-backend:bs_1.54.9__4.9.0
+      # ArgoCD
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.54.9__3.1.3
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd-backend:bs_1.54.9__1.7.2
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-argocd:bs_1.54.9__1.9.0
         disabled: false
@@ -602,32 +584,7 @@ redhat-developer-hub:
       # Tekton CI (NFS — no pluginConfig needed)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.54.9__4.0.5
         disabled: false
-      ##### Default Backstage Dynamic Plugins (OCI images for NFS) #####
-      # Catalog frontend (NFS page + sidebar nav — PR build, no released version yet)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog:pr_2563__2.0.1
-        disabled: false
-      # Catalog Import
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-import:bs_1.54.9__0.13.17
-        disabled: false
-      # Scaffolder frontend (NFS /create page — PR build)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder:pr_2563__1.36.1
-        disabled: false
-      # Search frontend (NFS /search page — PR build)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-search:pr_2563__1.7.0
-        disabled: false
-      # Home page (NFS / route)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-home:bs_1.54.9__0.9.9
-        disabled: false
-      # RHDH Homepage (customized home page with widgets + root redirect)
-      # The "recently-visited" and "top-visited" widgets are disabled via app.extensions
-      # because they require a visits API that the homepage-backend doesn't fully implement.
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage:bs_1.54.9__3.1.0
-        disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-homepage-backend:bs_1.54.9__0.6.0
-        disabled: false
-      # Global Header
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-global-header:bs_1.54.9__3.2.0
-        disabled: false
+
       # Kubernetes
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes-backend:bs_1.54.9__0.21.10
         disabled: false
@@ -640,39 +597,8 @@ redhat-developer-hub:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-catalog-backend-module-keycloak:bs_1.54.9__3.23.1
         disabled: false
 
-      # TechDocs
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs-backend:bs_1.54.9__2.2.5
-        disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs:bs_1.54.9__1.18.0
-        disabled: false
-      # Disable default catalog plugins replaced by OCI images above.
-      # These are enabled by dynamic-plugins.default.yaml and must be explicitly disabled.
-      - package: ref://red-hat-developer-hub-backstage-plugin-global-header
-        disabled: true
-      - package: ref://backstage-plugin-kubernetes
-        disabled: true
-      - package: ref://backstage-plugin-kubernetes-backend
-        disabled: true
-      - package: ref://backstage-community-plugin-topology
-        disabled: true
-      - package: ref://backstage-plugin-techdocs
-        disabled: true
-      - package: ref://backstage-plugin-techdocs-backend
-        disabled: true
-      # Disable Scalprum-only frontend plugins that lack NFS support (no mf-manifest.json)
-      - package: ref://red-hat-developer-hub-backstage-plugin-homepage
-        disabled: true
-      - package: ref://red-hat-developer-hub-backstage-plugin-quickstart
-        disabled: true
+      # Disable Segment Plugin (no segment key setup)
       - package: ref://backstage-community-plugin-analytics-provider-segment
-        disabled: true
-      - package: ref://backstage-plugin-techdocs-module-addons-contrib
-        disabled: true
-      - package: ref://red-hat-developer-hub-backstage-plugin-adoption-insights
-        disabled: true
-      - package: ref://red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights
-        disabled: true
-      - package: ref://red-hat-developer-hub-backstage-plugin-extensions
         disabled: true
       # Gitlab Plugins
       - package: ref://backstage-plugin-catalog-backend-module-github
@@ -688,6 +614,8 @@ redhat-developer-hub:
         disabled: false
       - package: ref://backstage-plugin-scaffolder-backend-module-github
         disabled: false
+
+      # OIDC Plugin
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth-backend-module-oidc-provider:bs_1.54.9__0.4.20
         disabled: false
     volume:

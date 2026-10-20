@@ -601,12 +601,6 @@ redhat-developer-hub:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-catalog-backend-module-keycloak:bs_1.54.6__3.23.1
         disabled: false
 
-      # TechDocs
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs-backend:bs_1.54.9__2.2.5
-        disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-techdocs:bs_1.54.9__1.18.0
-        disabled: false
-
       # Disable Segment Plugin (no segment key setup)
       - package: ref://backstage-community-plugin-analytics-provider-segment
         disabled: true

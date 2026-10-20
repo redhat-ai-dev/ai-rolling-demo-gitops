@@ -197,7 +197,7 @@ redhat-developer-hub:
           type: url
           rules:
             - allow: [Component, Location, Template]
-        - target: https://github.com/JslYoon/rhdh-llama-stack-agentic-sample/blob/ogx-client-migration/all.yaml
+        - target: https://github.com/redhat-developer/rhdh-llama-stack-agentic-sample/blob/main/all.yaml
           type: url
           rules:
             - allow: [Component, Location, Template]

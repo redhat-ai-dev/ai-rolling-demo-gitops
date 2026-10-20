@@ -584,10 +584,6 @@ redhat-developer-hub:
       # Tekton CI (NFS — no pluginConfig needed)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.54.9__4.0.5
         disabled: false
-      ##### Default Backstage Dynamic Plugins (OCI images for NFS) #####
-      # Search frontend (NFS /search page — PR build)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-search:pr_2563__1.7.0
-        disabled: false
 
       # Kubernetes
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes-backend:bs_1.54.9__0.21.10

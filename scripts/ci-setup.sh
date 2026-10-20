@@ -45,20 +45,45 @@ export ARGOCD_HOSTNAME="${ARGOCD_HOSTNAME:-dummy-argocd-hostname}"
 export ARGOCD_API_TOKEN="${ARGOCD_API_TOKEN:-dummy-argocd-token}"
 
 # setup lightspeed required secret values
+if [ -z "${OPENAI_API_KEY:-}" ] || [ -z "${VLLM_URL:-}" ] || [ -z "${VLLM_API_KEY:-}" ] || \
+   [ -z "${LIGHTSPEED_POSTGRES_USER:-}" ] || [ -z "${LIGHTSPEED_POSTGRES_PASSWORD:-}" ] || \
+   [ -z "${LIGHTSPEED_POSTGRES_DB:-}" ]; then
+  echo "WARNING: Required secrets are not set. If you are working from a fork, push your branch to the upstream repo and re-open the PR from there. For local runs, see docs/TESTING.md." >&2
+fi
+# New LCORE images require OTEL_ANONYMIZATION_SECRET when OTEL is enabled (RAG path).
+# Disable the SDK in CI instead of provisioning that secret.
+export OTEL_SDK_DISABLED=true
+export KV_STORE_PATH="/tmp/kvstore.db"
+export SQL_STORE_PATH="/tmp/sql_store.db"
+export SQLITE_STORE_DIR="/tmp/llama-stack-files"
+export ENABLE_VALIDATION=__disabled__
 export ENABLE_VLLM="true"
+export ENABLE_OPENAI="true"
+export OPENAI_API_KEY="${OPENAI_API_KEY:?OPENAI_API_KEY must be set}"
+# Optional: empty means the openai provider falls back to api.openai.com,
+# which is correct for CI (real OpenAI key). Cluster deployments set this
+# to the internal OpenAI-compatible gateway.
+export OPENAI_API_BASE_URL="${OPENAI_API_BASE_URL:-https://api.openai.com/v1}"
 export VLLM_URL="${VLLM_URL:?VLLM_URL must be set}"
 export VLLM_API_KEY="${VLLM_API_KEY:?VLLM_API_KEY must be set}"
-export VALIDATION_PROVIDER="${VALIDATION_PROVIDER:?VALIDATION_PROVIDER must be set}"
-export VALIDATION_MODEL_NAME="${VALIDATION_MODEL_NAME:?VALIDATION_MODEL_NAME must be set}"
+# CI uses OpenAI while the shared vLLM test endpoint is unstable.
+export VALIDATION_PROVIDER="${VALIDATION_PROVIDER:-openai}"
+export VALIDATION_MODEL_NAME="${VALIDATION_MODEL_NAME:-gpt-4o-mini}"
 export LIGHTSPEED_POSTGRES_USER="${LIGHTSPEED_POSTGRES_USER:?LIGHTSPEED_POSTGRES_USER must be set}"
 export LIGHTSPEED_POSTGRES_PASSWORD="${LIGHTSPEED_POSTGRES_PASSWORD:?LIGHTSPEED_POSTGRES_PASSWORD must be set}"
 export LIGHTSPEED_POSTGRES_DB="${LIGHTSPEED_POSTGRES_DB:?LIGHTSPEED_POSTGRES_DB must be set}"
-export NOTEBOOKS_QUERY_PROVIDER_ID="${NOTEBOOKS_QUERY_PROVIDER_ID:?NOTEBOOKS_QUERY_PROVIDER_ID must be set}"
-export NOTEBOOKS_QUERY_MODEL="${NOTEBOOKS_QUERY_MODEL:?NOTEBOOKS_QUERY_MODEL must be set}"
+export NOTEBOOKS_QUERY_PROVIDER_ID="${NOTEBOOKS_QUERY_PROVIDER_ID:-openai}"
+export NOTEBOOKS_QUERY_MODEL="${NOTEBOOKS_QUERY_MODEL:-gpt-4o-mini}"
 
 # we consider this to be a secondary instance. This will skip pipelines-as-code-secret
 # and lightspeed-postgres-info secrets, since their namespaces do not exist on kind
 export IS_SECONDARY_INSTANCE="true"
+
+# Install upstream KServe (RawDeployment) + apply InferenceService fixtures so
+# Kind CI can run the KServe connector cluster-fixture Playwright cases
+# (RHIDP-17561). Set INSTALL_KSERVE_KIND=false to skip.
+export INSTALL_KSERVE_KIND="${INSTALL_KSERVE_KIND:-true}"
+export KSERVE_FIXTURE_NAMESPACE="${KSERVE_FIXTURE_NAMESPACE:-ggmtest}"
 
 # create the kind cluster
 log "Creating Kind cluster..."
@@ -67,7 +92,7 @@ kubectl cluster-info --context kind-rhdh-ci
 
 # create the ingress-nginx controller
 log "Installing nginx ingress controller..."
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/kind/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.8/deploy/static/provider/kind/deploy.yaml
 log "Waiting for ingress-nginx controller pod to be created..."
 until kubectl get pods --namespace ingress-nginx \
   --selector=app.kubernetes.io/component=controller \
@@ -80,6 +105,11 @@ kubectl wait --namespace ingress-nginx \
   --timeout=240s
 log "Adding $CI_HOSTNAME to /etc/hosts..."
 echo "127.0.0.1 $CI_HOSTNAME" | sudo tee -a /etc/hosts
+
+if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
+  log "Installing upstream KServe (RawDeployment) on Kind..."
+  bash "$SCRIPTS_DIR/install-kserve-kind.sh"
+fi
 
 # create namespaces for RHDH
 source "$SCRIPTS_DIR/setup-namespaces.sh"
@@ -98,14 +128,32 @@ source "$SCRIPTS_DIR/setup-sa-tokens.sh"
 # we have already prepared all necessary env vars
 source "$SCRIPTS_DIR/setup-secrets.sh"
 
+# Notebooks use the inline faiss vector store (on-disk at /tmp), so CI does not
+# deploy a pgvector Postgres instance.
+
+# Strip OKP config from lightspeed-stack so LCORE starts without OKP on Kind.
+# The file is a Helm ConfigMap template ({{ .Release.Namespace }}), so yq can't
+# parse it — use sed instead. Removes "- okp" from rag.retrieval.tool.sources
+# and the nested rag.okp block.
+log "Stripping OKP config from lightspeed-stack-config for CI..."
+sed -i.bak '/^[[:space:]]*- okp$/d' \
+  "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml"
+sed -i.bak '/^      okp:$/,/^      [^ ]/{ /^      [^ ]/!d; /^      okp:$/d; }' \
+  "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml"
+rm -f "$GITOPS_DIR/charts/rhdh/templates/lightspeed-stack-config.yaml.bak"
+
 # initial installation of rhdh-chart provided our ci values
 log "Installing RHDH chart via Helm..."
+# Disable the scaffolder MCP extras plugin for the Kind environment.
+CI_RHDH_VALUES="$(mktemp)"
+trap 'rm -f "$CI_RHDH_VALUES"' EXIT
+yq '( ."redhat-developer-hub".dynamicPlugins.plugins[] | select(.package | contains("scaffolder-mcp-extras")) ).disabled = true' \
+  "$GITOPS_DIR/charts/rhdh/values.yaml" > "$CI_RHDH_VALUES"
 helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
   --namespace "$RHDH_NAMESPACE" \
-  -f "$GITOPS_DIR/charts/rhdh/values.yaml" \
+  -f "$CI_RHDH_VALUES" \
   -f "$GITOPS_DIR/ci/values-ci.yaml" \
-  --set 'global.dynamic.plugins[8].disabled=true' \
-  --set 'global.dynamic.plugins[9].disabled=true' \
+  --set "redhat-developer-hub.postgresql.auth.existingSecret=${ARGOCD_APP_NAME}-postgresql" \
   --timeout 40m \
   --wait
 
@@ -156,27 +204,39 @@ log "Waiting for RHDH to be ready..."
 kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
   -n "$RHDH_NAMESPACE" --timeout=600s
 
-# Kind limited resources (better not to install Argo): render the job
-# template with global.ci=false to override values-ci.yaml, then apply
-# it directly. This will by-pass the postsync hook of ArgoCD and add
-# all sidecars through a normal job.
-log "Applying sidecars job..."
-helm template "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
-  --namespace "$RHDH_NAMESPACE" \
-  -f "$GITOPS_DIR/charts/rhdh/values.yaml" \
-  -f "$GITOPS_DIR/ci/values-ci.yaml" \
-  --set global.ci=false \
-  -s templates/rolling-demo-sidecars-job.yaml \
-  | kubectl apply -n "$RHDH_NAMESPACE" -f -
+if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
+  # Bridge token is Helm-managed; reconcile after install (same as setup.sh).
+  log "Reconciling kserve-connector-secrets from rhdh-rhoai-bridge-token..."
+  bash "$SCRIPTS_DIR/reconcile-kserve-secrets.sh"
 
-log "Waiting for sidecars job to complete..."
-kubectl wait job/update-deployment-containers \
-  -n "$RHDH_NAMESPACE" \
-  --for=condition=complete \
-  --timeout=1200s
+  # Restart *before* applying InferenceService fixtures. Fixture predictors pull
+  # model images and compete with RHDH for Kind memory; a post-fixture restart
+  # previously timed out with old replicas stuck pending termination.
+  log "Restarting RHDH so connector picks up reconciled cluster credentials..."
+  kubectl rollout restart deployment/"${ARGOCD_APP_NAME}-backstage" \
+    -n "$RHDH_NAMESPACE"
+  if ! kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
+    -n "$RHDH_NAMESPACE" --timeout=900s; then
+    log "RHDH rollout after secret reconcile failed — collecting diagnostics..."
+    kubectl get pods -n "$RHDH_NAMESPACE" -o wide || true
+    kubectl describe deployment/"${ARGOCD_APP_NAME}-backstage" -n "$RHDH_NAMESPACE" || true
+    kubectl get events -n "$RHDH_NAMESPACE" --sort-by='.lastTimestamp' | tail -40 || true
+    exit 1
+  fi
 
-log "Waiting for RHDH to be ready after sidecars patch..."
-kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
-  -n "$RHDH_NAMESPACE" --timeout=600s
+  log "Applying Kind KServe InferenceService fixtures in ${KSERVE_FIXTURE_NAMESPACE}..."
+  bash "$GITOPS_DIR/tests/fixtures/kserve/apply.sh" kind "$KSERVE_FIXTURE_NAMESPACE"
+
+  # Predictors already reported Ready; the connector only needs InferenceService
+  # status fields. Scale them down so Playwright keeps Kind memory headroom.
+  log "Scaling down fixture predictors to free Kind capacity..."
+  kubectl -n "$KSERVE_FIXTURE_NAMESPACE" scale deploy --all --replicas=0 \
+    2>/dev/null || true
+
+  # Give ModelCatalogResourceEntityProvider a short window after IS Ready.
+  log "Waiting for connector reconcile window after InferenceServices are Ready..."
+  sleep 60
+  export KSERVE_E2E=true
+fi
 
 log "CI setup complete. RHDH is available at http://$CI_HOSTNAME"

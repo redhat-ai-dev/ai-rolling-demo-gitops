@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kserve-connector-app-config
+  namespace: {{ .Release.Namespace }}
+data:
+  kserve-connector-app-config.yaml: |
+{{- if .Values.rhoai.enabled }}
+    catalog:
+      providers:
+        modelCatalog:
+          kserve-kubeflow-connector:
+            cluster-1:
+              name: my-k8s-cluster
+              url: "${K8S_CLUSTER_URL}"
+              serviceAccountToken: "${K8S_SA_TOKEN}"
+              skipTLSVerify: false
+              caData: "${K8S_CA_DATA}"
+              kubeflow-model-catalog-url: "${KUBEFLOW_MODEL_CATALOG_URL}"
+              default-owner: "${OWNER:-default-owner}"
+              default-lifecycle: "${LIFECYCLE:-production}"
+{{- else }}
+    {}
+{{- end }}

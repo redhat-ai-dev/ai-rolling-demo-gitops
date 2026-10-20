@@ -36,6 +36,9 @@ POLL_INTERVAL=15
 # TIMEOUT: The maximum time (in seconds) to wait for an operator CSV to reach
 # the Succeeded phase or for custom resources to reach the desired conditions.
 TIMEOUT=900
+# PENDING_INSTALL_PLAN_TIMEOUT: The maximum time (in seconds) to look for an
+# optional Pipelines install plan that requires manual approval.
+PENDING_INSTALL_PLAN_TIMEOUT=60
 
 # ensure_namespace: creates a namespace if it doesn't exist
 ensure_namespace() {
@@ -102,6 +105,50 @@ install_cluster_scoped_operator() {
     exit 1
   fi
   log "Subscription for '$package' created."
+}
+
+# approve_pending_install_plan: finds and approves a pending install plan containing the target CSV.
+# In shared namespaces like openshift-operators, OLM may bundle multiple operators into one install
+# plan and use the most restrictive approval policy. If another subscription in the namespace uses
+# Manual approval, our Automatic subscription's install plan inherits Manual.
+approve_pending_install_plan() {
+  local namespace="$1"
+  local csv="$2"
+  local timeout="${3:-$PENDING_INSTALL_PLAN_TIMEOUT}"
+  local elapsed=0
+
+  log "Looking for pending install plan containing '$csv' in namespace '$namespace' for up to $timeout seconds..."
+  while (( elapsed < timeout )); do
+    local plan
+    plan=$(oc get installplan -n "$namespace" -o json 2>/dev/null \
+      | jq -r --arg csv "$csv" '.items[] | select(.spec.approved == false) | select(.spec.clusterServiceVersionNames[] == $csv) | .metadata.name' 2>/dev/null \
+      | head -1)
+    if [[ -n "$plan" ]]; then
+      log "Found pending install plan '$plan'. Approving..."
+      if oc patch installplan "$plan" -n "$namespace" --type merge -p '{"spec":{"approved":true}}' >/dev/null 2>&1; then
+        log "Install plan '$plan' approved."
+        return 0
+      else
+        log "Failed to approve install plan '$plan'."
+        log_fail
+        return 1
+      fi
+    fi
+
+    local approved_plan
+    approved_plan=$(oc get installplan -n "$namespace" -o json 2>/dev/null \
+      | jq -r --arg csv "$csv" '.items[] | select(.spec.approved == true) | select(.spec.clusterServiceVersionNames[] == $csv) | .metadata.name' 2>/dev/null \
+      | head -1)
+    if [[ -n "$approved_plan" ]]; then
+      log "Install plan '$approved_plan' for '$csv' is already approved."
+      return 0
+    fi
+
+    sleep "$POLL_INTERVAL"
+    elapsed=$((elapsed + POLL_INTERVAL))
+  done
+  log "No install plan found for '$csv' within timeout. Continuing anyway."
+  return 0
 }
 
 # install_namespaced_operator: creates namespace, applies OperatorGroup and Subscription from deps/
@@ -229,11 +276,12 @@ install_deps() {
   else
     log "OpenShift Pipelines Operator not found. Installing..."
     install_cluster_scoped_operator "$PIPELINES_OPERATOR_NAMESPACE" "openshift-pipelines-operator-subscription.yaml" "$PIPELINES_OPERATOR_PACKAGE"
+    approve_pending_install_plan "$PIPELINES_OPERATOR_NAMESPACE" "$PIPELINES_STARTING_CSV"
     wait_for_csv "$PIPELINES_OPERATOR_NAMESPACE" "$PIPELINES_OPERATOR_PACKAGE"
   fi
 
-  if [[ "${SKIP_RHOAI_SETUP}" == "true" ]]; then
-    log "SKIP_RHOAI_SETUP=true — skipping NFD and GPU operator installation."
+  if [[ "${SKIP_GPU_SETUP:-}" == "true" || "${SKIP_RHOAI_SETUP:-}" == "true" ]]; then
+    log "Skipping NFD and GPU operator installation (SKIP_GPU_SETUP=${SKIP_GPU_SETUP:-false}, SKIP_RHOAI_SETUP=${SKIP_RHOAI_SETUP:-false})."
   else
     # install Node Feature Discovery Operator if it doesn't exist
     if check_operator_exists "$NFD_OPERATOR_NAMESPACE" "$NFD_OPERATOR_PACKAGE"; then

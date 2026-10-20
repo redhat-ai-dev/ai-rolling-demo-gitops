@@ -21,7 +21,7 @@ shellcheck scripts/*.sh       # Lint shell scripts locally before pushing
 | `main`        | `rolling-demo`    | `rolling-demo-ns`    | Production, auto-synced |
 | `development` | `rhdhai-rhdh-dev` | `rhdhai-development` | Staging, auto-synced    |
 
-Always target `development` for new changes. Scheduled workflow changes must also reach `main` to take effect. Promote to `main` via PR after validation on staging. Automation branches (`automation/rhdh-image-*`, `automation/plugin-*`) are created by GitHub Actions — do not edit them manually.
+Always target `development` for new changes. Promote to `main` via PR after validation on staging. Automation branches (`automation/rhdh-image-*`, `automation/plugin-*`) are created by GitHub Actions — do not edit them manually.
 
 ## Environment Setup
 
@@ -37,14 +37,15 @@ Required CLI tools: `oc`, `kubectl`, `yq`, `argocd`, `cosign`, `openssl`, `envsu
 
 ## Testing
 
-Tests are in `tests/` using Playwright + pytest (Python ≥3.11, managed with `uv`).
+Tests are in `tests/` using Playwright + TypeScript (Node.js ≥24).
 
 Required env vars: `RHDH_BASE_URL`, `RHDH_ENVIRONMENT`, `ROLLING_DEMO_TEST_USERNAME`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
 
-Test markers:
+Primary spec files:
 
-- `smoke` — no authentication required
-- `auth_required` — needs a logged-in Keycloak session
+- `tests/specs/lightspeed.spec.ts`
+- `tests/specs/mcp.spec.ts`
+- `tests/specs/notebook.spec.ts`
 
 ## Key Files
 
@@ -63,7 +64,7 @@ Test markers:
 | Workflow                  | Branch        | What it does                                                      |
 | ------------------------- | ------------- | ----------------------------------------------------------------- |
 | `plugins-updater.yaml`    | `development` | Opens one PR per plugin with a new OCI tag                        |
-| `rhdh-image-updater.yaml` | `main` → `development` | Runs from `main`, checks out `development`, and opens a PR there using `quay.io/rhdh/rhdh-hub-rhel10` and `redhat-developer-hub.image.tag` |
+| `rhdh-image-updater.yaml` | `development` | Opens a PR when a new `next-<hash>` RHDH image appears on Quay.io |
 | `nightly.yml`             | `main`        | Runs Playwright E2E tests; sends Slack alert on failure           |
 
 When updating plugin config in `charts/rhdh/values.yaml`, always cross-reference the RHDH release notes for the target version: `https://docs.redhat.com/en/documentation/red_hat_developer_hub/<version>/html/red_hat_developer_hub_release_notes` (e.g. replace `<version>` with `1.9`).

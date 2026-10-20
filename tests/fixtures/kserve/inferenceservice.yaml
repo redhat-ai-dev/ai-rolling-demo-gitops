@@ -1,0 +1,22 @@
+# Baseline sklearn InferenceService for KServe connector QE.
+# Catalog IDs (rhdh.io/catalog-source + rhdh.io/catalog-model) are the two
+# annotations the plugin uses to look up a KubeFlow Model Catalog ModelCard
+# and to import TechDocs on the generated AiModelServerAPI entity.
+#
+# Replace the catalog-* values with IDs that exist in the target Model Catalog
+# when validating TechDocs/ModelCard import end-to-end.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: sklearn-iris
+  annotations:
+    rhdh.io/catalog-source: kserve-qe
+    rhdh.io/catalog-model: sklearn-iris
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: sklearn
+      protocolVersion: v2
+      runtime: mlserver-runtime
+      storageUri: "gs://kfserving-examples/models/sklearn/1.0/model"

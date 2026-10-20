@@ -30,7 +30,7 @@ GITOPS_STARTING_CSV="${GITOPS_STARTING_CSV:-openshift-gitops-operator.v1.19.1}"
 
 # Pipelines operator subscription settings
 PIPELINES_OPERATOR_CHANNEL="${PIPELINES_OPERATOR_CHANNEL:-latest}"
-PIPELINES_STARTING_CSV="${PIPELINES_STARTING_CSV:-openshift-pipelines-operator-rh.v1.21.0}"
+PIPELINES_STARTING_CSV="${PIPELINES_STARTING_CSV:-openshift-pipelines-operator-rh.v1.23.1}"
 
 # NFD operator subscription settings
 # If NFD_STARTING_CSV is not set, it will be auto-detected from the cluster catalog.

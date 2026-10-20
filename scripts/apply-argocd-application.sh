@@ -9,8 +9,6 @@ source "$SCRIPTS_DIR/common.sh"
 apply_argocd_application() {
   log "Applying gitops/application.yaml..."
   cd "$GITOPS_DIR" || { log "Failed to cd into $GITOPS_DIR. Exiting."; log_fail; exit 1; }
-  local openshift_ai_url="https://rhods-dashboard-redhat-ods-applications.${RHDH_CLUSTER_ROUTER_BASE}/"
-  local openshift_ai_param="global.dynamic.plugins[11].pluginConfig.dynamicPlugins.frontend.red-hat-developer-hub\\.backstage-plugin-global-header.mountPoints[13].config.props.link"
   local rhdh_namespace="${RHDH_NAMESPACE:-rolling-demo-ns}"
   local argocd_app_name="${ARGOCD_APP_NAME:-rolling-demo}"
   if oc get application "$argocd_app_name" -n openshift-gitops >/dev/null 2>&1; then
@@ -19,17 +17,18 @@ apply_argocd_application() {
     exit 1
   fi
   local helm_params
-  if [[ "${SKIP_RHOAI_SETUP}" == "true" ]]; then
+  if [[ "${SKIP_RHOAI_SETUP:-}" == "true" && "${RHOAI_PREINSTALLED:-}" != "true" ]]; then
     helm_params="[
-       {\"name\": \"global.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
+       {\"name\": \"redhat-developer-hub.openshift.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
        {\"name\": \"global.isSecondaryInstance\", \"value\": \"${IS_SECONDARY_INSTANCE:-false}\"},
-       {\"name\": \"rhoai.enabled\", \"value\": \"false\"}
+       {\"name\": \"rhoai.enabled\", \"value\": \"false\"},
+       {\"name\": \"redhat-developer-hub.postgresql.auth.existingSecret\", \"value\": \"$argocd_app_name-postgresql\"}
      ]"
   else
     helm_params="[
-       {\"name\": \"global.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
+       {\"name\": \"redhat-developer-hub.openshift.clusterRouterBase\", \"value\": \"$RHDH_CLUSTER_ROUTER_BASE\"},
        {\"name\": \"global.isSecondaryInstance\", \"value\": \"${IS_SECONDARY_INSTANCE:-false}\"},
-       {\"name\": \"$openshift_ai_param\", \"value\": \"$openshift_ai_url\"}
+       {\"name\": \"redhat-developer-hub.postgresql.auth.existingSecret\", \"value\": \"$argocd_app_name-postgresql\"}
      ]"
   fi
   if ! yq eval \

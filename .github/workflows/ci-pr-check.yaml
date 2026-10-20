@@ -10,7 +10,8 @@ jobs:
   e2e-tests:
     name: CI PR Check - E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Includes Kind KServe RawDeployment + InferenceService fixtures (RHIDP-17561).
+    timeout-minutes: 75
 
     steps:
       - name: Checkout PR branch
@@ -20,7 +21,7 @@ jobs:
         run: |
           # kind
           curl -sSLo /tmp/kind \
-            "https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64"
+            "https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64"
           sudo install /tmp/kind /usr/local/bin/kind
 
           # helm
@@ -30,6 +31,24 @@ jobs:
           curl -sSLo /tmp/yq \
             "https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64"
           sudo install /tmp/yq /usr/local/bin/yq
+
+      - name: Check vendored chart dependencies are in sync
+        run: bash tests/helm/test-chart-dependencies.sh
+
+      - name: Test chart-managed RHDH pod additions
+        run: bash tests/helm/test-rhdh-pod-additions.sh
+
+      - name: Test RHDH CI values
+        run: bash tests/helm/test-rhdh-ci-values.sh
+
+      - name: Test KServe connector has no legacy sidecars
+        run: bash tests/helm/test-kserve-connector-no-sidecars.sh
+
+      - name: Test OGX entity provider uses ai-catalog config
+        run: bash tests/helm/test-ogx-entity-provider-config.sh
+
+      - name: Test operator installation helpers
+        run: bash tests/scripts/test-install-operators.sh
 
       - name: Deploy RHDH on Kind
         env:
@@ -49,6 +68,8 @@ jobs:
           QUAY_DOCKERCONFIGJSON: ${{ secrets.QUAY_DOCKERCONFIGJSON }}
           VLLM_URL: ${{ secrets.VLLM_URL }}
           VLLM_API_KEY: ${{ secrets.VLLM_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE_URL: ${{ secrets.OPENAI_API_BASE_URL }}
           VALIDATION_PROVIDER: ${{ secrets.VALIDATION_PROVIDER }}
           VALIDATION_MODEL_NAME: ${{ secrets.VALIDATION_MODEL_NAME }}
           LIGHTSPEED_POSTGRES_USER: ${{ secrets.LIGHTSPEED_POSTGRES_USER }}
@@ -60,23 +81,24 @@ jobs:
           ARGOCD_PASSWORD: ${{ secrets.ARGOCD_PASSWORD }}
           ARGOCD_HOSTNAME: ${{ secrets.ARGOCD_HOSTNAME }}
           ARGOCD_API_TOKEN: ${{ secrets.ARGOCD_API_TOKEN }}
+          # Install upstream KServe + apply InferenceService fixtures (RHIDP-17561).
+          INSTALL_KSERVE_KIND: "true"
         run: make ci-install
 
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          python-version: "3.14"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: tests/package-lock.json
 
       - name: Install test dependencies
         working-directory: tests
-        run: uv sync
+        run: npm ci
 
       - name: Install Playwright browsers
         working-directory: tests
-        run: uv run playwright install chromium --with-deps
+        run: npx playwright install chromium --with-deps
 
       - name: Run E2E tests
         env:
@@ -85,6 +107,9 @@ jobs:
           ROLLING_DEMO_TEST_USERNAME: ${{ secrets.ROLLING_DEMO_TEST_USERNAME }}
           KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
           KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+          # Ungate KServe connector cluster-fixture cases after Kind install.
+          KSERVE_E2E: "true"
+          INSTALL_KSERVE_KIND: "true"
         run: make ci-tests
 
       - name: Collect RHDH logs
@@ -102,5 +127,6 @@ jobs:
           name: playwright-results
           path: |
             tests/playwright-report/
+            tests/test-results/
             /tmp/rhdh.log
           retention-days: 7

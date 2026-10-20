@@ -34,7 +34,7 @@ kubectl create secret generic "$SECRET_NAME" \
     --from-literal=VLLM_URL="$VLLM_URL" \
     --from-literal=VLLM_API_KEY="$VLLM_API_KEY" \
     --from-literal=OPENAI_API_KEY="${OPENAI_API_KEY:-passthrough}" \
-    --from-literal=OPENAI_API_BASE_URL="${OPENAI_API_BASE_URL:-}" \
+    --from-literal=OPENAI_API_BASE_URL="${OPENAI_API_BASE_URL:-https://api.openai.com/v1}" \
     --from-literal=VALIDATION_PROVIDER="$VALIDATION_PROVIDER" \
     --from-literal=VALIDATION_MODEL_NAME="$VALIDATION_MODEL_NAME" \
     --from-literal=NOTEBOOKS_QUERY_PROVIDER_ID="$NOTEBOOKS_QUERY_PROVIDER_ID" \

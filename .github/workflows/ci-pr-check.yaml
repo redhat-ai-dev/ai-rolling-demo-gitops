@@ -69,6 +69,7 @@ jobs:
           VLLM_URL: ${{ secrets.VLLM_URL }}
           VLLM_API_KEY: ${{ secrets.VLLM_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE_URL: ${{ secrets.OPENAI_API_BASE_URL }}
           VALIDATION_PROVIDER: ${{ secrets.VALIDATION_PROVIDER }}
           VALIDATION_MODEL_NAME: ${{ secrets.VALIDATION_MODEL_NAME }}
           LIGHTSPEED_POSTGRES_USER: ${{ secrets.LIGHTSPEED_POSTGRES_USER }}

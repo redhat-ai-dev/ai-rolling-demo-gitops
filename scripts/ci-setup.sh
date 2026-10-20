@@ -60,6 +60,10 @@ export ENABLE_VALIDATION=__disabled__
 export ENABLE_VLLM="true"
 export ENABLE_OPENAI="true"
 export OPENAI_API_KEY="${OPENAI_API_KEY:?OPENAI_API_KEY must be set}"
+# Optional: empty means the openai provider falls back to api.openai.com,
+# which is correct for CI (real OpenAI key). Cluster deployments set this
+# to the internal OpenAI-compatible gateway.
+export OPENAI_API_BASE_URL="${OPENAI_API_BASE_URL:-https://api.openai.com/v1}"
 export VLLM_URL="${VLLM_URL:?VLLM_URL must be set}"
 export VLLM_API_KEY="${VLLM_API_KEY:?VLLM_API_KEY must be set}"
 # CI uses OpenAI while the shared vLLM test endpoint is unstable.

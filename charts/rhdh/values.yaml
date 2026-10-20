@@ -542,10 +542,6 @@ redhat-developer-hub:
               red-hat-developer-hub.backstage-plugin-rolling-demo-customized-sign-in-page:
                 signInPage:
                   importName: RollingDemoCustomizedSignInPage
-      ##### NFS Frontend Plugins #####
-      # OAuth2 callback handler (may provide /oauth2/* route for OIDC flow)
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth:bs_1.54.9__0.1.11
-        disabled: false
       ##### Red Hat Plugins #####
       # ArgoCD
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.49.4__2.8.1

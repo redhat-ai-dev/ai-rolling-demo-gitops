@@ -7,7 +7,7 @@ redhat-developer-hub:
   image:
     registry: quay.io
     repository: rhdh/rhdh-hub-rhel10
-    tag: 2.1-119
+    tag: 2.1-120
   imagePullSecrets:
     - name: quay-pull-secret
   catalogIndex:

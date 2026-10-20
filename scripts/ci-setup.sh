@@ -45,7 +45,7 @@ export ARGOCD_HOSTNAME="${ARGOCD_HOSTNAME:-dummy-argocd-hostname}"
 export ARGOCD_API_TOKEN="${ARGOCD_API_TOKEN:-dummy-argocd-token}"
 
 # setup lightspeed required secret values
-if [ -z "${OPENAI_API_KEY:-}" ] || [ -z "${OPENAI_API_BASE_URL:-}" ] || [ -z "${VLLM_URL:-}" ] || [ -z "${VLLM_API_KEY:-}" ] || \
+if [ -z "${OPENAI_API_KEY:-}" ] || [ -z "${VLLM_URL:-}" ] || [ -z "${VLLM_API_KEY:-}" ] || \
    [ -z "${LIGHTSPEED_POSTGRES_USER:-}" ] || [ -z "${LIGHTSPEED_POSTGRES_PASSWORD:-}" ] || \
    [ -z "${LIGHTSPEED_POSTGRES_DB:-}" ]; then
   echo "WARNING: Required secrets are not set. If you are working from a fork, push your branch to the upstream repo and re-open the PR from there. For local runs, see docs/TESTING.md." >&2
@@ -60,7 +60,10 @@ export ENABLE_VALIDATION=__disabled__
 export ENABLE_VLLM="true"
 export ENABLE_OPENAI="true"
 export OPENAI_API_KEY="${OPENAI_API_KEY:?OPENAI_API_KEY must be set}"
-export OPENAI_API_BASE_URL="${OPENAI_API_BASE_URL:?OPENAI_API_BASE_URL must be set}"
+# Optional: empty means the openai provider falls back to api.openai.com,
+# which is correct for CI (real OpenAI key). Cluster deployments set this
+# to the internal OpenAI-compatible gateway.
+export OPENAI_API_BASE_URL="${OPENAI_API_BASE_URL:-}"
 export VLLM_URL="${VLLM_URL:?VLLM_URL must be set}"
 export VLLM_API_KEY="${VLLM_API_KEY:?VLLM_API_KEY must be set}"
 # CI uses OpenAI while the shared vLLM test endpoint is unstable.

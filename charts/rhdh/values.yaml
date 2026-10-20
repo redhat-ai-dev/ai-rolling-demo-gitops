@@ -585,9 +585,6 @@ redhat-developer-hub:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.54.9__4.0.5
         disabled: false
       ##### Default Backstage Dynamic Plugins (OCI images for NFS) #####
-      # Catalog Import
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-import:bs_1.54.9__0.13.17
-        disabled: false
       # Scaffolder frontend (NFS /create page — PR build)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-scaffolder:pr_2563__1.36.1
         disabled: false

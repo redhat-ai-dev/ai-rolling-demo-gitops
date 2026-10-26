@@ -58,12 +58,12 @@ The plugin updater workflow runs nightly (and can be triggered manually via `wor
 
 1. Checks out the repository.
 2. Runs the [`redhat-ai-dev/rhdh-plugin-gitops-updater`](https://github.com/redhat-ai-dev/rhdh-plugin-gitops-updater) action against `charts/rhdh/values.yaml`.
-3. Scans all `oci:` plugin image tags with the prefixes `bs_`, and resolves the latest available version for each.
-4. Opens a **pull request**, targeting the `development` branch, for each plugin that has a new version available.
+3. Scans all `oci:` plugin image tags with the prefixes `next__` and `bs_`, and resolves the latest available version for each.
+4. Opens a **pull request**, targeting the `development` branch, grouping all plugins that have a new version available into a single PR (`update-pr-strategy: "grouped"`).
 
 This automation ensures that our gitops environment uses always the latest stable versions of rhdh plugins.
 Once we have sufficiently validated the changes to the `development` branch and want to update the `main` branch, we will manually open a PR from `development` to `main`.
 
 ### The RHDH Image Updater (`rhdh-image-updater.yaml`) Workflow
 
-Runs nightly (or manually via `workflow_dispatch`). Reads the current `MAJOR.MAJOR-MINOR` tag (e.g. `1.10-123`) from `charts/rhdh/values.yaml`, queries `quay.io/rhdh/rhdh-hub-rhel9` for the highest minor number available under the same `MAJOR.MAJOR-` prefix, and opens a PR against `development` if a newer tag is found. The major version is never bumped automatically. Any previously open PR for an older tag is automatically closed and its branch deleted.
+Runs nightly (or manually via `workflow_dispatch`). Reads the current `MAJOR.MINOR-<N>` tag (e.g. `2.1-123`) from `charts/rhdh/values.yaml`, queries `quay.io/rhdh/rhdh-hub-rhel10` for the highest build number available under the same `MAJOR.MINOR-` prefix, and opens a PR against `development` if a newer tag is found. The version prefix (e.g. `2.1`) is never bumped automatically. Any previously open PR for an older tag is automatically closed and its branch deleted.

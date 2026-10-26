@@ -50,12 +50,13 @@ A guide covering RHDH fundamentals—navigation, the Software Catalog, TechDocs,
 
 Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md).
 
-Two install paths are available:
+Three install paths are available:
 
 | Command                 | Cluster requirements                     | What's included                                                                |
 | ----------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
 | `make install`          | GPU-capable nodes (`g5.2xlarge`+), RHOAI | Full stack: RHDH, Lightspeed, OKP, Model Catalog Bridge, AI Software Templates      |
 | `make install-no-rhoai` | Any OCP cluster (no GPU required)        | RHDH, Lightspeed, OKP, AI Software Templates — **no** Model Catalog Bridge or RHOAI |
+| `make install-kserve-catalog-bridge-rhoai-handled-separately` | Any OCP cluster with RHOAI pre-provisioned | RHDH connected to an existing RHOAI instance via the `kserve-kubeflow-connector` plugin |
 
 Use `make install-no-rhoai` when you want to run the demo on a smaller cluster that does not have GPU nodes or Red Hat OpenShift AI.
 

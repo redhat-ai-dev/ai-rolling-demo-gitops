@@ -121,6 +121,12 @@ export NOTEBOOKS_QUERY_PROVIDER_ID="vllm"
 # from the kserve deployment name or vLLM model path. It takes values similar to VALIDATION_MODEL_NAME.
 export NOTEBOOKS_QUERY_MODEL="llama-31-8b-version1"
 
+# Vertex AI (Gemini) — optional; these defaults are applied when left unset
+export VERTEX_AI_PROJECT="passthrough"
+export VERTEX_AI_LOCATION="global"
+# VERTEX_AI_CREDENTIALS: contents of a GCP service account JSON key
+export VERTEX_AI_CREDENTIALS=""
+
 # Boost / OGX (AI Catalog agent chat)
 # BOOST_OGX_URL: the URL of the OGX service backing the Boost agent chat.
 export BOOST_OGX_URL="http://ogx-service:8321"

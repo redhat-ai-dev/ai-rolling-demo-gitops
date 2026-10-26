@@ -253,13 +253,13 @@ redhat-developer-hub:
               - connectorPluginId: skill-image-connector # Registered connector plugin ID, not its config key.
                 sourceId: gabemontero-skills # Must match skillImageConnector.sources[].id.
                 sourceType: oci
-          defaultOwner: team-skills
-          defaultLifecycle: experimental
-          namespace: default
-          schedule:
-            frequency: { minutes: 1 } # Testing; default is 10 minutes.
-            timeout: { minutes: 10 }
-            initialDelay: { seconds: 0 }
+            defaultOwner: team-skills
+            defaultLifecycle: experimental
+            namespace: default
+            schedule:
+              frequency: { minutes: 1 } # Testing; default is 10 minutes.
+              timeout: { minutes: 10 }
+              initialDelay: { seconds: 0 }
     skillImageConnector:
       fetchTimeoutMs: 30000 # 30 seconds per request, including body reading
       maxBlobSizeBytes: 5242880 # 5 MiB per downloaded blob and decompressed layer

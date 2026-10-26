@@ -63,8 +63,8 @@ Primary spec files:
 
 | Workflow                  | Branch        | What it does                                                      |
 | ------------------------- | ------------- | ----------------------------------------------------------------- |
-| `plugins-updater.yaml`    | `development` | Opens one PR per plugin with a new OCI tag                        |
-| `rhdh-image-updater.yaml` | `development` | Opens a PR when a new `next-<hash>` RHDH image appears on Quay.io |
+| `plugins-updater.yaml`    | `development` | Opens a single grouped PR when plugins have new OCI tags          |
+| `rhdh-image-updater.yaml` | `development` | Opens a PR when a newer `MAJOR.MINOR-<N>` tag (e.g. `2.1-123`) of `quay.io/rhdh/rhdh-hub-rhel10` appears on Quay.io |
 | `nightly.yml`             | `main`        | Runs Playwright E2E tests; sends Slack alert on failure           |
 
 When updating plugin config in `charts/rhdh/values.yaml`, always cross-reference the RHDH release notes for the target version: `https://docs.redhat.com/en/documentation/red_hat_developer_hub/<version>/html/red_hat_developer_hub_release_notes` (e.g. replace `<version>` with `1.9`).

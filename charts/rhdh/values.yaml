@@ -793,6 +793,17 @@ redhat-developer-hub:
       tag: latest
     auth:
       username: postgres
+      # NOTE: Helm does not template values files, and the chart renders this
+      # value unquoted into the backstage Deployment env (POSTGRES_PASSWORD
+      # secretKeyRef.name), so it must stay a plain per-environment string —
+      # never "{{ .Release.Name }}-postgresql". This is the development
+      # default: the dev ArgoCD app reads values.yaml directly with no
+      # parameter override. Production sets it via the ArgoCD Application
+      # helm parameter
+      # redhat-developer-hub.postgresql.auth.existingSecret=rolling-demo-postgresql,
+      # injected by scripts/apply-argocd-application.sh at install time as
+      # ${ARGOCD_APP_NAME}-postgresql (patch the live Application for
+      # existing clusters).
       existingSecret: "rhdhai-rhdh-dev-postgresql"
       secretKeys:
         adminPasswordKey: postgres-password

@@ -620,6 +620,9 @@ redhat-developer-hub:
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.54.9__1.1.0
         disabled: false
+      # Skills Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-skills-catalog-provider:bs_1.54.9__1.1.0
+        disabled: false
       # Skills image connector (built against an older Backstage line; see plugin tag)
       - package: oci://quay.io/gabemontero/red-hat-developer-hub-backstage-plugin-skill-image-connector-backend:bs_1.54.6__0.10.0
         disabled: false

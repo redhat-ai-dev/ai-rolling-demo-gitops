@@ -20,8 +20,6 @@ redhat-developer-hub:
     okp:
       enabled: true
       # Temporary override until the chart dependency includes OKP 1.3.
-      image:
-        tag: "1.3.0-1792010339"
     # Dynamic plugins intentionally not overridden — the chart's bundled ref://
     # defaults ship versions matched to each chart release.
     existingSecret: "llama-stack-secrets"

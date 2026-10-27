@@ -282,6 +282,8 @@ redhat-developer-hub:
           scope: local # Required: each backend instance maintains its own snapshots.
           allowedRegistries:
             - quay.io
+          allowedOrigins:
+            - https://s3.us-east-1.amazonaws.com
           quayDiscovery:
             organization: gabemontero
         - id: skillimage-skills
@@ -292,6 +294,8 @@ redhat-developer-hub:
           scope: local
           allowedRegistries:
             - quay.io
+          allowedOrigins:
+            - https://s3.us-east-1.amazonaws.com
           quayDiscovery:
             organization: skillimage
     intelligent-assistant:

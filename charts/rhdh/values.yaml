@@ -253,11 +253,14 @@ redhat-developer-hub:
               - connectorPluginId: skill-image-connector # Registered connector plugin ID, not its config key.
                 sourceId: gabemontero-skills # Must match skillImageConnector.sources[].id.
                 sourceType: oci
+              - connectorPluginId: skill-image-connector
+                sourceId: skillimage-skills
+                sourceType: oci
             defaultOwner: team-skills
             defaultLifecycle: experimental
             namespace: default
             schedule:
-              frequency: { minutes: 1 } # Testing; default is 10 minutes.
+              frequency: { minutes: 5 }
               timeout: { minutes: 10 }
               initialDelay: { seconds: 0 }
     skillImageConnector:
@@ -273,19 +276,24 @@ redhat-developer-hub:
       sources:
         - id: gabemontero-skills
           schedule:
-            frequency: { minutes: 1 } # Testing; default is 10 minutes.
+            frequency: { minutes: 5 }
             timeout: { minutes: 10 }
             initialDelay: { seconds: 0 }
           scope: local # Required: each backend instance maintains its own snapshots.
           allowedRegistries:
             - quay.io
-          # Optional explicit images; can be combined with quayDiscovery.
-          # images:
-          #   - imageRef: quay.io/gabemontero/hello-world-skill:1.0.0-draft
           quayDiscovery:
-            organization: gabemontero # required
-            # registry: quay.io # optional, defaults to quay.io
-            # tag: 1.0.0-draft # optional exact filter; omit for all active tags
+            organization: gabemontero
+        - id: skillimage-skills
+          schedule:
+            frequency: { minutes: 5 }
+            timeout: { minutes: 10 }
+            initialDelay: { seconds: 0 }
+          scope: local
+          allowedRegistries:
+            - quay.io
+          quayDiscovery:
+            organization: skillimage
     intelligent-assistant:
       screen-context:
         enabled: true

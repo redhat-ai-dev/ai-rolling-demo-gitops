@@ -22,11 +22,8 @@ redhat-developer-hub:
       # Temporary override until the chart dependency includes OKP 1.3.
       image:
         tag: "1.3.0-1792687969"
-    plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.9__5.3.10
-        disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.54.9__5.3.10
-        disabled: false
+    # Dynamic plugins intentionally not overridden — the chart's bundled ref://
+    # defaults ship versions matched to each chart release.
     existingSecret: "llama-stack-secrets"
     core:
       image:
@@ -197,7 +194,7 @@ redhat-developer-hub:
           type: url
           rules:
             - allow: [Component, Location, Template]
-        - target: https://github.com/redhat-developer/rhdh-llama-stack-agentic-sample/blob/ai-rolling-demo-2_1/all.yaml
+        - target: https://github.com/redhat-developer/rhdh-ogx-agentic-sample/blob/ai-rolling-demo-2_1/all.yaml
           type: url
           rules:
             - allow: [Component, Location, Template]

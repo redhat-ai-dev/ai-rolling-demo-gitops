@@ -1,6 +1,6 @@
 dependencies:
 - name: redhat-developer-hub
   repository: https://redhat-developer.github.io/rhdh-chart/
-  version: 3.4.10
-digest: sha256:6d1ea423c58551a49c579b9cc334396de73f22654e328d4316cd49bcc3ebd077
-generated: "2026-10-13T09:55:47.723107-04:00"
+  version: 3.5.13
+digest: sha256:e0d010117dc54fa102d7970f4b4c5057a89c1f241724fa25072814489898a52d
+generated: "2026-10-27T18:13:31.844539936Z"

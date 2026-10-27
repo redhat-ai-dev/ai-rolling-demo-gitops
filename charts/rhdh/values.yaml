@@ -14,7 +14,7 @@ redhat-developer-hub:
     image:
       registry: quay.io
       repository: rhdh/plugin-catalog-index
-      tag: "2.2"
+      tag: "2.1"
   intelligentAssistant:
     enabled: true
     okp:
@@ -197,7 +197,7 @@ redhat-developer-hub:
           type: url
           rules:
             - allow: [Component, Location, Template]
-        - target: https://github.com/redhat-developer/rhdh-llama-stack-agentic-sample/blob/ai-rolling-demo-2_1/all.yaml
+        - target: https://github.com/redhat-developer/rhdh-ogx-agentic-sample/blob/ai-rolling-demo-2_1/all.yaml
           type: url
           rules:
             - allow: [Component, Location, Template]

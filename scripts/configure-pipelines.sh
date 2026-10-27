@@ -151,6 +151,25 @@ if ! DEV_SETUP_TASK=$(echo "${DEV_SETUP_TASK}" | yq ".spec.steps[0].script = str
     exit 1
 fi
 
+log "Waiting for Tekton webhook to be ready..."
+WEBHOOK_TIMEOUT=300
+WEBHOOK_ELAPSED=0
+while (( WEBHOOK_ELAPSED < WEBHOOK_TIMEOUT )); do
+    if kubectl get endpoints tekton-pipelines-webhook -n "$PAC_NAMESPACE" -o jsonpath='{.subsets[0].addresses[0].ip}' >/dev/null 2>&1; then
+        WEBHOOK_IP=$(kubectl get endpoints tekton-pipelines-webhook -n "$PAC_NAMESPACE" -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null)
+        if [[ -n "$WEBHOOK_IP" ]]; then
+            log "Tekton webhook endpoint is ready ($WEBHOOK_IP)."
+            break
+        fi
+    fi
+    log "Tekton webhook not ready yet. Waiting..."
+    sleep 5
+    WEBHOOK_ELAPSED=$((WEBHOOK_ELAPSED + 5))
+done
+if (( WEBHOOK_ELAPSED >= WEBHOOK_TIMEOUT )); then
+    log "Timed out waiting for Tekton webhook. Continuing anyway..."
+fi
+
 log "Applying Tekton Task definition..."
 if ! kubectl apply -n "${NAMESPACE}" -f - >/dev/null <<EOF
 ${DEV_SETUP_TASK}

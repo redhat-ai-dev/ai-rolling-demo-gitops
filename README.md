@@ -10,10 +10,11 @@ The repository contains the gitops resources required to deploy an instance of t
 The rolling demo combines the following components so far:
 
 - The redhat developer hub chart ([rhdh-chart](https://github.com/redhat-developer/rhdh-chart)), in an attempt to keep the demo up-to-date with the latest changes of RHDH.
-- The [AI software templates](https://github.com/redhat-ai-dev/ai-lab-template), a collection of Software Templates based on AI applications.
+- The [AI software templates](https://github.com/redhat-developer/rhdh-ai-template), a collection of Software Templates based on AI applications.
 - The [Model Catalog Bridge](https://github.com/redhat-ai-dev/model-catalog-bridge) and the [catalog-backend-module-rhdh-ai](https://github.com/redhat-ai-dev/rhdh-plugins/tree/main/workspaces/rhdh-ai/plugins/catalog-backend-module-rhdh-ai) plugin. This mechanism provides a way to facilitate the seamless export of AI model records from Red Hat OpenShift AI and imports them into Red Hat Developer Hub (Backstage) as catalog entities.
 - The [MCP Plugins](https://github.com/redhat-developer/rhdh-plugins/tree/main/workspaces/mcp-integrations), which provides a way for LLMs and AI applications to interact with Developer Hub.
 - `Red Hat Developer Lightspeed` (Developer Lightspeed) is a virtual assistant powered by generative AI that offers in-depth insights into `Red Hat Developer Hub` (RHDH), including its wide range of capabilities.
+- The [Red Hat Offline Knowledge Portal](https://access.redhat.com/products/red-hat-offline-knowledge-portal/) (OKP), deployed through the RHDH chart's native Intelligent Assistant support with its shipped defaults, provides offline Red Hat product documentation search.
 
 ## Capabilities & Limitations
 
@@ -49,12 +50,13 @@ A guide covering RHDH fundamentals—navigation, the Software Catalog, TechDocs,
 
 Some instructions on how to setup an instance of the rolling demo on your own can be found in [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md).
 
-Two install paths are available:
+Three install paths are available:
 
 | Command                 | Cluster requirements                     | What's included                                                                |
 | ----------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `make install`          | GPU-capable nodes (`g5.2xlarge`+), RHOAI | Full stack: RHDH, Lightspeed, Model Catalog Bridge, AI Software Templates      |
-| `make install-no-rhoai` | Any OCP cluster (no GPU required)        | RHDH, Lightspeed, AI Software Templates — **no** Model Catalog Bridge or RHOAI |
+| `make install`          | GPU-capable nodes (`g5.2xlarge`+), RHOAI | Full stack: RHDH, Lightspeed, OKP, Model Catalog Bridge, AI Software Templates      |
+| `make install-no-rhoai` | Any OCP cluster (no GPU required)        | RHDH, Lightspeed, OKP, AI Software Templates — **no** Model Catalog Bridge or RHOAI |
+| `make install-kserve-catalog-bridge-rhoai-handled-separately` | Any OCP cluster with RHOAI pre-provisioned | RHDH connected to an existing RHOAI instance via the `kserve-kubeflow-connector` plugin |
 
 Use `make install-no-rhoai` when you want to run the demo on a smaller cluster that does not have GPU nodes or Red Hat OpenShift AI.
 

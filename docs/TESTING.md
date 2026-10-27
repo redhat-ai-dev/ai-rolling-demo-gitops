@@ -12,8 +12,8 @@ A user is also able to run our testing suite locally (`make ci-install && make c
 - `helm` v3+
 - `kubectl`
 - `openssl`
-- `python` version greater than `3.11`.
-- [uv](https://docs.astral.sh/uv/) installed (`pip install uv` or via the official installer).
+- `node` version greater than or equal to `24`.
+- `npm` (bundled with Node).
 - `sudo` access (the script writes to `/etc/hosts`)
 
 ### Prepare `scripts/private-env`
@@ -42,6 +42,13 @@ export VALIDATION_MODEL_NAME="<model>"
 # Notebooks
 export NOTEBOOKS_QUERY_PROVIDER_ID="<provider-id>"
 export NOTEBOOKS_QUERY_MODEL="<model>"
+
+# Boost / OGX (AI Catalog agent chat)
+# URL to OGX (LlamaStack) instance for Boost plugin agent chat
+# Dev cluster default: https://llamastack-llamastack.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
+export BOOST_OGX_URL="<ogx-url>"
+# Optional: model name override for Boost agents (defaults handled by OGX)
+export BOOST_MODEL="<model-name>"
 
 # Lightspeed PostgreSQL
 export LIGHTSPEED_POSTGRES_USER="<user>"
@@ -83,6 +90,20 @@ make ci-install   # creates Kind cluster and deploys RHDH (~40 min)
 make ci-tests     # runs the Playwright E2E suite
 ```
 
+If you want to run the Playwright suite against an existing RHDH instance (without Kind):
+
+1. Copy `tests/.env.example` to `tests/.env` and fill in the auth values.
+2. Run:
+
+```bash
+cd tests
+npm ci
+npx playwright install chromium --with-deps
+npx playwright test          # headless
+npx playwright test --ui     # interactive UI mode
+npx playwright test --headed # headed browser, no UI runner
+```
+
 To tear down the cluster afterwards:
 
 ```bash
@@ -113,6 +134,9 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 | `LIGHTSPEED_POSTGRES_DB`       | Lightspeed DB name                            |
 | `NOTEBOOKS_QUERY_PROVIDER_ID`  | Notebooks query provider ID                   |
 | `NOTEBOOKS_QUERY_MODEL`        | Notebooks query model                         |
+| `BOOST_OGX_URL`                | OGX endpoint URL for `ai-catalog.entityProviders.ogx` (and legacy `boost.providers.ogx`) |
+| `BOOST_MODEL`                  | Model name for OGX agents (optional)          |
+| `OGX_E2E`                      | When `true`, require live OGX `/v1/models` → `AiModelServerAPI` in Playwright |
 | `GH_APP_APP_ID`                | GitHub App ID (maps to `GITHUB_APP_APP_ID`)   |
 | `GH_APP_CLIENT_ID`             | GitHub App client ID                          |
 | `GH_APP_CLIENT_SECRET`         | GitHub App client secret                      |
@@ -127,8 +151,103 @@ The CI PR check workflow (`.github/workflows/ci-pr-check.yaml`) reads the same v
 | `ROLLING_DEMO_TEST_USERNAME`   | Keycloak username used by E2E tests           |
 | `RHDH_ENVIRONMENT`             | Environment label passed to tests (e.g. `ci`) |
 
+## KServe / KubeFlow connector QE
+
+Playwright coverage for the standalone `kserve-kubeflow-connector` plugin lives in `tests/specs/kserve-connector.spec.ts`. It maps to the original [RHIDP-14261](https://redhat.atlassian.net/browse/RHIDP-14261) description / ACs (and child [RHIDP-17132](https://redhat.atlassian.net/browse/RHIDP-17132)) for both the RHOAI (devcluster) path and upstream KServe / KubeFlow Model Catalog on kind.
+
+Install-level checks always run on Kind CI (plugin HTTP API, no leftover sidecar location at `localhost:9090`). The `cluster fixtures (KSERVE_E2E)` describe block needs live InferenceServices; Kind CI now installs upstream KServe (RawDeployment) and applies `tests/fixtures/kserve` so those cases run with `KSERVE_E2E=true` ([RHIDP-17561](https://redhat.atlassian.net/browse/RHIDP-17561)). Set `INSTALL_KSERVE_KIND=false` to skip that path (fixtures describe soft-skips again).
+
+CI also runs `tests/helm/test-kserve-connector-no-sidecars.sh` on every PR to catch Helm regressions that would reintroduce legacy connector sidecars or drop `caData` wiring.
+
+| Ticket scenario / attachment | How it is covered |
+| --- | --- |
+| InferenceService discovery + Model Catalog on RHOAI 3.x+ | Apply RHOAI fixtures, then ingestion tests against `AiModelServerAPI` |
+| Upstream KServe on kind (no RHOAI APIs) | Apply kind fixtures; same ingestion tests |
+| KubeFlow Model Catalog / ModelCard + TechDocs | `rhdh.io/catalog-source` and `rhdh.io/catalog-model` on the IS; entity `backstage.io/techdocs-ref` |
+| No sidecar (`location`, `storage-rest`, `rhoai-normalizer`) | Helm unit test + Playwright plugin `/list` + catalog locations + optional live `assert-no-connector-sidecars.sh` |
+| Spec overrides (`system`, `serverType`, models, default) | `inferenceservice-overrides.yaml` + entity spec/UI assertions |
+| Credentials only via cluster config (no sidecar env vars) | `kserve-connector-app-config` / secrets (`K8S_*`, `KUBEFLOW_MODEL_CATALOG_URL`) |
+| `mlserver-serving-runtime.yaml` / IS YAML | `tests/fixtures/kserve/` (+ kind variants) |
+| `OCP-SET-UP-CLIENT-TLS.md` / `extract-ca-*` / `set-ca-env.sh` | `tests/fixtures/kserve/tls/` — feed `K8S_CA_DATA` into `private-env` / secrets |
+
+### Fixtures
+
+Manifests and helpers are under `tests/fixtures/kserve/`.
+
+```bash
+# RHOAI / OpenShift (MLServer ServingRuntime from registry.redhat.io)
+tests/fixtures/kserve/apply.sh rhoai ggmtest
+
+# Upstream KServe on kind (RawDeployment, no RHOAI runtime image)
+tests/fixtures/kserve/apply.sh kind ggmtest
+
+# Optional: live Deployment must not have legacy connector sidecar containers
+tests/fixtures/kserve/assert-no-connector-sidecars.sh rhdhai-development
+
+# Optional: client TLS for non–Let's Encrypt API servers (RHIDP-14261 attachments)
+./tests/fixtures/kserve/tls/extract-ca-from-kubeconfig.sh "$KUBECONFIG" [cluster-name]
+source ./tests/fixtures/kserve/tls/set-ca-env.sh
+# then put K8S_CA_DATA into scripts/private-env and re-run setup-secrets / install
+```
+
+The connector only emits an `AiModelServerAPI` entity after the InferenceService has `status.url` (or `status.address.url`). Wait for Ready, then give the entity provider a short reconcile window before running tests.
+
+Replace `rhdh.io/catalog-source` / `rhdh.io/catalog-model` with IDs that exist in the target KubeFlow Model Catalog when validating live ModelCard → TechDocs import. The checked-in values (`kserve-qe` / `sklearn-iris`) still prove the annotation → `backstage.io/techdocs-ref` mapping.
+
+### Kind cluster (upstream KServe / KubeFlow)
+
+`make ci-install` (with `INSTALL_KSERVE_KIND=true`, the default) installs cert-manager + KServe RawDeployment via `scripts/install-kserve-kind.sh`, enables the connector ConfigMap (`rhoai.enabled=true`, `rhoai.modelRegistry.enabled=false`), reconciles `kserve-connector-secrets` from `rhdh-rhoai-bridge-token`, restarts RHDH (before fixtures, to avoid Kind memory pressure), applies Kind InferenceService fixtures, and exports `KSERVE_E2E=true` for `make ci-tests`.
+
+Manual / existing cluster:
+
+1. Create a kind cluster (or reuse one) and run `make install-kserve-kind` (or install [KServe](https://kserve.github.io/website/latest/get_started/) yourself — RawDeployment is enough). Recipe notes from Gabe: [Kind KServe / InferenceService](https://docs.google.com/document/d/1tKtfZjmgVfwxvxKJuJhwwqOnYrj2XAPgVT5pYHq9wKQ/edit).
+2. Optionally install [KubeFlow Model Catalog](https://www.kubeflow.org/docs/components/model-registry/) if you need ModelCard/TechDocs, not just InferenceService discovery. Kind CI does **not** install Model Catalog; TechDocs assertions still cover the annotation → `backstage.io/techdocs-ref` mapping.
+3. Point RHDH at that cluster with the same credential mechanism used in production: `kubernetes.clusterLocatorMethods` or the connector's cluster `url` / `serviceAccountToken` / `caData` fields (see `charts/rhdh/templates/kserve-connector-config.yaml`). Do not add sidecar env vars.
+4. Apply the kind fixtures and run:
+
+```bash
+tests/fixtures/kserve/apply.sh kind ggmtest
+cd tests
+KSERVE_E2E=true npx playwright test specs/kserve-connector.spec.ts
+```
+
+`LLMInferenceService` coverage is intentionally out of this ticket — follow-up after InferenceService Kind CI is stable.
+
+### RHOAI devcluster
+
+1. Use the team RHOAI 3.x+ cluster that already backs the rolling demo / development instance (`make install-kserve-catalog-bridge-rhoai-handled-separately`).
+2. Apply the RHOAI fixtures (`apply.sh rhoai`) in a namespace the connector's ServiceAccount can list (`inferenceservices`, `routes`, `serviceaccounts`).
+3. Run the same Playwright file with `KSERVE_E2E=true` against that RHDH `RHDH_BASE_URL`.
+4. Run `assert-no-connector-sidecars.sh` against the Backstage Deployment.
+
+## OGX entity provider QE
+
+Playwright coverage for the standalone `ogx-entity-provider` plugin lives in `tests/specs/ogx-entity-provider.spec.ts` ([RHIDP-16560](https://redhat.atlassian.net/browse/RHIDP-16560) / [RHIDP-17280](https://redhat.atlassian.net/browse/RHIDP-17280)).
+
+Config must live under `ai-catalog.entityProviders.ogx` in `charts/rhdh/values.yaml`. The plugin ignores legacy `boost.entityProviders.ogx` / `boost.providers.ogx` for entity ingestion (those namespaces are not a second path for the standalone provider).
+
+| Check | How |
+| --- | --- |
+| Helm config namespace + packages | `tests/helm/test-ogx-entity-provider-config.sh` (PR CI) |
+| Config agents → `AiResource` / `agent` | Playwright install checks (Kind CI — no live OGX required) |
+| OGX `/v1/models` → `AiModelServerAPI` | Playwright `cluster OGX models (OGX_E2E)` when `OGX_E2E=true` |
+| Extensions packages (optional) | Playwright when installed-packages table is populated; otherwise Helm |
+
+```bash
+# PR CI / local Helm assertion
+bash tests/helm/test-ogx-entity-provider-config.sh
+
+# Kind / rolling-demo (agents from app-config)
+cd tests
+npx playwright test specs/ogx-entity-provider.spec.ts
+
+# RHOAI / team OGX with live /v1/models
+export BOOST_OGX_URL="<ogx-url>"
+OGX_E2E=true npx playwright test specs/ogx-entity-provider.spec.ts
+```
+
 ## Troubleshooting
 
-- **Test suite fails on first `test_navbar.py` test**: If Kind cluster is created successfully but then your tests are failing when an authenticated session is required (e.g. `test_navbar` which is the first group of tests ran where auth is required), you have most probably haven't exported correctly the variables mentioned in [Prepare `scripts/private-env`](#prepare-scriptsprivate-env).
+- **Test suite fails on first authenticated Lightspeed spec**: If Kind cluster is created successfully but tests fail before the first `/lightspeed` assertions, the likely issue is missing or wrong auth variables used by the Keycloak impersonation flow (`RHDH_ENVIRONMENT`, `ROLLING_DEMO_TEST_USERNAME`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`).
 
 - **Tests hit wrong RHDH URL (e.g. your OCP cluster's hostname instead of `rhdh-ci.apps.testing`)**: This usually means `RHDH_BASE_URL` was set to a custom value before running `make ci-tests`. The CI scripts derive `RHDH_BASE_URL` from `CI_HOSTNAME` (default: `rhdh-ci.apps.testing`). Do not set `RHDH_BASE_URL` manually when running local CI tests — unset it and let `run-tests.sh` compute it. Note that `RHDH_CLUSTER_ROUTER_BASE` (used for OCP deployments) does **not** affect the local Kind CI hostname; `clusterRouterBase` is fixed to `apps.testing` in `ci/values-ci.yaml` because `ci-setup.sh` writes `127.0.0.1 rhdh-ci.apps.testing` to `/etc/hosts` and configures the Kind ingress to that same hostname — changing the variable alone without re-running the cluster setup would break the routing.

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-rbac-policy
+  namespace: {{ .Release.Namespace }}
+data:
+  rbac-policy.csv: |
+    p, role:default/mcp-admin, intelligent-assistant.mcp.manage, update, allow
+    g, user:default/jcollier, role:default/mcp-admin
+    g, user:default/mvaldron, role:default/mcp-admin
+    g, user:default/lucasyoon, role:default/mcp-admin

@@ -1,0 +1,29 @@
+# InferenceService that exercises AiModelServerAPI spec overrides.
+# Expected catalog entity (namespace ggmtest):
+#   metadata.name: ggmtest-sklearn-iris-overrides
+#   spec.system: kserve-qe-system
+#   spec.serverType: openai-v1
+#   spec.models.available: [sklearn-iris-primary, sklearn-iris-secondary]
+#   spec.models.default: sklearn-iris-primary
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: sklearn-iris-overrides
+  annotations:
+    rhdh.io/catalog-source: kserve-qe
+    rhdh.io/catalog-model: sklearn-iris
+    rhdh.io/system: kserve-qe-system
+    rhdh.io/serverType: openai-v1
+    rhdh.io/default: sklearn-iris-primary
+    rhdh.io/model-primary: sklearn-iris-primary
+    rhdh.io/model-secondary: sklearn-iris-secondary
+    rhdh.io/owner: team-rhdhpai
+    rhdh.io/lifecycle: experimental
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: sklearn
+      protocolVersion: v2
+      runtime: mlserver-runtime
+      storageUri: "gs://kfserving-examples/models/sklearn/1.0/model"

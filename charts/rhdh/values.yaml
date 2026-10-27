@@ -1,11 +1,540 @@
 global:
   ci: false
-  dynamic:
+redhat-developer-hub:
+  # Keep the existing <release>-backstage Route, Service, and Deployment names.
+  # Setup URLs, OIDC callbacks, and CI ingress/service references depend on them.
+  nameOverride: backstage
+  image:
+    registry: quay.io
+    repository: rhdh/rhdh-hub-rhel10
+    tag: 2.1-120
+  imagePullSecrets:
+    - name: quay-pull-secret
+  catalogIndex:
+    image:
+      registry: quay.io
+      repository: rhdh/plugin-catalog-index
+      tag: "2.2"
+  intelligentAssistant:
+    enabled: true
+    okp:
+      enabled: true
+      # Temporary override until the chart dependency includes OKP 1.3.
+      image:
+        tag: "1.3.0-1792010339"
+    plugins:
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.9__5.3.10
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.54.9__5.3.10
+        disabled: false
+    existingSecret: "llama-stack-secrets"
+    core:
+      image:
+        registry: quay.io
+        repository: lightspeed-core/lightspeed-stack
+        tag: 0.7.1
+      extraEnv:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /app-root/gcp-creds.json
+        - name: SOLR_EMBEDDING_MODEL
+          value: ibm-granite/granite-embedding-small-english-r2
+      extraVolumeMounts:
+        - name: lightspeed-skills
+          mountPath: /app-root/skills
+        - name: gcp-creds
+          mountPath: /app-root/gcp-creds.json
+          subPath: gcp-creds.json
+          readOnly: true
+      resources:
+        # Higher limits: sidecar CPU-throttles and OOMKills during notebook embedding.
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: "2"
+          memory: 4Gi
+    config:
+      stack:
+        existingConfigMap:
+          name: lightspeed-stack-config
+          key: lightspeed-stack.yaml
+  appConfig:
+    app:
+      title: AI Rolling Demo Developer Hub
+      baseUrl: "${RHDH_BASE_URL}"
+      extensions:
+        - app/routes:
+            config:
+              redirects:
+                - from: /
+                  to: /home
+        - page:home: false
+        - page:homepage:
+            config:
+              path: /home
+        # Disable as it conflicts with (nav-content:app/sidebar)
+        - nav-content:app: false
+        # Disable homepage widgets and visit tracking infrastructure
+        # to avoid "Something Went Wrong" error boxes on the home page
+        - home-page-widget:homepage/recently-visited-card: false
+        - home-page-widget:homepage/top-visited-card: false
+        - api:home/visits: false
+        - app-root-element:home/visit-listener: false
+      analytics:
+        adoptionInsights:
+          maxBufferSize: 20
+          flushInterval: 5000
+          debug: false
+          licensedUsers: 50
+    homepage:
+      defaultWidgets:
+        - id: rhdh-onboarding-section
+          ref: rhdh-onboarding-section
+          props:
+            title: Onboarding section
+        - id: rhdh-entity-section
+          ref: rhdh-entity-section
+          props:
+            title: Entity section
+        - id: rhdh-template-section
+          ref: rhdh-template-section
+          props:
+            title: Template section
+    auth:
+      environment: production
+      experimentalDynamicClientRegistration:
+        enabled: true
+        allowedRedirectUriPatterns:
+          - '*'
+      experimentalRefreshToken:
+        enabled: true
+      session:
+        secret: "${BACKEND_SECRET}"
+      providers:
+        oidc:
+          production:
+            metadataUrl: "${KEYCLOAK_METADATA_URL}"
+            clientId: "${KEYCLOAK_CLIENT_ID}"
+            clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+            callbackUrl: "${RHDH_CALLBACK_URL}"
+            prompt: auto
+            signIn:
+              resolvers:
+                - resolver: emailMatchingUserEntityProfileEmail
+          development:
+            metadataUrl: "${KEYCLOAK_METADATA_URL}"
+            clientId: "${KEYCLOAK_CLIENT_ID}"
+            clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+            callbackUrl: "${RHDH_CALLBACK_URL}"
+            prompt: auto
+            signIn:
+              resolvers:
+                - resolver: emailMatchingUserEntityProfileEmail
+      clientIdMetadataDocuments:
+        enabled: true
+    backend:
+      actions:
+        pluginSources:
+          - 'software-catalog-mcp-extras'
+          - 'techdocs-mcp-extras'
+          - 'scaffolder-mcp-extras'
+      auth:
+        externalAccess:
+          - type: static
+            options:
+              token: ${ADMIN_TOKEN}
+              subject: admin-curl-access
+          - type: static
+            options:
+              token: ${MCP_TOKEN}
+              subject: mcp-clients
+        keys:
+          - secret: "${BACKEND_SECRET}"
+      baseUrl: "${RHDH_BASE_URL}"
+      database:
+        connection:
+          password: ${POSTGRES_PASSWORD}
+          user: ${POSTGRES_USER}
+      cors:
+        origin: "${RHDH_BASE_URL}"
+      csp:
+        upgrade-insecure-requests: false
+        img-src:
+          - "'self'"
+          - "data:"
+          - https://img.freepik.com
+          - https://cdn.dribbble.com
+          - https://upload.wikimedia.org
+          - https://podman-desktop.io
+          - https://argo-cd.readthedocs.io
+          - https://instructlab.ai
+          - https://quay.io
+          - https://news.mit.edu
+        script-src:
+          - "'self'"
+          - "'unsafe-eval'"
+          - https://cdn.jsdelivr.net
+      reading:
+        allow:
+          - host: example.com
+          - host: '*.mozilla.org'
+          - host: '*.openshift.com'
+          - host: '*.openshiftapps.com'
+    techdocs:
+      builder: local
+      generator:
+        runIn: local
+    signInPage: oidc
+    catalog:
+      rules:
+        - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API, AiResource, AiModelServerAPI]
+      locations:
+        - target: https://github.com/benwilcock/rhdh-techdocs/blob/main/rhdh-catalog-info.yaml
+          rules:
+            - allow: [Component, System]
+          type: url
+        - target: https://github.com/redhat-developer/rhdh-ai-template/blob/ai-rolling-demo-2_1/all.yaml
+          type: url
+          rules:
+            - allow: [Component, Location, Template]
+        - target: https://github.com/redhat-developer/rhdh-llama-stack-agentic-sample/blob/ai-rolling-demo-2_1/all.yaml
+          type: url
+          rules:
+            - allow: [Component, Location, Template]
+        - target: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/development/catalog-info.yaml
+          type: url
+          rules:
+            - allow: [Component, System]
+      providers:
+        modelCatalog:
+          kserve-kubeflow-connector:
+            cluster-1:
+              name: my-k8s-cluster
+              kubeflow-model-catalog-url: '${KUBEFLOW_MODEL_CATALOG_URL:-}'
+              default-owner: '${OWNER:-default-owner}'
+              default-lifecycle: '${LIFECYCLE:-production}'
+        github:
+          providerId:
+            organization: "${GITOPS_GIT_ORG}"
+            schedule:
+              frequency:
+                minutes: 15
+              initialDelay:
+                seconds: 15
+              timeout:
+                minutes: 15
+        githubOrg:
+          githubUrl: https://github.com
+          orgs: ["${GITOPS_GIT_ORG}"]
+          schedule:
+            frequency:
+              minutes: 15
+            initialDelay:
+              seconds: 15
+            timeout:
+              minutes: 15
+        keycloakOrg:
+          default:
+            baseUrl: "${KEYCLOAK_BASE_URL}"
+            loginRealm: "${KEYCLOAK_REALM}"
+            realm: "${KEYCLOAK_REALM}"
+            clientId: "${KEYCLOAK_CLIENT_ID}"
+            clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+            schedule:
+              frequency: {minutes: 1}
+              timeout: {minutes: 1}
+              initialDelay: {seconds: 15}
+            signIn:
+              resolvers:
+                - resolver: emailMatchingUserEntityProfileEmail
+    intelligent-assistant:
+      screen-context:
+        enabled: true
+        screenshots:
+          enabled: true
+        dom-extraction:
+          enabled: true
+      notebooks:
+        enabled: true
+        queryDefaults:
+          model: ${NOTEBOOKS_QUERY_MODEL}
+          provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
+        chunkingStrategy:
+          type: static
+          maxChunkSizeTokens: 1200
+          chunkOverlapTokens: 1 # min honored; 0 coerced to 50 by plugin bug
+      mcpServers:
+        - name: mcp-integration-tools
+          auth: dcr
+    mcpActions:
+      namespacedToolNames: false
+    permission:
+      enabled: false
+      rbac:
+        policies-csv-file: /opt/app-root/src/rbac-policy.csv
+        defaultPermissions:
+          defaultRole: role:default/user
+          basicPermissions:
+            - permission: catalog.entity.read
+              action: read
+            - permission: intelligent-assistant.chat.read
+              action: read
+            - permission: intelligent-assistant.chat.create
+              action: create
+            - permission: intelligent-assistant.chat.update
+              action: update
+            - permission: intelligent-assistant.chat.delete
+              action: delete
+            - permission: intelligent-assistant.mcp.read
+              action: read
+        admin:
+          users:
+            - name: user:default/jcollier
+            - name: user:default/mvaldron
+            - name: user:default/lucasyoon
+    integrations:
+      github:
+        - apps:
+            - appId: ${GITHUB_APP_APP_ID}
+              clientId: ${GITHUB_APP_CLIENT_ID}
+              clientSecret: ${GITHUB_APP_CLIENT_SECRET}
+              webhookUrl: ${GITHUB_APP_WEBHOOK_URL}
+              webhookSecret: ${GITHUB_APP_WEBHOOK_SECRET}
+              privateKey: |
+                ${GITHUB_APP_PRIVATE_KEY}
+          host: github.com
+    kubernetes:
+      clusterLocatorMethods:
+        - clusters:
+            - authProvider: serviceAccount
+              name: default
+              serviceAccountToken: ${K8S_CLUSTER_TOKEN}
+              skipTLSVerify: true
+              url: https://kubernetes.default.svc
+          type: config
+      customResources:
+        - apiVersion: v1beta1
+          group: tekton.dev
+          plural: pipelines
+        - apiVersion: v1beta1
+          group: tekton.dev
+          plural: pipelineruns
+        - apiVersion: v1beta1
+          group: tekton.dev
+          plural: taskruns
+        - apiVersion: v1
+          group: route.openshift.io
+          plural: routes
+      serviceLocatorMethod:
+        type: multiTenant
+    argocd:
+      username: ${ARGOCD_USER}
+      password: ${ARGOCD_PASSWORD}
+      waitCycles: 25
+      appLocatorMethods:
+        - type: 'config'
+          instances:
+            - name: default
+              url: https://${ARGOCD_HOSTNAME}
+              token: ${ARGOCD_API_TOKEN}
+    i18n:
+      locales:
+        - en
+        - it
+        - ja
+        - fr
+    proxy:
+      endpoints:
+        "/developer-hub":
+          target: https://raw.githubusercontent.com
+          pathRewrite:
+            "^/api/proxy/developer-hub$": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/homepage/plugins/homepage/dev/quickaccess-default.json"
+            "^/api/proxy/developer-hub/learning-paths": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/ai-integrations/plugins/ai-experience/src/learning-paths/data.json"
+          changeOrigin: true
+          secure: false
+        "/ai-rssfeed":
+          target: "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml"
+          changeOrigin: true
+          followRedirects: true
+    boost:
+      security:
+        mode: 'development-only-no-auth'
+        adminUsers:
+          - 'user:default/admin'
+          - 'user:default/guest'
+      providers:
+        ogx:
+          baseUrl: ${BOOST_OGX_URL:-http://localhost:8321}
+          defaultModel: ${BOOST_MODEL:-default}
+    ai-catalog:
+      entityProviders:
+        ogx:
+          baseUrl: ${BOOST_OGX_URL:-http://localhost:8321}
+          # Fast enough for Kind CI agent ingest checks; models stay at plugin default (60s).
+          agentRefreshIntervalSeconds: 30
+          defaultAgent: router
+          maxAgentTurns: 10
+          agents:
+            - id: router
+              name: FantaCo Router
+              description: Customer service router that classifies and transfers to specialists
+              instructions: |
+                You are a customer service router for FantaCo. Classify the user's
+                question and transfer to the appropriate specialist agent.
+
+                Transfer rules:
+                - Legal questions (software licenses, embargoes, privacy/PII,
+                  contracts, policies, compliance) -> transfer to Legal
+                - Technical support (OpenShift/Kubernetes, deployment, permissions,
+                  performance, FantaCo products like CloudSync or TechGear Pro,
+                  troubleshooting) -> transfer to Software Support
+                - HR questions (benefits, health care, vacation/PTO, retirement,
+                  workspaces, office facilities, bonuses, compensation, perks,
+                  participation requirements) -> transfer to Human Resources.
+                  If the question mentions "workspaces at FantaCo", ALWAYS transfer
+                  to Human Resources.
+                - Sales questions (territories, leads, discounting, quotas, CRM,
+                  brand guidelines, expenses, escalations, performance metrics)
+                  -> transfer to Sales
+                - Procurement questions (competitive bidding, vendor evaluation,
+                  ethics, transparency, spending limits, approval processes)
+                  -> transfer to Procurement
+
+                Always transfer to the most appropriate specialist. Do not answer
+                the question yourself.
+              handoffs:
+                - legal
+                - support
+                - hr
+                - sales
+                - procurement
+              model: ${BOOST_MODEL:-}
+              lifecycleStage: published
+            - id: legal
+              name: Legal
+              description: Handles questions about software licenses, embargoes, privacy/PII, contracts, policies, procedures, or compliance
+              handoffDescription: Handles questions about software licenses, embargoes, privacy/PII, contracts, policies, procedures, or compliance
+              instructions: |
+                You are FantaCo's Legal department specialist. Based on the relevant
+                documents in the knowledge base, help with the user's legal query.
+                Provide a helpful response based on the documents found. If no
+                relevant documents are found, provide general guidance.
+              enableRAG: true
+              model: ${BOOST_MODEL:-}
+              lifecycleStage: published
+            - id: support
+              name: Software Support
+              description: Handles technical support questions about OpenShift/Kubernetes, deployment, permissions, performance, and FantaCo products
+              handoffDescription: Handles technical support questions about OpenShift/Kubernetes, application deployment, permissions, resource utilization, performance, and FantaCo products (CloudSync, TechGear Pro)
+              instructions: |
+                You are FantaCo's Software Support specialist. Based on the relevant
+                documents in the knowledge base, help with the user's technical
+                support query. Provide a helpful response based on the documents
+                found. If no relevant documents are found, provide general guidance.
+              enableRAG: true
+              model: ${BOOST_MODEL:-}
+              lifecycleStage: published
+            - id: hr
+              name: Human Resources
+              description: Handles questions about employee benefits, health care, vacation/PTO, retirement, workspaces, and compensation
+              handoffDescription: Handles questions about employee benefits, health care, vacation/PTO, retirement plans, workspaces, office facilities, work environment, bonuses, compensation, and perks
+              instructions: |
+                You are FantaCo's Human Resources specialist. Based on the relevant
+                documents in the knowledge base, help with the user's HR query.
+
+                FantaCo's benefits are organized into categories:
+                - bare necessities: workspace, health care, vacation/PTO, retirement
+                - beyond the basics: music, parties, activities, food services,
+                  driving services, bonuses
+                - caveats: participation requirements
+
+                Try to narrow the response to details from the relevant sub-section
+                of the benefits document when possible.
+
+                Provide a helpful response based on the documents found. If no
+                relevant documents are found, provide general guidance.
+              enableRAG: true
+              model: ${BOOST_MODEL:-}
+              lifecycleStage: published
+            - id: sales
+              name: Sales
+              description: Handles questions about sales territories, leads, discounting, quotas, CRM, and performance metrics
+              handoffDescription: Handles questions about sales territories, lead assignments, discounting, deal approval, quotas, sales compensation, CRM systems, brand guidelines, expenses, escalations, and performance metrics
+              instructions: |
+                You are FantaCo's Sales specialist. Based on the relevant documents
+                in the knowledge base, help with the user's sales query.
+
+                FantaCo's sales operation manual covers:
+                - geographic territories
+                - lead assignments
+                - discounting and deal approval
+                - quotas and compensation
+                - CRM systems
+                - brands and communications
+                - expenses and escalations
+                - performance and compliance
+
+                Try to narrow the response to details from the relevant sub-section
+                of the sales document when possible.
+
+                Provide a helpful response based on the documents found. If no
+                relevant documents are found, provide general guidance.
+              enableRAG: true
+              model: ${BOOST_MODEL:-}
+              lifecycleStage: published
+            - id: procurement
+              name: Procurement
+              description: Handles questions about competitive bidding, vendor evaluation, procurement ethics, and approval processes
+              handoffDescription: Handles questions about competitive bidding, vendor evaluation, procurement ethics, transparency, spending limits, and approval processes
+              instructions: |
+                You are FantaCo's Procurement specialist. Based on the relevant
+                documents in the knowledge base, help with the user's procurement
+                query.
+
+                FantaCo's procurement policies cover:
+                - competitive bidding
+                - vendor evaluation and categorization
+                - ethics and transparency
+                - review processes
+                - spending limits
+
+                Try to narrow the response to details from the relevant sub-section
+                of the procurement document when possible.
+
+                Provide a helpful response based on the documents found. If no
+                relevant documents are found, provide general guidance.
+              enableRAG: true
+              model: ${BOOST_MODEL:-}
+              lifecycleStage: published
+  extraAppConfig:
+    - filename: kserve-connector-app-config.yaml
+      configMapRef: kserve-connector-app-config
+  readinessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /healthcheck
+      port: 7007
+      scheme: HTTP
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 2
+    timeoutSeconds: 2
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /healthcheck
+      port: 7007
+      scheme: HTTP
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 2
+  dynamicPlugins:
     includes:
       - "dynamic-plugins.default.yaml"
     plugins:
-      ##### Custom sign in page plugin #####
-      - package: oci://quay.io/redhat-ai-dev/rolling-demo-customized-sign-in-page:v0.1.1
+      ##### Custom sign in page plugin (now NFS compatible) #####
+      - package: oci://quay.io/redhat-ai-dev/rolling-demo-customized-sign-in-page:0.2.0!red-hat-developer-hub-backstage-plugin-rolling-demo-customized-sign-in-page
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -13,753 +542,282 @@ global:
               red-hat-developer-hub.backstage-plugin-rolling-demo-customized-sign-in-page:
                 signInPage:
                   importName: RollingDemoCustomizedSignInPage
-
-      ##### Red Hat Plugins without wrappers #####
-      # Plugins for ArgoCD integration
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.49.4__2.8.0
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              backstage-community.plugin-redhat-argocd:
-                mountPoints:
-                  - mountPoint: entity.page.overview/cards
-                    importName: ArgocdDeploymentSummary
-                    config:
-                      layout:
-                        gridColumnEnd:
-                          lg: "span 8"
-                          xs: "span 12"
-                      if:
-                        allOf:
-                          - isArgocdConfigured
-                  - mountPoint: entity.page.cd/cards
-                    importName: ArgocdDeploymentLifecycle
-                    config:
-                      layout:
-                        gridColumn: '1 / -1'
-                      if:
-                        allOf:
-                          - isArgocdConfigured
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-argo-cd-backend:bs_1.49.4__4.8.0
+      ##### Red Hat Plugins #####
+      # ArgoCD
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.54.9__3.1.3
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-argocd:bs_1.49.4__1.8.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd-backend:bs_1.54.9__1.7.2
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-argocd:bs_1.54.9__1.9.0
         disabled: false
 
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-search-backend-module-techdocs:bs_1.54.9__0.4.17
+        disabled: false
       # MCP Actions plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.49.4__0.1.11
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.54.9__0.2.1
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras:bs_1.49.4__0.2.2
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras:bs_1.54.9__0.2.5
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras:bs_1.49.4__0.2.3
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras:bs_1.54.9__0.2.6
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras:bs_1.49.4__0.4.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras:bs_1.54.9__0.4.4
         disabled: false
-
       # Model Catalog Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.49.4__0.9.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.54.9__1.1.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.49.4__0.5.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.54.9__0.6.3
         disabled: false
-
-      # Tekton Pipelines Plugins
-      # Tekton CI Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.49.4__3.37.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.54.9__0.3.0
         disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              backstage-community.plugin-tekton:
-                mountPoints:
-                  - config:
-                      if:
-                        allOf:
-                          - isTektonCIAvailable
-                      layout:
-                        gridColumn: 1 / -1
-                        gridRowStart: 1
-                    importName: TektonCI
-                    mountPoint: entity.page.ci/cards
-
-      ##### Default Backstage Dynamic Plugins #####
-      # Plugin for global header customization
-      # We follow the default plugins setup with a slight diff
-      # on the application-launcher dropdown items
-      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-header
+      # AI Resource Kind Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-model-server:bs_1.54.9__0.3.1
         disabled: false
-        pluginConfig:
-          app:
-            sidebar:
-              search: false
-              settings: false
-              logo: false
-          dynamicPlugins:
-            frontend:
-              default.main-menu-items:
-                menuItems:
-                  default.create:
-                    title: ''
-                  default.admin:
-                    title: Administration
-                    textKey: menuItem.administration
-                    icon: admin
-                  default.help:
-                    title: RHDH Guide
-                    icon: techdocs
-                    priority: 5
-                    to: /catalog/default/system/rhdh-getting-started/docs
-                    enabled: true
-              red-hat-developer-hub.backstage-plugin-global-header:
-                translationResources:
-                - importName: globalHeaderTranslations
-                  ref: globalHeaderTranslationRef
-                mountPoints:
-                - mountPoint: application/header
-                  importName: GlobalHeader
-                  config:
-                    position: above-sidebar
-                - mountPoint: global.header/component
-                  importName: CompanyLogo
-                  config:
-                    priority: 200
-                    props:
-                      to: /
-                - mountPoint: global.header/component
-                  importName: SearchComponent
-                  config:
-                    priority: 100
-                - mountPoint: global.header/component
-                  importName: Spacer
-                  config:
-                    priority: 99
-                    props:
-                      growFactor: 0
-                - mountPoint: global.header/component
-                  importName: HeaderIconButton
-                  config:
-                    priority: 90
-                    props:
-                      title: Self-service
-                      titleKey: create.title
-                      icon: add
-                      to: create
-                - mountPoint: global.header/component
-                  importName: StarredDropdown
-                  config:
-                    priority: 85
-                - mountPoint: global.header/component
-                  importName: ApplicationLauncherDropdown
-                  config:
-                    priority: 82
-                - mountPoint: global.header/application-launcher
-                  importName: MenuItemLink
-                  config:
-                    section: Documentation
-                    priority: 300
-                    props:
-                      title: Developer Hub
-                      icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
-                      link: https://docs.redhat.com/en/documentation/red_hat_developer_hub
-
-                - mountPoint: global.header/application-launcher
-                  importName: MenuItemLink
-                  config:
-                    section: Documentation
-                    priority: 290
-                    props:
-                      title: Openshift AI Docs
-                      icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
-                      link: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed
-
-                - mountPoint: global.header/application-launcher
-                  importName: MenuItemLink
-                  config:
-                    section: Developer Tools
-                    priority: 200
-                    props:
-                      title: RHDH Local
-                      icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
-                      link: https://github.com/redhat-developer/rhdh-local
-
-                - mountPoint: global.header/application-launcher
-                  importName: MenuItemLink
-                  config:
-                    section: Developer Tools
-                    priority: 190
-                    props:
-                      title: RHDH Dynamic Plugin Factory
-                      icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
-                      link: https://github.com/redhat-developer/rhdh-plugins
-
-                - mountPoint: global.header/application-launcher
-                  importName: MenuItemLink
-                  config:
-                    section: Developer Tools
-                    priority: 180
-                    props:
-                      title: RHDH CLI
-                      icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
-                      link: https://github.com/redhat-developer/rhdh-cli
-
-                - mountPoint: global.header/application-launcher
-                  importName: MenuItemLink
-                  config:
-                    section: Quick Links
-                    priority: 150
-                    props:
-                      title: MCP Tools Guide
-                      icon: https://upload.wikimedia.org/wikipedia/commons/0/01/Google_Docs_logo_%282014-2020%29.svg
-                      link: https://docs.google.com/document/d/1o9qRYCAszGzTwW2mRjC4c9wFwJIx8J3XF1kGPFy5F1s/edit?tab=t.0
-
-                - mountPoint: global.header/application-launcher
-                  importName: MenuItemLink
-                  config:
-                    section: Quick Links
-                    priority: 140
-                    props:
-                      title: Openshift AI
-                      icon: https://upload.wikimedia.org/wikipedia/commons/d/d8/Red_Hat_logo.svg
-                      link: https://data-science-gateway.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
-
-                - mountPoint: global.header/application-launcher
-                  importName: MenuItemLink
-                  config:
-                    section: Quick Links
-                    priority: 139
-                    props:
-                      title: RHDH AI Rolling Demo Monitoring
-                      icon: https://upload.wikimedia.org/wikipedia/commons/a/a1/Grafana_logo.svg
-                      link: https://grafana-route-devcluster-monitoring.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com/
-
-                - mountPoint: global.header/component
-                  importName: HelpDropdown
-                  config:
-                    priority: 80
-                - mountPoint: global.header/help
-                  importName: SupportButton
-                  config:
-                    priority: 10
-                - mountPoint: global.header/component
-                  importName: NotificationButton
-                  config:
-                    priority: 70
-                - mountPoint: global.header/component
-                  importName: Divider
-                  config:
-                    priority: 50
-                - mountPoint: global.header/component
-                  importName: ProfileDropdown
-                  config:
-                    priority: 10
-                - mountPoint: global.header/profile
-                  importName: MenuItemLink
-                  config:
-                    priority: 100
-                    props:
-                      title: Settings
-                      titleKey: profile.settings
-                      link: /settings
-                      icon: manageAccounts
-                - mountPoint: global.header/profile
-                  importName: MenuItemLink
-                  config:
-                    priority: 90
-                    props:
-                      title: My profile
-                      titleKey: profile.myProfile
-                      type: myProfile
-                      icon: account
-                - mountPoint: global.header/profile
-                  importName: LogoutButton
-                  config:
-                    priority: 10
-
-      # Plugins for Kubernetes integration
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-backend-dynamic
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.54.9__0.4.1
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:bs_1.54.9__0.5.2
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
+      # AI Catalog Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ai-catalog:bs_1.54.9__1.0.1
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.54.9__1.0.1
+        disabled: false
+      # Tekton CI (NFS — no pluginConfig needed)
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.54.9__4.0.5
         disabled: false
 
+      # Kubernetes
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes-backend:bs_1.54.9__0.21.10
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-kubernetes:bs_1.54.9__0.12.22
+        disabled: false
+      # Topology
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-topology:bs_1.54.9__3.0.7
+        disabled: false
       # Catalog plugins
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-catalog-backend-module-keycloak:bs_1.54.9__3.23.1
         disabled: false
 
-      # TechDocs plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
-        disabled: false        
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
-        disabled: false
-
+      # Disable Segment Plugin (no segment key setup)
+      - package: ref://backstage-community-plugin-analytics-provider-segment
+        disabled: true
       # Gitlab Plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-github
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-gitlab-dynamic
+      - package: ref://backstage-plugin-scaffolder-backend-module-gitlab
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-gitlab
         disabled: true
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-org-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-gitlab-org
         disabled: true
-        
       # Github Plugins
-      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-org-dynamic
+      - package: ref://backstage-plugin-catalog-backend-module-github-org
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
+      - package: ref://backstage-plugin-scaffolder-backend-module-github
         disabled: false
 
-  clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
+      # OIDC Plugin
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-auth-backend-module-oidc-provider:bs_1.54.9__0.4.20
+        disabled: false
+    volume:
+      ephemeral:
+        resources:
+          requests:
+            storage: 4Gi
   host: ""
+  openshift:
+    clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
+    route:
+      annotations: {}
+      enabled: true
+      host: "{{ .Values.host }}"
+      path: "/"
+      wildcardPolicy: None
+      tls:
+        enabled: true
+        termination: "edge"
+        certificate: ""
+        key: ""
+        caCertificate: ""
+        destinationCACertificate: ""
+        insecureEdgeTerminationPolicy: "Redirect"
   auth:
     backend:
       enabled: true
-      existingSecret: ""
-      value: ""
-
-  # Configure lightspeed post GA
-  lightspeed:
-    enabled: true
-    plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.49.4__2.8.5
-        disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-lightspeed:
-                translationResources:
-                  - importName: lightspeedTranslations
-                    module: Alpha
-                    ref: lightspeedTranslationRef
-                dynamicRoutes:
-                  - path: /lightspeed
-                    importName: LightspeedPage
-                mountPoints:
-                  - mountPoint: application/listener
-                    importName: LightspeedFAB
-                  - mountPoint: application/provider
-                    importName: LightspeedDrawerProvider
-                  - mountPoint: application/internal/drawer-state
-                    importName: LightspeedDrawerStateExposer
-                    config:
-                      id: lightspeed
-                  - mountPoint: application/internal/drawer-content
-                    importName: LightspeedChatContainer
-                    config:
-                      id: lightspeed
-                      priority: 100
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.49.4__2.8.5
-        disabled: false
-    secret:
-      create: false
-      name: "llama-stack-secrets"
-    sidecar:
-      image: quay.io/lightspeed-core/lightspeed-stack:0.5.2
-    configMaps:
-      - name: stack
-        create: true
-        mountPath: /app-root/lightspeed-stack.yaml
-        subPath: lightspeed-stack.yaml
-        sourceFile: lightspeed-stack.yaml
-        optional: false
-      # override llama-stack-config to keep the gpt allowed models customization
-      - name: config
-        create: false
-        nameOverride: "llama-stack-config"
-        mountPath: /app-root/config.yaml
-        subPath: config.yaml
-        sourceFile: config.yaml
-        optional: false
-      - name: rhdh-profile
-        create: false
-        nameOverride: "rhdh-profile"
-        mountPath: /app-root/rhdh-profile.py
-        subPath: rhdh-profile.py
-        sourceFile: rhdh-profile.py
-        optional: false
-
-backstage:
-  # override the default name to stay in the context
-  # of the same deployment resource (e.g. rolling-demo-backstage)
-  # where the latest rhdh-chart introduces rolling-demo-developer-hub
-  nameOverride: backstage
-  upstream:
-    nameOverride: backstage
-    backstage:
-      image:
-        registry: quay.io
-        repository: rhdh/rhdh-hub-rhel9
-        tag: "1.10-171"
-        pullSecrets:
-          - quay-pull-secret
-      command: []
-      appConfig:
-        app:
-          title: AI Rolling Demo Developer Hub
-          baseUrl: "${RHDH_BASE_URL}"
-          analytics:
-            adoptionInsights:
-              maxBufferSize: 20
-              flushInterval: 5000
-              debug: false
-              licensedUsers: 50
-        auth:
-          environment: production
-          session:
-            secret: "${BACKEND_SECRET}"
-          providers:
-            oidc:
-              production:
-                metadataUrl: "${KEYCLOAK_METADATA_URL}"
-                clientId: "${KEYCLOAK_CLIENT_ID}"
-                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
-                callbackUrl: "${RHDH_CALLBACK_URL}"
-                prompt: auto
-                signIn:
-                  resolvers:
-                    - resolver: preferredUsernameMatchingUserEntityName
-              development:
-                metadataUrl: "${KEYCLOAK_METADATA_URL}"
-                clientId: "${KEYCLOAK_CLIENT_ID}"
-                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
-                callbackUrl: "${RHDH_CALLBACK_URL}"
-                prompt: auto
-                signIn:
-                  resolvers:
-                    - resolver: preferredUsernameMatchingUserEntityName
-        backend:
-          actions:
-            pluginSources:
-              - 'software-catalog-mcp-extras'
-              - 'techdocs-mcp-extras'
-              - 'scaffolder-mcp-extras'
-          auth:
-            externalAccess:
-              - type: static
-                options:
-                  token: ${ADMIN_TOKEN}
-                  subject: admin-curl-access
-              - type: static
-                options:
-                  token: ${MCP_TOKEN}
-                  subject: mcp-clients
-            keys:
-              - secret: "${BACKEND_SECRET}"
-          baseUrl: "${RHDH_BASE_URL}"
-          database:
-            connection:
-              password: ${POSTGRESQL_ADMIN_PASSWORD}
-              user: postgres
-          cors:
-            origin: "${RHDH_BASE_URL}"
-          csp:
-            upgrade-insecure-requests: false
-            img-src:
-              - "'self'"
-              - "data:"
-              - https://img.freepik.com
-              - https://cdn.dribbble.com
-              - https://upload.wikimedia.org
-              - https://podman-desktop.io
-              - https://argo-cd.readthedocs.io
-              - https://instructlab.ai
-              - https://quay.io
-              - https://news.mit.edu
-            script-src:
-              - "'self'"
-              - "'unsafe-eval'"
-              - https://cdn.jsdelivr.net
-          reading:
-            allow:
-              - host: example.com
-              - host: '*.mozilla.org'
-              - host: '*.openshift.com'
-              - host: '*.openshiftapps.com'
-              - host: '10.*:9090'
-              - host: '127.0.0.1:9090'
-              - host: '127.0.0.1:8888'
-              - host: '127.0.0.1:7070'
-              - host: 'localhost:9090'
-              - host: 'localhost:8888'
-              - host: 'localhost:7070'
-        signInPage: oidc
-        catalog:
-          rules:
-            - allow: [User, Group, System, Domain, Component, Resource, Location, Template, API]
-          locations:
-            - target: https://github.com/benwilcock/rhdh-techdocs/blob/main/rhdh-catalog-info.yaml
-              rules:
-                - allow: [Component, System]
-              type: url
-            - target: https://github.com/redhat-ai-dev/ai-lab-template/blob/ai-rolling-demo-1_10/all.yaml
-              type: url
-              rules:
-                - allow: [Component, Location, Template]
-            - target: https://github.com/redhat-ai-dev/llama-stack-agentic-sample/blob/ai-rolling-demo-1_10/all.yaml
-              type: url
-              rules:
-                - allow: [Component, Location, Template]
-            - target: https://github.com/redhat-ai-dev/ai-rolling-demo-gitops/blob/development/catalog-info.yaml
-              type: url
-              rules:
-                - allow: [Component, System]
-          providers:
-            modelCatalog:
-              development:
-                baseUrl: http://localhost:9090
-            github:
-              providerId:
-                organization: "${GITOPS_GIT_ORG}"
-                schedule:
-                  frequency:
-                    minutes: 15
-                  initialDelay:
-                    seconds: 15
-                  timeout:
-                    minutes: 15
-            githubOrg:
-              githubUrl: https://github.com
-              orgs: ["${GITOPS_GIT_ORG}"]
-              schedule:
-                frequency:
-                  minutes: 15
-                initialDelay:
-                  seconds: 15
-                timeout:
-                  minutes: 15
-            keycloakOrg:
-              default:
-                baseUrl: "${KEYCLOAK_BASE_URL}"
-                loginRealm: "${KEYCLOAK_REALM}"
-                realm: "${KEYCLOAK_REALM}"
-                clientId: "${KEYCLOAK_CLIENT_ID}"
-                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
-                schedule:
-                  frequency: { minutes: 1 }
-                  timeout: { minutes: 1 }
-                  initialDelay: { seconds: 15 }
-                signIn:
-                  resolvers:
-                    - resolver: emailMatchingUserEntityProfileEmail
-        lightspeed:
-          notebooks:
-            enabled: true
-            queryDefaults:
-              model: ${NOTEBOOKS_QUERY_MODEL}
-              provider_id: ${NOTEBOOKS_QUERY_PROVIDER_ID}
-          mcpServers:
-            - name: mcp-integration-tools
-              token: ${MCP_TOKEN}
-        mcpActions:
-          namespacedToolNames: false
-        integrations:
-          github:
-            - apps:
-                - appId: ${GITHUB_APP_APP_ID}
-                  clientId: ${GITHUB_APP_CLIENT_ID}
-                  clientSecret: ${GITHUB_APP_CLIENT_SECRET}
-                  webhookUrl: ${GITHUB_APP_WEBHOOK_URL}
-                  webhookSecret: ${GITHUB_APP_WEBHOOK_SECRET}
-                  privateKey: |
-                    ${GITHUB_APP_PRIVATE_KEY}
-              host: github.com
-        kubernetes:
-          clusterLocatorMethods:
-            - clusters:
-                - authProvider: serviceAccount
-                  name: default
-                  serviceAccountToken: ${K8S_CLUSTER_TOKEN}
-                  skipTLSVerify: true
-                  url: https://kubernetes.default.svc
-              type: config
-          customResources:
-            - apiVersion: v1beta1
-              group: tekton.dev
-              plural: pipelines
-            - apiVersion: v1beta1
-              group: tekton.dev
-              plural: pipelineruns
-            - apiVersion: v1beta1
-              group: tekton.dev
-              plural: taskruns
-            - apiVersion: v1
-              group: route.openshift.io
-              plural: routes
-          serviceLocatorMethod:
-            type: multiTenant
-        argocd:
-          username: ${ARGOCD_USER}
-          password: ${ARGOCD_PASSWORD}
-          waitCycles: 25
-          appLocatorMethods:
-          - type: 'config'
-            instances:
-              - name: default
-                url: https://${ARGOCD_HOSTNAME}
-                token: ${ARGOCD_API_TOKEN}
-        i18n:
-          locales:
-            - en
-            - it
-            - ja
-            - fr
-        proxy:
-          endpoints:
-            "/developer-hub":
-              target: https://raw.githubusercontent.com
-              pathRewrite:
-                "^/api/proxy/developer-hub/learning-paths": "/redhat-developer/rhdh-plugins/refs/heads/main/workspaces/ai-integrations/plugins/ai-experience/src/learning-paths/data.json"
-              changeOrigin: true
-              secure: false
-            "/ai-rssfeed":
-              target: "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml"
-              changeOrigin: true
-              followRedirects: true
-      readinessProbe:
-        failureThreshold: 3
-        httpGet:
-          path: /healthcheck
-          port: 7007
-          scheme: HTTP
-        initialDelaySeconds: 30
-        periodSeconds: 10
-        successThreshold: 2
-        timeoutSeconds: 2
-      livenessProbe:
-        failureThreshold: 3
-        httpGet:
-          path: /healthcheck
-          port: 7007
-          scheme: HTTP
-        initialDelaySeconds: 60
-        periodSeconds: 10
-        successThreshold: 1
-        timeoutSeconds: 2
-      extraEnvVars:
-        - name: POSTGRESQL_ADMIN_PASSWORD
+      existingSecretRef:
+        name: rhdh-secrets
+        key: BACKEND_SECRET
+  extraEnv:
+    # Only for demo purposes: Remove in production
+    - name: NODE_TLS_REJECT_UNAUTHORIZED
+      value: "0"
+  extraEnvFrom:
+    - secretRef:
+        name: github-secrets
+    - secretRef:
+        name: kubernetes-secrets
+    - secretRef:
+        name: rhdh-secrets
+    - secretRef:
+        name: keycloak-secrets
+    - secretRef:
+        name: argocd-secrets
+    - secretRef:
+        name: lightspeed-secrets
+    - secretRef:
+        name: llama-stack-secrets
+    - secretRef:
+        name: kserve-connector-secrets
+  extraVolumeMounts:
+    - name: rbac-policy
+      mountPath: /opt/app-root/src/rbac-policy.csv
+      subPath: rbac-policy.csv
+  extraVolumes:
+    - name: rbac-policy
+      configMap:
+        name: "{{ .Release.Name }}-rbac-policy"
+    - name: gcp-creds
+      secret:
+        secretName: llama-stack-secrets
+        items:
+          - key: VERTEX_AI_CREDENTIALS
+            path: gcp-creds.json
+    - name: lightspeed-skills
+      emptyDir: {}
+  extraInitContainers:
+    - name: byok-rag-init
+      image: quay.io/redhat-ai-dev/byok-sample:latest
+      imagePullPolicy: Always
+      command:
+        - sh
+        - -c
+      args:
+        - >-
+          echo 'Staging BYOK RAG data...' &&
+          mkdir -p /tmp/byok-staging /tmp/vector_db &&
+          if cp -r /byok/vector_db /tmp/byok-staging/ 2>&1 &&
+             cp -r /tmp/byok-staging/vector_db/. /tmp/vector_db/ 2>&1 &&
+             chmod -R a+rwX /tmp/vector_db; then
+            echo 'BYOK merge complete.';
+          else
+            echo 'WARNING: BYOK merge failed. LCS will start without BYOK sources.' >&2;
+          fi
+      volumeMounts:
+        - name: lightspeed-data
+          mountPath: /tmp
+      securityContext:
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      resources:
+        requests:
+          cpu: 50m
+          memory: 50Mi
+        limits:
+          cpu: 100m
+          memory: 150Mi
+    - name: fetch-lightspeed-skills
+      image: quay.io/redhat-ai-dev/utils:latest
+      imagePullPolicy: Always
+      command:
+        - /bin/bash
+        - -c
+      args:
+        - >-
+          set -euo pipefail;
+          rm -rf /skills/.source;
+          git clone --depth 1 --branch main https://github.com/redhat-developer/rhdh-skills.git /skills/.source;
+          test -d /skills/.source/skills;
+          find /skills -mindepth 1 -maxdepth 1 ! -name .source -exec rm -rf {} +;
+          cp -R /skills/.source/skills/. /skills/;
+          rm -rf /skills/.source
+      volumeMounts:
+        - name: lightspeed-skills
+          mountPath: /skills
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        seccompProfile:
+          type: RuntimeDefault
+      resources:
+        requests:
+          cpu: 25m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+  extraContainers:
+    - name: feedback-harvester
+      image: quay.io/redhat-ai-dev/feedback-harvester:v0.1.0
+      env:
+        - name: PGUSER
           valueFrom:
             secretKeyRef:
-              key: postgres-password
-              name: "{{ .Release.Name }}-postgresql"
-        # Only for demo purposes: Remove in production
-        - name: NODE_TLS_REJECT_UNAUTHORIZED
-          value: "0"
-      extraEnvVarsSecrets:
-        - github-secrets
-        - kubernetes-secrets
-        - rhdh-secrets
-        - keycloak-secrets
-        - argocd-secrets
-        - lightspeed-secrets
-        - llama-stack-secrets
-      args:
-        - "--config"
-        - dynamic-plugins-root/app-config.dynamic-plugins.yaml
-      extraVolumeMounts:
-        - name: dynamic-plugins-root
-          mountPath: /opt/app-root/src/dynamic-plugins-root
-        # tmp backstage volume for scaffolder tasks
-        - name: backstage-tmp
-          mountPath: /tmp
-        - name: extensions-catalog
-          mountPath: /extensions
-      extraVolumes:
-        - name: dynamic-plugins-root
-          ephemeral:
-            volumeClaimTemplate:
-              spec:
-                accessModes:
-                  - ReadWriteOnce
-                resources:
-                  requests:
-                    storage: 2Gi
-        - name: dynamic-plugins
-          configMap:
-            defaultMode: 420
-            name: "{{ .Release.Name }}-dynamic-plugins"
-            optional: true
-        - name: dynamic-plugins-npmrc
-          secret:
-            defaultMode: 420
-            optional: true
-            secretName: dynamic-plugins-npmrc
-        # tmp backstage volume for scaffolder tasks
-        - name: backstage-tmp
-          emptyDir: {}
-        - name: extensions-catalog
-          emptyDir: {}
-      initContainers:
-        - name: install-dynamic-plugins
-          image: '{{ include "backstage.image" . }}'
-          command:
-            - ./install-dynamic-plugins.sh
-            - /dynamic-plugins-root
-          env:
-            - name: NPM_CONFIG_USERCONFIG
-              value: /opt/app-root/src/.npmrc.dynamic-plugins
-            - name: CATALOG_INDEX_IMAGE
-              value: '{{ .Values.global.catalogIndex.image.registry }}/{{ .Values.global.catalogIndex.image.repository }}:{{ .Values.global.catalogIndex.image.tag }}'
-            - name: CATALOG_ENTITIES_EXTRACT_DIR
-              value: '/extensions'
-          imagePullPolicy: Always
-          volumeMounts:
-            - mountPath: /dynamic-plugins-root
-              name: dynamic-plugins-root
-            - mountPath: /opt/app-root/src/dynamic-plugins.yaml
-              name: dynamic-plugins
-              readOnly: true
-              subPath: dynamic-plugins.yaml
-            - mountPath: /opt/app-root/src/.npmrc.dynamic-plugins
-              name: dynamic-plugins-npmrc
-              readOnly: true
-              subPath: .npmrc
-            - mountPath: /extensions
-              name: extensions-catalog
-      installDir: /opt/app-root/src
-      podAnnotations:
-        checksum/dynamic-plugins: >-
-          {{- include "common.tplvalues.render" ( dict "value"
-          .Values.global.dynamic "context" $) | sha256sum }}
-    ingress:
-      host: "{{ .Values.global.host }}"
-    postgresql:
-      enabled: true
-      postgresqlDataDir: /var/lib/pgsql/data/userdata
-      image:
-        registry: registry.redhat.io
-        repository: rhel9/postgresql-15
-        tag: latest
-      auth:
-        username: postgres
-        existingSecret: "{{ .Release.Name }}-postgresql"
-        secretKeys:
-          adminPasswordKey: postgres-password
-      primary:
-        podSecurityContext:
-          enabled: false
-        containerSecurityContext:
-          enabled: false
-        persistence:
-          enabled: true
-          size: 1Gi
-          mountPath: /var/lib/pgsql/data
-        extraEnvVars:
-          - name: POSTGRESQL_ADMIN_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                key: postgres-password
-                name: "{{ .Release.Name }}-postgresql"
-  route:
-    annotations: {}
+              name: lightspeed-postgres-info
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: password
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: lightspeed-postgres-info
+              key: db-name
+        - name: PGHOST
+          value: lightspeed-postgres-svc.lightspeed-postgres.svc.cluster.local
+        - name: PGPORT
+          value: "5432"
+        - name: FEEDBACK_DIRECTORY
+          value: /tmp/data/feedback
+        - name: FETCH_FREQUENCY
+          value: "60"
+      volumeMounts:
+        - name: lightspeed-data
+          mountPath: /tmp/data/feedback
+          subPath: data/feedback
+  postgresql:
     enabled: true
-    host: "{{ .Values.global.host }}"
-    path: "/"
-    wildcardPolicy: None
-    tls:
-      enabled: true
-      termination: "edge"
-      certificate: ""
-      key: ""
-      caCertificate: ""
-      destinationCACertificate: ""
-      insecureEdgeTerminationPolicy: "Redirect"
+    postgresqlDataDir: /var/lib/pgsql/data/userdata
+    image:
+      registry: registry.redhat.io
+      repository: rhel9/postgresql-15
+      tag: latest
+    auth:
+      username: postgres
+      # NOTE: Helm does not template values files, and the chart renders this
+      # value unquoted into the backstage Deployment env (POSTGRES_PASSWORD
+      # secretKeyRef.name), so it must stay a plain per-environment string —
+      # never "{{ .Release.Name }}-postgresql". This is the development
+      # default: the dev ArgoCD app reads values.yaml directly with no
+      # parameter override. Production sets it via the ArgoCD Application
+      # helm parameter
+      # redhat-developer-hub.postgresql.auth.existingSecret=rolling-demo-postgresql,
+      # injected by scripts/apply-argocd-application.sh at install time as
+      # ${ARGOCD_APP_NAME}-postgresql (patch the live Application for
+      # existing clusters).
+      existingSecret: "rhdhai-rhdh-dev-postgresql"
+      secretKeys:
+        adminPasswordKey: postgres-password
+    primary:
+      podSecurityContext:
+        enabled: false
+      containerSecurityContext:
+        enabled: false
+      persistence:
+        enabled: true
+        size: 1Gi
+        mountPath: /var/lib/pgsql/data
 rhoai:
   enabled: true
+  # RoleBindings into rhoai-model-registries. Set false on Kind (no RHOAI).
+  modelRegistry:
+    enabled: true

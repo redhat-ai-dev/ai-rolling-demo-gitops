@@ -1,0 +1,3 @@
+FROM registry.access.redhat.com/ubi9-micro:latest
+COPY vector_db /byok/vector_db
+USER 1001

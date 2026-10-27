@@ -625,7 +625,7 @@ redhat-developer-hub:
       # Skills Plugins
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-skills-catalog-provider:bs_1.54.9__1.1.0
         disabled: false
-      # Skills image connector (built against an older Backstage line; see plugin tag)
+      # Skills image connector (built against an older Backstage line; see plugin tag).  As part of the dev/eng spike nature of RHDHPLAN-1745 we are NOT producing an RHDH shippable artifact for integrating with the OCTO skillimage offering at this time
       - package: oci://quay.io/gabemontero/red-hat-developer-hub-backstage-plugin-skill-image-connector-backend:bs_1.54.6__0.10.0
         disabled: false
       # Tekton CI (NFS — no pluginConfig needed)

@@ -247,6 +247,57 @@ redhat-developer-hub:
             signIn:
               resolvers:
                 - resolver: emailMatchingUserEntityProfileEmail
+        skillsCatalogProvider:
+          experimental:
+            sources:
+              - connectorPluginId: skill-image-connector # Registered connector plugin ID, not its config key.
+                sourceId: gabemontero-skills # Must match skillImageConnector.sources[].id.
+                sourceType: oci
+              - connectorPluginId: skill-image-connector
+                sourceId: skillimage-skills
+                sourceType: oci
+            defaultOwner: team-skills
+            defaultLifecycle: experimental
+            namespace: default
+            schedule:
+              frequency: { minutes: 5 }
+              timeout: { minutes: 10 }
+              initialDelay: { seconds: 0 }
+    skillImageConnector:
+      fetchTimeoutMs: 30000 # 30 seconds per request, including body reading
+      maxBlobSizeBytes: 5242880 # 5 MiB per downloaded blob and decompressed layer
+      maxAggregateContentSizeBytes: 52428800 # 50 MiB retained skill content across images
+      maxRetainedMarkdownSizeBytes: 52428800 # 50 MiB durable Markdown per source; independent of extraction limits
+      catalogProviderPluginId: catalog # Authorized backend plugin for retention acknowledgments
+      maxDiscoveryResponseSizeBytes: 5242880 # 5 MiB per Quay discovery response
+      maxImages: 100 # 25 default; total explicit and discovered repository:tag candidates
+      maxRetries: 2 # Retries after the initial attempt; 0 disables retries
+      retryBaseDelayMs: 2000 # 2 seconds, doubled on subsequent retries
+      sources:
+        - id: gabemontero-skills
+          schedule:
+            frequency: { minutes: 5 }
+            timeout: { minutes: 10 }
+            initialDelay: { seconds: 0 }
+          scope: local # Required: each backend instance maintains its own snapshots.
+          allowedRegistries:
+            - quay.io
+          allowedOrigins:
+            - https://s3.us-east-1.amazonaws.com
+          quayDiscovery:
+            organization: gabemontero
+        - id: skillimage-skills
+          schedule:
+            frequency: { minutes: 5 }
+            timeout: { minutes: 10 }
+            initialDelay: { seconds: 0 }
+          scope: local
+          allowedRegistries:
+            - quay.io
+          allowedOrigins:
+            - https://s3.us-east-1.amazonaws.com
+          quayDiscovery:
+            organization: skillimage
     intelligent-assistant:
       screen-context:
         enabled: true
@@ -570,6 +621,8 @@ redhat-developer-hub:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.54.9__0.4.0
         disabled: false
       # AI Resource Kind Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-backend-module-ai-model:bs_1.54.9__0.1.3
+        disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-model-server:bs_1.54.9__0.4.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.54.9__0.5.0
@@ -580,6 +633,12 @@ redhat-developer-hub:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ai-catalog:bs_1.54.9__1.1.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.54.9__1.1.0
+        disabled: false
+      # Skills Plugins
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-skills-catalog-provider:bs_1.54.9__1.1.0
+        disabled: false
+      # Skills image connector (built against an older Backstage line; see plugin tag).  As part of the dev/eng spike nature of RHDHPLAN-1745 we are NOT producing an RHDH shippable artifact for integrating with the OCTO skillimage offering at this time
+      - package: oci://quay.io/gabemontero/red-hat-developer-hub-backstage-plugin-skill-image-connector-backend:bs_1.54.6__0.10.0
         disabled: false
       # Tekton CI (NFS — no pluginConfig needed)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.54.9__4.0.5

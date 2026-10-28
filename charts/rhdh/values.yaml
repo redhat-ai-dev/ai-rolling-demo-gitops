@@ -10,23 +10,14 @@ redhat-developer-hub:
     tag: 2.1-120
   imagePullSecrets:
     - name: quay-pull-secret
-  catalogIndex:
-    image:
-      registry: quay.io
-      repository: rhdh/plugin-catalog-index
-      tag: "2.2"
+  # catalogIndex image intentionally not overridden — chart 3.4.14 bundles
+  # quay.io/rhdh/plugin-catalog-index:2.1, which matches the RHDH 2.1 line.
   intelligentAssistant:
     enabled: true
     okp:
       enabled: true
-      # Temporary override until the chart dependency includes OKP 1.3.
-      image:
-        tag: "1.3.0-1792010339"
-    plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.9__5.3.10
-        disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend:bs_1.54.9__5.3.10
-        disabled: false
+    # Dynamic plugins intentionally not overridden — the chart's bundled ref://
+    # defaults ship versions matched to each chart release.
     existingSecret: "llama-stack-secrets"
     core:
       image:
@@ -197,7 +188,7 @@ redhat-developer-hub:
           type: url
           rules:
             - allow: [Component, Location, Template]
-        - target: https://github.com/redhat-developer/rhdh-llama-stack-agentic-sample/blob/ai-rolling-demo-2_1/all.yaml
+        - target: https://github.com/redhat-developer/rhdh-ogx-agentic-sample/blob/ai-rolling-demo-2_1/all.yaml
           type: url
           rules:
             - allow: [Component, Location, Template]

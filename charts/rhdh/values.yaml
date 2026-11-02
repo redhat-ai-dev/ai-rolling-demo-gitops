@@ -280,7 +280,6 @@ redhat-developer-hub:
         admin:
           users:
             - name: user:default/jcollier
-            - name: user:default/mvaldron
             - name: user:default/lucasyoon
     integrations:
       github:

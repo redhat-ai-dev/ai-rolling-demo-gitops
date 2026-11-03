@@ -21,7 +21,7 @@ redhat-developer-hub:
       enabled: true
       # Temporary override until the chart dependency includes OKP 1.3.
       image:
-        tag: "1.3.0-1792687969"
+        tag: "1.3.0-1793303796"
     plugins:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-intelligent-assistant:bs_1.54.9__5.3.10
         disabled: false
@@ -32,7 +32,7 @@ redhat-developer-hub:
       image:
         registry: quay.io
         repository: lightspeed-core/lightspeed-stack
-        tag: 0.7.2
+        tag: 0.7.3
       extraEnv:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app-root/gcp-creds.json

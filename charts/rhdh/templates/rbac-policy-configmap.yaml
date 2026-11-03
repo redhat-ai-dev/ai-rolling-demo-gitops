@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   rbac-policy.csv: |
-    p, role:default/intelligent-assistant-user, intelligent-assistant.chat, use, deny
+    p, role:default/intelligent-assistant-user, intelligent-assistant.chat, use, allow
     p, role:default/intelligent-assistant-user, intelligent-assistant.notebooks, use, deny
     p, role:default/intelligent-assistant-user, intelligent-assistant.mcp.tools, use, deny
     p, role:default/intelligent-assistant-user, intelligent-assistant.skills, use, deny

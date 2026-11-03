@@ -36,8 +36,6 @@ redhat-developer-hub:
       extraEnv:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /app-root/gcp-creds.json
-        - name: SOLR_EMBEDDING_MODEL
-          value: ibm-granite/granite-embedding-small-english-r2
       extraVolumeMounts:
         - name: lightspeed-skills
           mountPath: /app-root/skills

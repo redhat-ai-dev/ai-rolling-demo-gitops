@@ -71,3 +71,34 @@ jobs:
                 }
               ]
             }'
+
+      - name: Notify Slack on success
+        if: success()
+        run: |
+          curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            --data-binary '{
+              "text": "*<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|[RESOLVED] NightlyRollingDemoTestsPassed>*",
+              "attachments": [
+                {
+                  "color": "#36A64F",
+                  "fields": [
+                    {
+                      "title": "Summary",
+                      "value": "Nightly UI tests passed on the `main` branch.",
+                      "short": false
+                    },
+                    {
+                      "title": "Description",
+                      "value": "All tests passed.",
+                      "short": false
+                    },
+                    {
+                      "title": "Severity",
+                      "value": "info",
+                      "short": true
+                    }
+                  ]
+                }
+              ]
+            }'

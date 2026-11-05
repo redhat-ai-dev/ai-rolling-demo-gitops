@@ -765,7 +765,9 @@ redhat-developer-hub:
       ephemeral:
         resources:
           requests:
-            storage: 4Gi
+            # Full dynamic plugin set (defaults + explicit) extracts to
+            # over 4Gi; 4Gi caused ENOSPC crashloops in install-dynamic-plugins.
+            storage: 8Gi
   host: ""
   openshift:
     clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com

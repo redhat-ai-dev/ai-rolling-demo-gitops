@@ -1,20 +1,50 @@
 name: Nightly UI Tests
 
+# Scheduled runs execute the workflow file on the default branch (main).
+# Each job checks out its own ref and tests that ref's live RHDH instance.
 on:
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch to test
+        type: choice
+        default: both
+        options:
+          - both
+          - main
+          - development
 
 jobs:
   ui-tests:
-    name: Run UI Tests
+    name: Run UI Tests (${{ matrix.ref }})
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || inputs.ref == 'both' || inputs.ref == matrix.ref
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ref: main
+            # Production URL stays in RHDH_BASE_URL.
+            base_url: ""
+            alert_failure: NightlyRollingDemoTestsFailed
+            alert_success: NightlyRollingDemoTestsPassed
+            summary_failure: Nightly UI tests failed on the `main` branch.
+            summary_success: Nightly UI tests passed on the `main` branch.
+          - ref: development
+            # rhdhai-rhdh-dev in rhdhai-development, same cluster router as values.yaml.
+            base_url: https://rhdhai-rhdh-dev-backstage-rhdhai-development.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
+            alert_failure: NightlyDevelopmentTestsFailed
+            alert_success: NightlyDevelopmentTestsPassed
+            summary_failure: Nightly UI tests failed on the `development` branch.
+            summary_success: Nightly UI tests passed on the `development` branch.
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: main
+          ref: ${{ matrix.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -34,7 +64,7 @@ jobs:
       - name: Run tests
         working-directory: tests
         env:
-          RHDH_BASE_URL: ${{ secrets.RHDH_BASE_URL }}
+          RHDH_BASE_URL: ${{ matrix.base_url != '' && matrix.base_url || secrets.RHDH_BASE_URL }}
           RHDH_ENVIRONMENT: ${{ secrets.RHDH_ENVIRONMENT }}
           ROLLING_DEMO_TEST_USERNAME: ${{ secrets.ROLLING_DEMO_TEST_USERNAME }}
           KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
@@ -43,62 +73,66 @@ jobs:
 
       - name: Notify Slack on failure
         if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          ALERT_NAME: ${{ matrix.alert_failure }}
+          SUMMARY: ${{ matrix.summary_failure }}
+          DESCRIPTION: One or more tests failed.
+          SEVERITY: critical
+          COLOR: "#FF0000"
+          STATUS: FIRING
         run: |
-          curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            --data-binary '{
-              "text": "*<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|[FIRING] NightlyRollingDemoTestsFailed>*",
-              "attachments": [
+          jq -n \
+            --arg text "*<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|[$STATUS] $ALERT_NAME>*" \
+            --arg summary "$SUMMARY" \
+            --arg description "$DESCRIPTION" \
+            --arg severity "$SEVERITY" \
+            --arg color "$COLOR" \
+            '{
+              text: $text,
+              attachments: [
                 {
-                  "color": "#FF0000",
-                  "fields": [
-                    {
-                      "title": "Summary",
-                      "value": "Nightly UI tests failed on the `main` branch.",
-                      "short": false
-                    },
-                    {
-                      "title": "Description",
-                      "value": "One or more tests failed.",
-                      "short": false
-                    },
-                    {
-                      "title": "Severity",
-                      "value": "critical",
-                      "short": true
-                    }
+                  color: $color,
+                  fields: [
+                    {title: "Summary", value: $summary, short: false},
+                    {title: "Description", value: $description, short: false},
+                    {title: "Severity", value: $severity, short: true}
                   ]
                 }
               ]
-            }'
+            }' | curl -s -X POST "$SLACK_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              --data-binary @-
 
       - name: Notify Slack on success
         if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          ALERT_NAME: ${{ matrix.alert_success }}
+          SUMMARY: ${{ matrix.summary_success }}
+          DESCRIPTION: All tests passed.
+          SEVERITY: info
+          COLOR: "#36A64F"
+          STATUS: RESOLVED
         run: |
-          curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            --data-binary '{
-              "text": "*<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|[RESOLVED] NightlyRollingDemoTestsPassed>*",
-              "attachments": [
+          jq -n \
+            --arg text "*<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|[$STATUS] $ALERT_NAME>*" \
+            --arg summary "$SUMMARY" \
+            --arg description "$DESCRIPTION" \
+            --arg severity "$SEVERITY" \
+            --arg color "$COLOR" \
+            '{
+              text: $text,
+              attachments: [
                 {
-                  "color": "#36A64F",
-                  "fields": [
-                    {
-                      "title": "Summary",
-                      "value": "Nightly UI tests passed on the `main` branch.",
-                      "short": false
-                    },
-                    {
-                      "title": "Description",
-                      "value": "All tests passed.",
-                      "short": false
-                    },
-                    {
-                      "title": "Severity",
-                      "value": "info",
-                      "short": true
-                    }
+                  color: $color,
+                  fields: [
+                    {title: "Summary", value: $summary, short: false},
+                    {title: "Description", value: $description, short: false},
+                    {title: "Severity", value: $severity, short: true}
                   ]
                 }
               ]
-            }'
+            }' | curl -s -X POST "$SLACK_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              --data-binary @-

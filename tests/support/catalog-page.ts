@@ -31,8 +31,9 @@ export async function openExtensionsInstalledPackages(
   return true;
 }
 
+/** Entity header TechDocs link. The app sidebar also has a link named Docs. */
 export function entityDocsTab(page: Page): Locator {
   return page
-    .getByRole("tab", { name: /docs/i })
-    .or(page.getByRole("link", { name: /^docs$/i }));
+    .getByRole("navigation", { name: "Content navigation" })
+    .getByRole("link", { name: "TechDocs", exact: true });
 }

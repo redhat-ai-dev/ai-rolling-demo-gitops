@@ -17,28 +17,51 @@ on:
           - development
 
 jobs:
+  # matrix is not available in a job-level if. Build the include list here.
+  targets:
+    name: Select targets
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - id: select
+        env:
+          REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || 'both' }}
+        run: |
+          python3 - << 'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+
+          main = {
+              "ref": "main",
+              "base_url": "",
+              "alert_failure": "NightlyRollingDemoTestsFailed",
+              "alert_success": "NightlyRollingDemoTestsPassed",
+              "summary_failure": "Nightly UI tests failed on the `main` branch.",
+              "summary_success": "Nightly UI tests passed on the `main` branch.",
+          }
+          development = {
+              "ref": "development",
+              "base_url": "https://rhdhai-rhdh-dev-backstage-rhdhai-development.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com",
+              "alert_failure": "NightlyDevelopmentTestsFailed",
+              "alert_success": "NightlyDevelopmentTestsPassed",
+              "summary_failure": "Nightly UI tests failed on the `development` branch.",
+              "summary_success": "Nightly UI tests passed on the `development` branch.",
+          }
+          selected = {
+              "main": [main],
+              "development": [development],
+          }.get(os.environ["REF"], [main, development])
+          print("matrix=" + json.dumps({"include": selected}))
+          PY
+
   ui-tests:
     name: Run UI Tests (${{ matrix.ref }})
+    needs: targets
     runs-on: ubuntu-latest
-    if: github.event_name != 'workflow_dispatch' || inputs.ref == 'both' || inputs.ref == matrix.ref
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - ref: main
-            # Production URL stays in RHDH_BASE_URL.
-            base_url: ""
-            alert_failure: NightlyRollingDemoTestsFailed
-            alert_success: NightlyRollingDemoTestsPassed
-            summary_failure: Nightly UI tests failed on the `main` branch.
-            summary_success: Nightly UI tests passed on the `main` branch.
-          - ref: development
-            # rhdhai-rhdh-dev in rhdhai-development, same cluster router as values.yaml.
-            base_url: https://rhdhai-rhdh-dev-backstage-rhdhai-development.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
-            alert_failure: NightlyDevelopmentTestsFailed
-            alert_success: NightlyDevelopmentTestsPassed
-            summary_failure: Nightly UI tests failed on the `development` branch.
-            summary_success: Nightly UI tests passed on the `development` branch.
+      matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
 
     steps:
       - name: Checkout

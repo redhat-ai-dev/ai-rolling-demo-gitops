@@ -579,6 +579,10 @@ redhat-developer-hub:
     successThreshold: 1
     timeoutSeconds: 2
   dynamicPlugins:
+    initContainer:
+      resources:
+        limits:
+          memory: 5Gi
     includes:
       - "dynamic-plugins.default.yaml"
     plugins:
@@ -679,7 +683,7 @@ redhat-developer-hub:
       ephemeral:
         resources:
           requests:
-            storage: 4Gi
+            storage: 8Gi
   host: ""
   openshift:
     clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com

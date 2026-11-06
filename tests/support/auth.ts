@@ -1,4 +1,4 @@
-import { request, type BrowserContext, type Page } from "@playwright/test";
+import { expect, request, type BrowserContext, type Page } from "@playwright/test";
 
 type BrowserCookie = {
   name: string;
@@ -203,7 +203,26 @@ export async function loginViaKeycloakImpersonation(
   }
 
   await page.waitForLoadState("networkidle");
-  await hidePostLoginBannerIfVisible(page);
+  await dismissQuickStartIfVisible(page);
+}
+
+/**
+ * Dismisses the Developer Hub Quick Start panel when it is on screen.
+ * The panel exposes a Hide button; `isVisible()` does not wait, so this
+ * waits briefly and clicks only when that button appears.
+ */
+export async function dismissQuickStartIfVisible(
+  page: Page,
+  timeout = 5_000,
+): Promise<void> {
+  const hideQuickStart = page.getByRole("button", { name: "Hide", exact: true });
+  try {
+    await hideQuickStart.waitFor({ state: "visible", timeout });
+  } catch {
+    return;
+  }
+  await hideQuickStart.click();
+  await expect(hideQuickStart).toBeHidden();
 }
 
 /**
@@ -214,8 +233,5 @@ export async function hidePostLoginBannerIfVisible(
   page: Page,
   timeout = 5_000,
 ): Promise<void> {
-  const hideButton = page.getByRole("button", { name: "Hide" });
-  if (await hideButton.isVisible({ timeout })) {
-    await hideButton.click();
-  }
+  await dismissQuickStartIfVisible(page, timeout);
 }

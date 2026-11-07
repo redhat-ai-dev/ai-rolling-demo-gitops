@@ -176,17 +176,12 @@ test.describe("KServe / KubeFlow connector", () => {
 
       await openEntityPage(page, fixtureEntity!);
       const docsTab = entityDocsTab(page);
-      if (
-        await docsTab
-          .first()
-          .isVisible({ timeout: 15_000 })
-          .catch(() => false)
-      ) {
-        await docsTab.first().click();
-        await expect(
-          page.getByText(/techdocs|model card|documentation/i).first(),
-        ).toBeVisible({ timeout: 60_000 });
-      }
+      await expect(docsTab).toBeVisible();
+      await docsTab.click();
+      await expect(page).toHaveURL(
+        new RegExp(`${fixtureEntity!.metadata.name}/docs$`, "i"),
+      );
+      await expect(docsTab).toHaveAttribute("aria-current", "page");
     });
 
     // Optional — Kind CI often has an empty installed-packages table; package

@@ -84,6 +84,88 @@ redhat-developer-hub:
           flushInterval: 5000
           debug: false
           licensedUsers: 50
+      # Quickstart onboarding guides (RHIDP-13608), based on rhdh-local.
+      # roles kept on every entry so a future RBAC enablement does not
+      # hide cards; with permission framework off all users are treated
+      # as admins and see everything.
+      quickstart:
+        - title: "What Is Developer Hub?"
+          description: "Learn what Developer Hub is, its purpose, and how to use it to discover, create, and manage software in your organization."
+          icon: "developerHub"
+          roles: ["admin", "developer"]
+          cta:
+            text: "Read the Introduction"
+            link: "/docs/default/system/rhdh-getting-started/"
+        - title: "Navigate Your Way Around"
+          description: "The homepage gives links to important features and documentation. The topbar allows you to search for anything, register new components, view your starred entities, and launch external apps."
+          icon: "kind:location"
+          roles: ["admin", "developer"]
+          cta:
+            text: "Start Exploring"
+            link: "/"
+        - title: "Browse the Software Catalog"
+          description: "The software catalog lets you see all the projects and components shared by development teams throughout your organization."
+          icon: "catalog"
+          roles: ["admin", "developer"]
+          cta:
+            text: "Open the Catalog"
+            link: "/catalog"
+        - title: "Browse the 'Golden Path' Templates"
+          description: "Golden path templates let you quickly create and customize software projects that follow your organization's coding standards using simple wizard like forms. You can even develop and share templates of your own!"
+          icon: "scaffolder"
+          roles: ["admin", "developer"]
+          cta:
+            text: "Browse the Templates"
+            link: "/create"
+        - title: "Read Some TechDocs"
+          description: "Discover project documentation, architecture notes, and how-to guides in TechDocs."
+          icon: "techdocs"
+          roles: ["admin", "developer"]
+          cta:
+            text: "View the TechDocs"
+            link: "/docs"
+        - title: "Explore APIs"
+          description: "Visit the APIs section to discover the APIs that have been added by our organization."
+          icon: "kind:api"
+          roles: ["admin", "developer"]
+          cta:
+            text: "View the APIs"
+            link: "/api-docs"
+        - title: "Add Software to the Catalog"
+          description: "You can register existing Backstage components into the catalog using catalog-info.yaml files."
+          icon: "add"
+          roles: ["admin", "developer"]
+          cta:
+            text: "Register a Component"
+            link: "/catalog-import"
+        - title: "Personalize Your Experience"
+          description: "Customize Developer Hub to match your preferences. Toggle dark mode, adjust your theme, and configure settings to create your ideal workspace."
+          icon: "manageAccounts"
+          roles: ["admin", "developer"]
+          cta:
+            text: "Open Settings"
+            link: "/settings"
+        - title: "Learn New Skills"
+          description: "Discover curated learning paths designed to help you expand your knowledge and skills in various technologies."
+          icon: "school"
+          roles: ["admin", "developer"]
+          cta:
+            text: "View Learning Paths"
+            link: "/learning-paths"
+        - title: "Star Your Favorite Items"
+          description: "Click the Star icon on any Catalog entity, API, or anywhere else you see a star. Your starred items appear in the top navigation bar for quick access. Try it now by adding the Getting Started guide to your starred items list."
+          icon: "star"
+          roles: ["admin", "developer"]
+          cta:
+            text: "Learn More"
+            link: "/catalog/default/system/rhdh-getting-started"
+        - title: "View Your Platform Adoption Metrics"
+          description: "See how your developers are using Developer Hub's many tools and features."
+          icon: "chart"
+          roles: ["admin", "developer"]
+          cta:
+            text: "Open Adoption Insights"
+            link: "/adoption-insights"
     homepage:
       defaultWidgets:
         - id: rhdh-onboarding-section
@@ -596,6 +678,10 @@ redhat-developer-hub:
                 signInPage:
                   importName: RollingDemoCustomizedSignInPage
       ##### Red Hat Plugins #####
+      # Quickstart onboarding guides (RHIDP-13608) — OCI overlay for NFS
+      # compatibility; the default ref:// package lacks a scalprum manifest.
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-quickstart:bs_1.54.9__2.2.0
+        disabled: false
       # ArgoCD
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.54.9__3.1.3
         disabled: false

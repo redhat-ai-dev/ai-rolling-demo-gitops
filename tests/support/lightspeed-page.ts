@@ -151,9 +151,15 @@ export async function expectChatInputAreaVisible(page: Page): Promise<void> {
 }
 
 export async function expectEmptyChatHistory(page: Page): Promise<void> {
-  await expect(
-    page.getByRole("heading", { name: /Saved prompts/ }),
-  ).toBeVisible();
+  const savedPromptsHeading = page.getByRole("heading", {
+    name: /Saved prompts/,
+  });
+  if (!(await savedPromptsHeading.isVisible())) {
+    await chatbotHeaderOptions(page).click();
+    await page.getByRole("menuitem", { name: "Enable saved prompts" }).click();
+  }
+
+  await expect(savedPromptsHeading).toBeVisible();
   await expect(
     page
       .locator(".lightspeed-saved-prompts-group")

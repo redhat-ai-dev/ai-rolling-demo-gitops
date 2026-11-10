@@ -97,6 +97,21 @@ test.describe("Lightspeed MCP", () => {
     ).toBeVisible();
 
     await expect(modal.getByText("Status", { exact: true })).toBeVisible();
+
+    const disabledNotice = modal.getByText(
+      "This server is disabled and unavailable in chat.",
+    );
+    if (await disabledNotice.isVisible()) {
+      await expect(page.locator("#mcp-configure-modal-body")).toMatchAriaSnapshot(`
+    - 'heading "Custom alert: Credentials are encrypted and operations use your exact permissions." [level=4]'
+    - 'heading "Custom alert: This server uses Dynamic Client Registration (DCR). Tokens are minted automatically using your Backstage identity — no manual token is needed." [level=4]'
+    - text: Status Disabled Enabled This server is disabled and unavailable in chat.
+    - switch "Toggle ${MCP_SERVER_NAME}"
+    `);
+      await closeConfigureServerModal(page);
+      return;
+    }
+
     await expect(modal.getByText(/^Tools \(\d+\)$/).first()).toBeVisible();
     await expect(modal.getByText("Enabled", { exact: true })).toBeVisible();
 

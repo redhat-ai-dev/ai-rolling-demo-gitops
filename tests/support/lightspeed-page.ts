@@ -85,7 +85,7 @@ export async function expectRhdhContentVisible(
 ): Promise<void> {
   const shell = page
     .getByText(/welcome back!/i)
-    .or(page.locator("h1").filter({ hasText: "Catalog" }));
+    .or(page.getByText("My Org Catalog"));
 
   if (visible) {
     await expect(shell).toBeVisible({ timeout: 30_000 });

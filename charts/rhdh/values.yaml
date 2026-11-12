@@ -60,7 +60,17 @@ redhat-developer-hub:
     app:
       title: AI Rolling Demo Developer Hub
       baseUrl: "${RHDH_BASE_URL}"
+      sidebar:
+        items:
+          - title: Home
+            icon: home
+            to: /home
+            priority: 300
+            requiresRoute: true
       extensions:
+        - sidebar-item:ai-catalog/ai-catalog:
+            config:
+              priority: 200
         - app/routes:
             config:
               redirects:

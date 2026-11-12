@@ -70,6 +70,9 @@ jobs:
           VLLM_API_KEY: ${{ secrets.VLLM_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_BASE_URL: ${{ secrets.OPENAI_API_BASE_URL }}
+          VERTEX_AI_CREDENTIALS: ${{ secrets.VERTEX_AI_CREDENTIALS }}
+          VERTEX_AI_PROJECT: ${{ secrets.VERTEX_AI_PROJECT }}
+          VERTEX_AI_LOCATION: ${{ secrets.VERTEX_AI_LOCATION }}
           VALIDATION_PROVIDER: ${{ secrets.VALIDATION_PROVIDER }}
           VALIDATION_MODEL_NAME: ${{ secrets.VALIDATION_MODEL_NAME }}
           LIGHTSPEED_POSTGRES_USER: ${{ secrets.LIGHTSPEED_POSTGRES_USER }}

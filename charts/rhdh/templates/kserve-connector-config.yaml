@@ -17,7 +17,7 @@ data:
               skipTLSVerify: false
               caData: "${K8S_CA_DATA}"
               kubeflow-model-catalog-url: "${KUBEFLOW_MODEL_CATALOG_URL}"
-              default-owner: "${OWNER:-default-owner}"
+              default-owner: {{ index .Values "redhat-developer-hub" "appConfig" "catalog" "providers" "modelCatalog" "kserve-kubeflow-connector" "cluster-1" "default-owner" | quote }}
               default-lifecycle: "${LIFECYCLE:-production}"
 {{- else }}
     {}

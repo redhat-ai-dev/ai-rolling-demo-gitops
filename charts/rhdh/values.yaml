@@ -301,8 +301,27 @@ redhat-developer-hub:
             cluster-1:
               name: my-k8s-cluster
               kubeflow-model-catalog-url: '${KUBEFLOW_MODEL_CATALOG_URL:-}'
-              default-owner: '${OWNER:-default-owner}'
+              default-owner: gabemontero # Connector expects a username; mapping adds user:.
               default-lifecycle: '${LIFECYCLE:-production}'
+        # Import a small sample from the official public MCP Registry.
+        mcpRegistry:
+          mcpRegistry:
+            baseUrl: https://registry.modelcontextprotocol.io
+            apiVersion: v0.1
+            defaultOwner: user:default/gabemontero
+            defaultLifecycle: production
+            # Two pages allow a five-entry page plus the soft-cap overflow check.
+            pageLimit: 2
+            pageSize: 5
+            maxEntries: 5 # Soft traversal cap, before filtering and mapping.
+            remotesOnly: false
+            latestVersion: true
+            hostAllowList:
+              - registry.modelcontextprotocol.io
+            schedule:
+              frequency: { minutes: 1 }
+              timeout: { minutes: 3 }
+              initialDelay: { seconds: 0 }
         github:
           providerId:
             organization: "${GITOPS_GIT_ORG}"
@@ -346,7 +365,7 @@ redhat-developer-hub:
               - connectorPluginId: skill-image-connector
                 sourceId: skillimage-skills
                 sourceType: oci
-            defaultOwner: team-skills
+            defaultOwner: user:default/gabemontero
             defaultLifecycle: experimental
             namespace: default
             schedule:
@@ -710,6 +729,9 @@ redhat-developer-hub:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras:bs_1.54.9__0.2.6
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras:bs_1.54.9__0.4.4
+        disabled: false
+      # MCP Registry provider (uses the AI model module enabled below).
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-mcp-registry-provider:bs_1.54.9__0.3.0
         disabled: false
       # Model Catalog Plugins
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.54.9__1.2.0

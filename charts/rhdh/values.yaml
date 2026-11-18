@@ -801,7 +801,7 @@ redhat-developer-hub:
       ephemeral:
         resources:
           requests:
-            storage: 8Gi
+            storage: 12Gi
   host: ""
   openshift:
     clusterRouterBase: apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com

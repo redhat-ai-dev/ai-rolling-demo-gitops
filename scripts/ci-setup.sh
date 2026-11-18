@@ -154,7 +154,7 @@ helm install "$ARGOCD_APP_NAME" "$GITOPS_DIR/charts/rhdh" \
   -f "$CI_RHDH_VALUES" \
   -f "$GITOPS_DIR/ci/values-ci.yaml" \
   --set "redhat-developer-hub.postgresql.auth.existingSecret=${ARGOCD_APP_NAME}-postgresql" \
-  --timeout 40m \
+  --timeout 60m \
   --wait
 
 # generate a self-signed TLS certificate so node-openid-client accepts the HTTPS callback URL
@@ -200,9 +200,17 @@ spec:
                   number: 7007
 EOF
 
+# The default progressDeadlineSeconds (600s) is shorter than a cold
+# install-dynamic-plugins run on a GitHub runner (each rollout restart gets a
+# fresh dynamic-plugins-root PVC and re-downloads all OCI plugins, ~10 min).
+# Raise it so the deployment controller does not mark the rollout failed
+# while init containers are still fetching plugins.
+kubectl patch deployment/"${ARGOCD_APP_NAME}-backstage" -n "$RHDH_NAMESPACE" \
+  --type merge -p '{"spec":{"progressDeadlineSeconds":1800}}' >/dev/null
+
 log "Waiting for RHDH to be ready..."
 kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
-  -n "$RHDH_NAMESPACE" --timeout=600s
+  -n "$RHDH_NAMESPACE" --timeout=1500s
 
 if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
   # Bridge token is Helm-managed; reconcile after install (same as setup.sh).
@@ -216,7 +224,7 @@ if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
   kubectl rollout restart deployment/"${ARGOCD_APP_NAME}-backstage" \
     -n "$RHDH_NAMESPACE"
   if ! kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
-    -n "$RHDH_NAMESPACE" --timeout=900s; then
+    -n "$RHDH_NAMESPACE" --timeout=1800s; then
     log "RHDH rollout after secret reconcile failed — collecting diagnostics..."
     kubectl get pods -n "$RHDH_NAMESPACE" -o wide || true
     kubectl describe deployment/"${ARGOCD_APP_NAME}-backstage" -n "$RHDH_NAMESPACE" || true

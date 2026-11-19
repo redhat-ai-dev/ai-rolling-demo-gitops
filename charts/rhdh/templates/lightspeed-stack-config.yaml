@@ -25,10 +25,21 @@ data:
                 When appropriate, cite sources at the end of sentences using doc_url and doc_title format.
                 Citing sources is not always required because citations are handled externally.
                 Never include any citation that is in the form '<| file-id |>'.
+    compaction:
+      enabled: true
+      threshold_ratio: 0.7
+      token_floor: 4096
+      buffer_turns: 4
+      buffer_max_ratio: 0.3
     inference:
       providers:
         - type: vllm
           id: vllm
+          allowed_models:
+            - name: meta-llama-31-8b-quantizedw4a16
+              provider_model_id: meta-llama-31-8b-quantizedw4a16
+              metadata:
+                context_window: 128000
           api_key_env: VLLM_API_KEY
           config:
             base_url: ${env.VLLM_URL:=}
@@ -42,10 +53,22 @@ data:
         - type: openai
           id: openai
           allowed_models:
-            - gpt-5.4-mini
-            - gpt-5.5
-            - gpt-5.6-sol
-            - gpt-5.6-luna
+            - name: gpt-5.4-mini
+              provider_model_id: gpt-5.4-mini
+              metadata:
+                context_window: 400000
+            - name: gpt-5.5
+              provider_model_id: gpt-5.5
+              metadata:
+                context_window: 1050000
+            - name: gpt-5.6-sol
+              provider_model_id: gpt-5.6-sol
+              metadata:
+                context_window: 1050000
+            - name: gpt-5.6-luna
+              provider_model_id: gpt-5.6-luna
+              metadata:
+                context_window: 1050000
           api_key_env: OPENAI_API_KEY
           config:
             base_url: ${env.OPENAI_API_BASE_URL:=https://api.openai.com/v1}
@@ -55,9 +78,18 @@ data:
         - type: vertexai
           id: vertexai
           allowed_models:
-            - publishers/google/models/gemini-3.5-flash-lite
-            - publishers/google/models/gemini-3.8-flash
-            - publishers/google/models/gemini-3.1-pro-preview
+            - name: publishers/google/models/gemini-3.5-flash-lite
+              provider_model_id: publishers/google/models/gemini-3.5-flash-lite
+              metadata:
+                context_window: 1048576
+            - name: publishers/google/models/gemini-3.8-flash
+              provider_model_id: publishers/google/models/gemini-3.8-flash
+              metadata:
+                context_window: 1048576
+            - name: publishers/google/models/gemini-3.1-pro-preview
+              provider_model_id: publishers/google/models/gemini-3.1-pro-preview
+              metadata:
+                context_window: 1048576
           config:
             project: ${env.VERTEX_AI_PROJECT:=}
             location: ${env.VERTEX_AI_LOCATION:=global}

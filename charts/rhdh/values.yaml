@@ -365,10 +365,19 @@ redhat-developer-hub:
               - connectorPluginId: skill-image-connector
                 sourceId: skillimage-skills
                 sourceType: oci
+            defaultOwner: user:default/gabemontero
+            defaultLifecycle: experimental
+            namespace: default
+            schedule:
+              frequency: { minutes: 5 }
+              timeout: { minutes: 10 }
+              initialDelay: { seconds: 0 }
+          npx:
+            sources:
               - connectorPluginId: npx-skill-connector
                 sourceId: public-agent-skills
                 sourceType: npx
-            defaultOwner: user:default/gabemontero
+            defaultOwner: user:johnmcollier
             defaultLifecycle: experimental
             namespace: default
             schedule:

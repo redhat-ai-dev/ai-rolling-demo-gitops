@@ -365,6 +365,9 @@ redhat-developer-hub:
               - connectorPluginId: skill-image-connector
                 sourceId: skillimage-skills
                 sourceType: oci
+              - connectorPluginId: npx-skill-connector
+                sourceId: public-agent-skills
+                sourceType: npx
             defaultOwner: user:default/gabemontero
             defaultLifecycle: experimental
             namespace: default
@@ -372,6 +375,14 @@ redhat-developer-hub:
               frequency: { minutes: 5 }
               timeout: { minutes: 10 }
               initialDelay: { seconds: 0 }
+    npxSkillConnector:
+      sources:
+        - id: public-agent-skills
+          indexUrl: https://evilmartians.com/.well-known/agent-skills/index.json
+          schedule:
+            frequency: { minutes: 5 }
+            timeout: { minutes: 10 }
+            initialDelay: { seconds: 0 }
     skillImageConnector:
       fetchTimeoutMs: 30000 # 30 seconds per request, including body reading
       maxBlobSizeBytes: 5242880 # 5 MiB per downloaded blob and decompressed layer
@@ -736,7 +747,7 @@ redhat-developer-hub:
       # Model Catalog Plugins
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-model-catalog:bs_1.54.9__1.2.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.54.9__0.8.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-techdoc-url-reader-backend:bs_1.54.9__0.9.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-kserve-kubeflow-connector-backend:bs_1.54.9__0.4.0
         disabled: false
@@ -745,20 +756,21 @@ redhat-developer-hub:
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-model-server:bs_1.54.9__0.4.0
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.54.9__0.7.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-agent:bs_1.54.9__1.0.0
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:bs_1.54.9__0.6.0
         disabled: false
       # AI Catalog Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ai-catalog:bs_1.54.9__1.2.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ai-catalog:bs_1.54.9__1.2.2
         disabled: false
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.54.9__1.2.1
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-ogx-entity-provider:bs_1.54.9__1.2.2
         disabled: false
       # Skills Plugins
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-skills-catalog-provider:bs_1.54.9__1.1.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-skills-catalog-provider:bs_1.54.9__1.2.0
         disabled: false
-      # Skills image connector (built against an older Backstage line; see plugin tag).  As part of the dev/eng spike nature of RHDHPLAN-1745 we are NOT producing an RHDH shippable artifact for integrating with the OCTO skillimage offering at this time
-      - package: oci://quay.io/gabemontero/red-hat-developer-hub-backstage-plugin-skill-image-connector-backend:bs_1.54.6__0.10.0
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-skill-image-connector-backend:bs_1.54.9__0.10.0
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-npx-skill-connector-backend:bs_1.54.9__0.5.0
         disabled: false
       # Tekton CI (NFS — no pluginConfig needed)
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:bs_1.54.9__4.0.5

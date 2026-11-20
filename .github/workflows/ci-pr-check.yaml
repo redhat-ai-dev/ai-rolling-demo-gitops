@@ -17,6 +17,13 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: tests/package-lock.json
+
       - name: Install tooling (kind, helm, yq)
         run: |
           # kind
@@ -32,23 +39,32 @@ jobs:
             "https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64"
           sudo install /tmp/yq /usr/local/bin/yq
 
-      - name: Check vendored chart dependencies are in sync
-        run: bash tests/helm/test-chart-dependencies.sh
+      # Run setup and static checks concurrently so any failure stops the job
+      # before the deploy. Node and tooling are set up beforehand.
+      - parallel:
+          - name: Install test dependencies and Playwright browsers
+            working-directory: tests
+            run: |
+              npm ci
+              npx playwright install chromium --with-deps
 
-      - name: Test chart-managed RHDH pod additions
-        run: bash tests/helm/test-rhdh-pod-additions.sh
+          - name: Check vendored chart dependencies are in sync
+            run: bash tests/helm/test-chart-dependencies.sh
 
-      - name: Test RHDH CI values
-        run: bash tests/helm/test-rhdh-ci-values.sh
+          - name: Test chart-managed RHDH pod additions
+            run: bash tests/helm/test-rhdh-pod-additions.sh
 
-      - name: Test KServe connector has no legacy sidecars
-        run: bash tests/helm/test-kserve-connector-no-sidecars.sh
+          - name: Test RHDH CI values
+            run: bash tests/helm/test-rhdh-ci-values.sh
 
-      - name: Test OGX entity provider uses ai-catalog config
-        run: bash tests/helm/test-ogx-entity-provider-config.sh
+          - name: Test KServe connector has no legacy sidecars
+            run: bash tests/helm/test-kserve-connector-no-sidecars.sh
 
-      - name: Test operator installation helpers
-        run: bash tests/scripts/test-install-operators.sh
+          - name: Test OGX entity provider uses ai-catalog config
+            run: bash tests/helm/test-ogx-entity-provider-config.sh
+
+          - name: Test operator installation helpers
+            run: bash tests/scripts/test-install-operators.sh
 
       - name: Deploy RHDH on Kind
         env:
@@ -88,21 +104,6 @@ jobs:
           INSTALL_KSERVE_KIND: "true"
         run: make ci-install
 
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "24"
-          cache: "npm"
-          cache-dependency-path: tests/package-lock.json
-
-      - name: Install test dependencies
-        working-directory: tests
-        run: npm ci
-
-      - name: Install Playwright browsers
-        working-directory: tests
-        run: npx playwright install chromium --with-deps
-
       - name: Run E2E tests
         env:
           RHDH_BASE_URL: "https://rhdh-ci.apps.testing"
@@ -113,6 +114,7 @@ jobs:
           # Ungate KServe connector cluster-fixture cases after Kind install.
           KSERVE_E2E: "true"
           INSTALL_KSERVE_KIND: "true"
+          PLAYWRIGHT_SKIP_BROWSER_INSTALL: "true" # prevents a 2nd install of chromium
         run: make ci-tests
 
       - name: Collect RHDH logs

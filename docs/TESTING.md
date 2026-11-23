@@ -196,7 +196,7 @@ Replace `rhdh.io/catalog-source` / `rhdh.io/catalog-model` with IDs that exist i
 
 ### Kind cluster (upstream KServe / KubeFlow)
 
-`make ci-install` (with `INSTALL_KSERVE_KIND=true`, the default) installs cert-manager + KServe RawDeployment via `scripts/install-kserve-kind.sh`, enables the connector ConfigMap (`rhoai.enabled=true`, `rhoai.modelRegistry.enabled=false`), reconciles `kserve-connector-secrets` from `rhdh-rhoai-bridge-token`, restarts RHDH (before fixtures, to avoid Kind memory pressure), applies Kind InferenceService fixtures, and exports `KSERVE_E2E=true` for `make ci-tests`.
+`make ci-install` (with `INSTALL_KSERVE_KIND=true`, the default) installs cert-manager + KServe RawDeployment via `scripts/install-kserve-kind.sh`, enables the connector ConfigMap (`rhoai.enabled=true`, `rhoai.modelRegistry.enabled=false`), mints a token for the namespace's `default` service account into `kserve-connector-secrets` before the Helm install (so RHDH starts with connector credentials and needs no restart), applies Kind InferenceService fixtures after RHDH is ready, and exports `KSERVE_E2E=true` for `make ci-tests`.
 
 Manual / existing cluster:
 

@@ -124,6 +124,20 @@ kubectl create clusterrole cluster-reader \
 # create service accounts and tokens for RHDH components
 source "$SCRIPTS_DIR/setup-sa-tokens.sh"
 
+if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
+  # The chart's KServe connector RBAC targets the namespace's default SA. Mint
+  # its token now so kserve-connector-secrets is complete before RHDH starts,
+  # instead of copying rhdh-rhoai-bridge-token after install and restarting.
+  log "Creating KServe connector token for the 'default' service account..."
+  until kubectl get serviceaccount default -n "$RHDH_NAMESPACE" >/dev/null 2>&1; do
+    sleep 1
+  done
+  K8S_SA_TOKEN="$(kubectl create token default -n "$RHDH_NAMESPACE" --duration=4h)"
+  K8S_CA_DATA="$(kubectl config view --raw --minify \
+    -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')"
+  export K8S_SA_TOKEN K8S_CA_DATA
+fi
+
 # run the secrets generation script
 # we have already prepared all necessary env vars
 source "$SCRIPTS_DIR/setup-secrets.sh"
@@ -200,38 +214,11 @@ spec:
                   number: 7007
 EOF
 
-# The default progressDeadlineSeconds (600s) is shorter than a cold
-# install-dynamic-plugins run on a GitHub runner (each rollout restart gets a
-# fresh dynamic-plugins-root PVC and re-downloads all OCI plugins, ~10 min).
-# Raise it so the deployment controller does not mark the rollout failed
-# while init containers are still fetching plugins.
-kubectl patch deployment/"${ARGOCD_APP_NAME}-backstage" -n "$RHDH_NAMESPACE" \
-  --type merge -p '{"spec":{"progressDeadlineSeconds":1800}}' >/dev/null
-
 log "Waiting for RHDH to be ready..."
 kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
   -n "$RHDH_NAMESPACE" --timeout=1500s
 
 if [[ "${INSTALL_KSERVE_KIND}" == "true" ]]; then
-  # Bridge token is Helm-managed; reconcile after install (same as setup.sh).
-  log "Reconciling kserve-connector-secrets from rhdh-rhoai-bridge-token..."
-  bash "$SCRIPTS_DIR/reconcile-kserve-secrets.sh"
-
-  # Restart *before* applying InferenceService fixtures. Fixture predictors pull
-  # model images and compete with RHDH for Kind memory; a post-fixture restart
-  # previously timed out with old replicas stuck pending termination.
-  log "Restarting RHDH so connector picks up reconciled cluster credentials..."
-  kubectl rollout restart deployment/"${ARGOCD_APP_NAME}-backstage" \
-    -n "$RHDH_NAMESPACE"
-  if ! kubectl rollout status deployment/"${ARGOCD_APP_NAME}-backstage" \
-    -n "$RHDH_NAMESPACE" --timeout=1800s; then
-    log "RHDH rollout after secret reconcile failed — collecting diagnostics..."
-    kubectl get pods -n "$RHDH_NAMESPACE" -o wide || true
-    kubectl describe deployment/"${ARGOCD_APP_NAME}-backstage" -n "$RHDH_NAMESPACE" || true
-    kubectl get events -n "$RHDH_NAMESPACE" --sort-by='.lastTimestamp' | tail -40 || true
-    exit 1
-  fi
-
   log "Applying Kind KServe InferenceService fixtures in ${KSERVE_FIXTURE_NAMESPACE}..."
   bash "$GITOPS_DIR/tests/fixtures/kserve/apply.sh" kind "$KSERVE_FIXTURE_NAMESPACE"
 
